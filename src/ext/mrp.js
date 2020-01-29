@@ -2,6 +2,7 @@ import { Product } from './model-product'
 import { ProductStock } from './model-product-stock'
 import { InitMrp } from './init-mrp'
 import { InitUsers } from './init-users'
+import { Plan } from './model-plan'
 
 const packageName = 'Mrp'
 
@@ -17,6 +18,7 @@ export const Mrp = (app, opt) => {
 
   app.exModular.modelAdd(Product(app))
   app.exModular.modelAdd(ProductStock(app))
+  app.exModular.modelAdd(Plan(app))
 
   app.exModular.initAdd(InitUsers(app))
   app.exModular.initAdd(InitMrp(app))
