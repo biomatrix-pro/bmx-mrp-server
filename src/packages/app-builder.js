@@ -20,6 +20,7 @@ import { InitAccess } from './init-access'
 import { UserGroup } from './model-user-group'
 import { SignupOpen } from './signup-open'
 import { AuthPassword } from './auth-password'
+import { Codegen } from './service-codegen'
 
 export const appBuilder = (express, options) => {
   if (!express) {
@@ -90,6 +91,8 @@ export const appBuilder = (express, options) => {
       // configure app with modules:
       SignupOpen(app)
       AuthPassword(app)
+
+      Codegen(app)
 
       // configure system data init:
       app.exModular.initAdd(InitAccess(app))
