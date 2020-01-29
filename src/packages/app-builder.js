@@ -6,21 +6,26 @@ import Express from 'express'
 
 import sqliteStorage from './storage-knex-sqlite'
 import { exModular } from './ex-modular'
+
 import { Wrap } from './service-wrap'
 import { Mailer } from './service-mailer'
 import { Errors } from './service-errors'
 import { Validator } from './service-validator'
 import { RouteBuilder } from './route-builder'
 import { Controller } from './service-controller'
+import { Codegen } from './service-codegen'
+import { Seed } from './sevice-seed'
+
 import { User } from './model-user'
+import { UserGroup } from './model-user-group'
 import { Session } from './model-session'
+
 import { AuthJwt as Auth } from './auth-jwt'
 import { AccessSimple as Access } from './access-simple'
+
 import { InitAccess } from './init-access'
-import { UserGroup } from './model-user-group'
 import { SignupOpen } from './signup-open'
 import { AuthPassword } from './auth-password'
-import { Codegen } from './service-codegen'
 
 export const appBuilder = (express, options) => {
   if (!express) {
@@ -77,6 +82,7 @@ export const appBuilder = (express, options) => {
       app.exModular.services.validator = Validator(app)
       app.exModular.routes.builder = RouteBuilder(app)
       app.exModular.services.controller = Controller(app)
+      app.exModular.services.seed = Seed(app)
       app.exModular.auth = Auth(app)
       app.exModular.access = Access(app)
 

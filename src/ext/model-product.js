@@ -50,13 +50,6 @@ export const Product = () => {
         default: ''
       },
       {
-        name: 'inWorkingDays',
-        type: 'boolean',
-        caption: 'Рабочие дни',
-        description: 'Признак того, что количество указано в рабочих днях',
-        default: false
-      },
-      {
         name: 'comments',
         type: 'text',
         caption: 'Примечания',

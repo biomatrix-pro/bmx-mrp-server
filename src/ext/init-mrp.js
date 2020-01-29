@@ -2,6 +2,8 @@ export const deployGoodCarRent = 'ba59f20d-7d3b-462c-9e6e-00f24b8bdd7e'
 export const deployBetaGoodCarRent = 'a26b55fa-d7e3-4e1f-83a0-d14993ed75e0'
 
 export const InitMrp = (app) => () => {
+  return app.exModular.services.seed('Product', 'product.json')
+  /*
   return Promise.resolve()
     .then(() => app.exModular.models.Product.count())
     .then((count) => {
@@ -27,4 +29,5 @@ export const InitMrp = (app) => () => {
     .catch((e) => {
       throw e
     })
+   */
 }

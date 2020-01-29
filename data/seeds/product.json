@@ -1,0 +1,10 @@
+[
+  {
+    "id": "bmx-fl",
+    "caption": "Biomatrix",
+    "unit": "фл 6мл",
+    "qntMin": 1000.0,
+    "qntStep": 100,
+    "comments": "Biomatrix, флаконы 6мл"
+  }
+]
