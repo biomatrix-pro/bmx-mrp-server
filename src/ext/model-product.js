@@ -3,11 +3,12 @@ import uuid from 'uuid/v4'
 export const Product = () => {
   return {
     name: 'Product',
-    priority: 0,
     props: [
       {
         name: 'id',
         type: 'id',
+        caption: 'Id',
+        description: 'Идентификатор',
         format: 'uuid',
         default: () => uuid()
       },

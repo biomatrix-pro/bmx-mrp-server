@@ -11,11 +11,12 @@ export const ProductStockType = {
 export const ProductStock = () => {
   return {
     name: 'ProductStock',
-    priority: 0,
     props: [
       {
         name: 'id',
         type: 'id',
+        caption: 'Id',
+        description: 'Идентификатор',
         format: 'uuid',
         default: () => uuid()
       },

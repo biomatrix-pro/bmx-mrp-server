@@ -3,11 +3,12 @@ import uuid from 'uuid/v4'
 export const Resource = () => {
   return {
     name: 'Resource',
-    priority: 0,
     props: [
       {
         name: 'id',
         type: 'id',
+        caption: 'Id',
+        description: 'Идентификатор',
         format: 'uuid',
         default: () => uuid()
       },

@@ -8,14 +8,15 @@ export const ResourceStockType = {
   used: { value: 4, caption: 'used' }
 }
 
-export const ProductStock = () => {
+export const ResourceStock = () => {
   return {
-    name: 'ProductStock',
-    priority: 0,
+    name: 'ResourceStock',
     props: [
       {
         name: 'id',
         type: 'id',
+        caption: 'Id',
+        description: 'Идентификатор',
         format: 'uuid',
         default: () => uuid()
       },
@@ -35,18 +36,23 @@ export const ProductStock = () => {
         name: 'resourceId',
         type: 'ref',
         caption: 'Ресурс',
+        description: 'Ресурс, движение которого регистрируется',
         model: 'Resource',
         default: null
       },
       {
         name: 'date',
         type: 'datetime',
+        caption: 'Дата',
+        description: 'Дата операции с ресурсом',
         format: 'DD/MM/YYYY',
         default: () => Date.now()
       },
       {
         name: 'qnt',
         type: 'decimal',
+        caption: 'Количество',
+        description: 'Количество ресурса, которое регистрируется',
         precision: 12,
         scale: 2,
         default: 0
@@ -54,6 +60,8 @@ export const ProductStock = () => {
       {
         name: 'price',
         type: 'decimal',
+        caption: 'Цена',
+        description: 'Цена ресурса по регистрируемой операции',
         precision: 12,
         scale: 2,
         default: 0
@@ -62,6 +70,7 @@ export const ProductStock = () => {
         name: 'vendorId',
         type: 'ref',
         caption: 'Поставщик',
+        description: 'Поставщик (если применимо)',
         model: 'Vendor',
         default: null
       },
