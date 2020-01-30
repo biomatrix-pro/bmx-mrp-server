@@ -1,0 +1,62 @@
+[
+  {
+    "id": "1",
+    "stageId": "p-pb-s1",
+    "resourceId": "a-m",
+    "qnt": 9
+  },
+  {
+    "id": "2",
+    "stageId": "p-pb-s1",
+    "resourceId": "pg",
+    "qnt": 9
+  },
+  {
+    "id": "",
+    "stageId": "",
+    "resourceId": "",
+    "qnt": 0
+  },
+  {
+    "id": "",
+    "stageId": "",
+    "resourceId": "",
+    "qnt": 0
+  },
+  {
+    "id": "",
+    "stageId": "",
+    "resourceId": "",
+    "qnt": 0
+  },
+  {
+    "id": "",
+    "stageId": "",
+    "resourceId": "",
+    "qnt": 0
+  },
+  {
+    "id": "",
+    "stageId": "",
+    "resourceId": "",
+    "qnt": 0
+  },
+  {
+    "id": "",
+    "stageId": "",
+    "resourceId": "",
+    "qnt": 0
+  },
+  {
+    "id": "",
+    "stageId": "",
+    "resourceId": "",
+    "qnt": 0
+  },
+  {
+    "id": "",
+    "stageId": "",
+    "resourceId": "",
+    "qnt": 0
+  }
+]

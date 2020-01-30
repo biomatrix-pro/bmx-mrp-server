@@ -32,8 +32,8 @@ export const StageResource = () => {
         name: 'qnt',
         type: 'decimal',
         caption: 'Количество',
-        description: 'Количество потребляемого ресурса',
-        precision: 12,
+        description: 'Количество потребляемого ресурса для выпуска количества продукции, указанного как базовое в этапе',
+        precision: 14,
         scale: 4,
         default: 0
       }

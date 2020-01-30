@@ -1,10 +1,34 @@
 [
   {
     "id": "bmx-fl",
-    "caption": "Biomatrix",
+    "caption": "Biomatrix гель",
     "unit": "фл 6мл",
     "qntMin": 1000.0,
     "qntStep": 100,
-    "comments": "Biomatrix, флаконы 6мл"
+    "comments": "Biomatrix гель, флаконы 6мл"
+  },
+  {
+    "id": "bmx-am",
+    "caption": "Biomatrix гель",
+    "unit": "ам 2мл",
+    "qntMin": 1000.0,
+    "qntStep": 100,
+    "comments": "Biomatrix гель, ампулы 2мл"
+  },
+  {
+    "id": "p-pb",
+    "caption": "Пробио пилинг",
+    "unit": "фл 30мл",
+    "qntMin": 0,
+    "qntStep": 1,
+    "comments": "Biomatrix, ПРОБИО пилинг, флакон 30мл"
+  },
+  {
+    "id": "p-az",
+    "caption": "Азелаиновый пилинг",
+    "unit": "фл 30мл",
+    "qntMin": 0,
+    "qntStep": 1,
+    "comments": "Biomatrix, Азелаиновый пилинг"
   }
 ]

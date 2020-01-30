@@ -1,0 +1,12 @@
+[
+  {
+    "id": "p-pb-s1",
+    "order": 1,
+    "productId": "p-pb",
+    "caption": "Производство Пробио пилинга, этап 1",
+    "duration": 20,
+    "inWorkingDays": true,
+    "baseQnt": 1000,
+    "comments": ""
+  }
+]

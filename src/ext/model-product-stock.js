@@ -21,23 +21,10 @@ export const ProductStock = () => {
         default: () => uuid()
       },
       {
-        name: 'caption',
-        type: 'text',
-        caption: 'Описание',
-        format: 'text',
-        default: ''
-      },
-      {
         name: 'date',
         type: 'datetime',
         format: 'DD/MM/YYYY',
         default: () => Date.now()
-      },
-      {
-        name: 'productId',
-        type: 'ref',
-        model: 'Product',
-        default: null
       },
       {
         name: 'type',
@@ -50,6 +37,19 @@ export const ProductStock = () => {
           ProductStockType.sales
         ],
         default: ProductStockType.unknown.value
+      },
+      {
+        name: 'caption',
+        type: 'text',
+        caption: 'Описание',
+        format: 'text',
+        default: ''
+      },
+      {
+        name: 'productId',
+        type: 'ref',
+        model: 'Product',
+        default: null
       },
       {
         name: 'qnt',

@@ -56,6 +56,16 @@ export const Stage = () => {
         default: false
       },
       {
+        name: 'baseQnt',
+        type: 'decimal',
+        caption: 'База для нормы',
+        description: 'Базовое количество продукции в производстве для указания норм расхода',
+        format: '',
+        precision: 12,
+        scale: 2,
+        default: 1000.0
+      },
+      {
         name: 'comments',
         type: 'text',
         caption: 'Примечания',
