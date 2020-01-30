@@ -1,7 +1,7 @@
 import uuid from 'uuid/v4'
 
-export const Plan = () => {
-  return {
+export const Plan = (app) => {
+  const aPlan = {
     name: 'Plan',
     props: [
       {
@@ -46,6 +46,24 @@ export const Plan = () => {
         scale: 2,
         default: ''
       }
-    ]
+    ],
+
+    processAll: () => {
+      return aPlan.findAll()
+        .then((items) =>
+          app.exModular.services.serial(items.map((item) => () => aPlan.process(item.id)))
+        )
+        .catch((e) => { throw e })
+    },
+
+    process: (planId) => {
+      return Promise.resolve()
+        .then(() => aPlan.findById(planId))
+        .then((plan) => {
+          console.log('Processing plan:')
+          console.log(plan)
+        })
+    }
   }
+  return aPlan
 }

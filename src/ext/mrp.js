@@ -34,5 +34,45 @@ export const Mrp = (app, opt) => {
   app.exModular.initAdd(InitUsers(app))
   app.exModular.initAdd(InitMrp(app))
 
+  const extractPlanId = (req, res, next) => {
+    if (req.params.id) {
+      req.planId = req.params.id
+    } else {
+      next(Error('Plan id not found'))
+    }
+    next()
+  }
+
+  const processPlan = (req, res) => {
+    if (!req.planId) {
+      throw Error('No req.planId found')
+    }
+    return app.exModular.models.Plan.process(req.planId)
+      .then(() => res.sendStatus(200))
+
+  }
+
+  const processAllPlans = (req, res) => {
+    return app.exModular.models.Plan.processAll()
+      .then(() => res.sendStatus(200))
+  }
+
+  app.exModular.routes.Add({
+    method: 'GET',
+    name: 'processPlan',
+    description: 'Process plan',
+    path: '/plan/:id/process',
+    validate: extractPlanId,
+    handler: processPlan
+  })
+
+  app.exModular.routes.Add({
+    method: 'GET',
+    name: 'processAllPlans',
+    description: 'Process all plans',
+    path: '/plan/process',
+    handler: processAllPlans
+  })
+
   return app
 }
