@@ -37,7 +37,7 @@ export const processBeforeSaveToStorage = (Model, item) => {
       Model.key = prop.name
     }
     if (item[prop.name] && prop.type === 'datetime') {
-      aItem[prop.name] = moment(item[prop.name]).toDate()
+      aItem[prop.name] = moment.utc(item[prop.name]).toDate()
     }
     if (prop.type === 'enum') {
       // ensure enum values are in range:
@@ -125,7 +125,7 @@ export const processAfterLoadFromStorage = (Model, item) => {
       }
     }
     if (item[key] && prop.type === 'datetime') {
-      aItem[key] = moment(item[key]).toDate()
+      aItem[key] = moment.utc(item[key]).toDate()
     }
     if (prop.type === 'calculated') {
       if (prop.getter && (typeof prop.getter === 'function')) {
