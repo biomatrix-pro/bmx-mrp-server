@@ -108,7 +108,7 @@ export const exModular = (app) => {
   }
 
   ex.initAll = () =>
-    Promise.all(ex.init.map((item) => item()))
+    ex.services.serial(ex.init)
       .catch((e) => { throw e })
 
   ex.routes.Add = (routes) => {

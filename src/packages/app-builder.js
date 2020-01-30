@@ -15,6 +15,7 @@ import { RouteBuilder } from './route-builder'
 import { Controller } from './service-controller'
 import { Codegen } from './service-codegen'
 import { Seed } from './sevice-seed'
+import { Serial } from './service-serial'
 
 import { User } from './model-user'
 import { UserGroup } from './model-user-group'
@@ -83,6 +84,7 @@ export const appBuilder = (express, options) => {
       app.exModular.routes.builder = RouteBuilder(app)
       app.exModular.services.controller = Controller(app)
       app.exModular.services.seed = Seed(app)
+      app.exModular.services.serial = Serial(app)
       app.exModular.auth = Auth(app)
       app.exModular.access = Access(app)
 
