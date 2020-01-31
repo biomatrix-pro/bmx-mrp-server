@@ -1,4 +1,4 @@
-import { Plan } from './model-plan'
+import { PlanItem } from './model-plan-item'
 import { Product } from './model-product'
 import { ProductStock } from './model-product-stock'
 import { Resource } from './model-resource'
@@ -22,7 +22,7 @@ export const Mrp = (app, opt) => {
     ]
   })
 
-  app.exModular.modelAdd(Plan(app))
+  app.exModular.modelAdd(PlanItem(app))
   app.exModular.modelAdd(Product(app))
   app.exModular.modelAdd(ProductStock(app))
   app.exModular.modelAdd(Resource(app))
@@ -38,7 +38,7 @@ export const Mrp = (app, opt) => {
     if (req.params.id) {
       req.planId = req.params.id
     } else {
-      next(Error('Plan id not found'))
+      next(Error('PlanItem id not found'))
     }
     next()
   }
