@@ -214,6 +214,8 @@ export default (app) => {
     name: 'KNEX-Generic',
 
     modelFromSchema: (Model) => {
+      const modelMethods = []
+
       // process refs:
       const refsProps = _.filter(Model.props, { type: 'refs' })
       refsProps.map((prop) => {
@@ -223,27 +225,31 @@ export default (app) => {
         const methodCount = `${prop.name}Count`
 
         // define methods:
-        Model[methodAdd] = Model.storage.refAdd(Model, prop)
-        Model[methodRemove] = Model.storage.refRemove(Model, prop)
-        Model[methodClear] = Model.storage.refClear(Model, prop)
-        Model[methodCount] = Model.storage.refCount(Model, prop)
+        modelMethods.push({ name: methodAdd, handler: Model.storage.refAdd(Model, prop) })
+        modelMethods.push({ name: methodRemove, handler: Model.storage.refRemove(Model, prop) })
+        modelMethods.push({ name: methodClear, handler: Model.storage.refClear(Model, prop) })
+        modelMethods.push({ name: methodCount, handler: Model.storage.refCount(Model, prop) })
       })
 
-      return _.assign(Model, {
-        dataInit: Model.storage.dataInit(Model),
-        dataClear: Model.storage.dataClear(Model),
-        schemaInit: Model.storage.schemaInit(Model),
-        schemaClear: Model.storage.schemaClear(Model),
-        refsInit: Model.storage.refsInit(Model),
-        refsClear: Model.storage.refsClear(Model),
-        findById: Model.storage.findById(Model),
-        findOne: Model.storage.findOne(Model),
-        findAll: Model.storage.findAll(Model),
-        count: Model.storage.count(Model),
-        removeById: Model.storage.removeById(Model),
-        removeAll: Model.storage.removeAll(Model),
-        create: Model.storage.create(Model),
-        update: Model.storage.update(Model)
+      modelMethods.push({ name: 'dataInit', handler: Model.storage.dataInit(Model) })
+      modelMethods.push({ name: 'dataClear', handler: Model.storage.dataClear(Model) })
+      modelMethods.push({ name: 'schemaInit', handler: Model.storage.schemaInit(Model) })
+      modelMethods.push({ name: 'schemaClear', handler: Model.storage.schemaClear(Model) })
+      modelMethods.push({ name: 'refsInit', handler: Model.storage.refsInit(Model) })
+      modelMethods.push({ name: 'refsClear', handler: Model.storage.refsClear(Model) })
+      modelMethods.push({ name: 'findById', handler: Model.storage.findById(Model) })
+      modelMethods.push({ name: 'findOne', handler: Model.storage.findOne(Model) })
+      modelMethods.push({ name: 'findAll', handler: Model.storage.findAll(Model) })
+      modelMethods.push({ name: 'count', handler: Model.storage.count(Model) })
+      modelMethods.push({ name: 'removeById', handler: Model.storage.removeById(Model) })
+      modelMethods.push({ name: 'removeAll', handler: Model.storage.removeAll(Model) })
+      modelMethods.push({ name: 'create', handler: Model.storage.create(Model) })
+      modelMethods.push({ name: 'update', handler: Model.storage.update(Model) })
+
+      modelMethods.map((method) => {
+        if (!Model[method.name]) {
+          Model[method.name] = method.handler
+        }
       })
     },
 
