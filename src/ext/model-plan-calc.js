@@ -1,11 +1,7 @@
 import uuid from 'uuid/v4'
 
 export const PlanCalc = (app) => {
-  const processPlan = (item) => {
-
-  }
-
-  const aPlan = {
+  const Model = {
     name: 'PlanCalc',
     description: 'Калькуляция плана',
     props: [
@@ -49,24 +45,54 @@ export const PlanCalc = (app) => {
         size: 127,
         default: ''
       }
-    ],
-
-    processAll: () => {
-      return aPlan.findAll()
-        .then((items) =>
-          app.exModular.services.serial(items.map((item) => () => aPlan.process(item.id)))
-        )
-        .catch((e) => { throw e })
-    },
-
-    process: (planId) => {
-      return Promise.resolve()
-        .then(() => aPlan.findById(planId))
-        .then((plan) => {
-          console.log('Processing plan:')
-          console.log(plan)
-        })
-    }
+    ]
   }
-  return aPlan
+
+  Model._create = app.exModular.storages.default.create(Model)
+
+  Model.create = (aPlan) => {
+    console.log('New plan:')
+    console.log(aPlan)
+
+    // data objects:
+    const Plan = app.exModular.models.Plan
+    const PlanItem = app.exModular.models.PlanItem
+
+    // databags:
+    let planCalc = null
+    let sortedPlanItem = null
+
+    return Model._create(aPlan)
+      .then((_planCalc) => {
+        planCalc = _planCalc
+        // update status
+        _planCalc.status = 'Started'
+        _planCalc.createdAt = Date.now()
+        console.log('plan started, plan calc:')
+        console.log(_planCalc)
+        return Model.update(_planCalc)
+      })
+      .then((_planCalc) => {
+        planCalc = _planCalc // updated plan
+        // алгоритм обработки планов такой:
+        /*
+        Получаем список элементов планов - сортирован по датам, по типам продукции
+         */
+        return PlanItem.findAll({
+          orderBy: [
+            { column: 'date', order: 'asc' },
+            { column: 'productId', order: 'asc'}
+          ]
+        })
+      })
+      .then((_sortedPlanItem) => {
+        sortedPlanItem = _sortedPlanItem
+        console.log('_sortedPlanItem')
+        console.log(_sortedPlanItem)
+        return planCalc
+      })
+      .catch((e) => { throw e })
+  }
+
+  return Model
 }

@@ -7,6 +7,10 @@ export const Validator = (app) => {
 
   const validateData = (req, res, next) => {
     try {
+      const errors = validationResult(req)
+      if (!errors.isEmpty()) {
+        next(new app.exModular.services.errors.ServerInvalidParams({ errors: errors.array() }))
+      }
       req.data = matchedData(req)
       next()
     } catch (e) {
@@ -18,11 +22,13 @@ export const Validator = (app) => {
     const validations = []
     Model.props.map((prop) => {
       if (prop.type === 'text') {
-        validations.push(body([prop.name]).isString().withMessage(`${Model.name}.${prop.name} should be string`))
+        validations.push(body([prop.name]).optional().isString().withMessage(`${Model.name}.${prop.name} should be string`))
       } else if (prop.type === 'id' && (options && !options.optionalId)) {
         validations.push(body([prop.name]).optional().isString().withMessage(`${Model.name}.${prop.name} should be string UUID`))
       } else if (prop.type === 'refs') {
         validations.push(body([prop.name]).isArray({ min: 0 }).withMessage('Users should be specified as array'))
+      } else if (prop.type === 'ref') {
+        validations.push(body([prop.name]).optional().isString().withMessage(`${Model.name}.${prop.name} should be string UUID`))
       }
     })
     validations.push(validateData)

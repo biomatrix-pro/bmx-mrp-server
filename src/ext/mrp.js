@@ -1,4 +1,6 @@
+import { Plan } from './model-plan'
 import { PlanItem } from './model-plan-item'
+import { PlanCalc } from './model-plan-calc'
 import { Product } from './model-product'
 import { ProductStock } from './model-product-stock'
 import { Resource } from './model-resource'
@@ -22,7 +24,9 @@ export const Mrp = (app, opt) => {
     ]
   })
 
+  app.exModular.modelAdd(Plan(app))
   app.exModular.modelAdd(PlanItem(app))
+  app.exModular.modelAdd(PlanCalc(app))
   app.exModular.modelAdd(Product(app))
   app.exModular.modelAdd(ProductStock(app))
   app.exModular.modelAdd(Resource(app))
@@ -49,7 +53,6 @@ export const Mrp = (app, opt) => {
     }
     return app.exModular.models.Plan.process(req.planId)
       .then(() => res.sendStatus(200))
-
   }
 
   const processAllPlans = (req, res) => {

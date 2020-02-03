@@ -4,6 +4,7 @@ export const deployBetaGoodCarRent = 'a26b55fa-d7e3-4e1f-83a0-d14993ed75e0'
 export const InitMrp = (app) => () => {
   return app.exModular.services.seed('Product', 'product.json')
     .then(() => app.exModular.services.seed('Plan', 'plan.json', { upsert: true }))
+    .then(() => app.exModular.services.seed('PlanItem', 'plan-item.json', { upsert: true }))
     .then(() => app.exModular.services.seed('ProductStock', 'product-stock.json', { upsert: true }))
     .then(() => app.exModular.services.seed('Resource', 'resource.json', { upsert: true }))
     .then(() => app.exModular.services.seed('Stage', 'stage.json', { upsert: true }))

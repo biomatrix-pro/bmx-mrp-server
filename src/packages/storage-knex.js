@@ -251,6 +251,7 @@ export default (app) => {
           Model[method.name] = method.handler
         }
       })
+      return Model
     },
 
     mapPropToKnexTable: (prop, table) => {
