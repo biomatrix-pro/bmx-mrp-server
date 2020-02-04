@@ -9,7 +9,7 @@ export const ProductStockType = {
 }
 
 export const ProductStock = () => {
-  return {
+  const Model = {
     name: 'ProductStock',
     props: [
       {
@@ -64,7 +64,33 @@ export const ProductStock = () => {
         precision: 12,
         scale: 2,
         default: 0
+      },
+      {
+        name: 'planCalcId',
+        type: 'ref',
+        model: 'PlanCalc',
+        description: 'Калькуляция к которой относится эта запись',
+        default: null
       }
     ]
   }
+  Model.processProd = (productStockId, planCalcId) => {
+    const ProductStock = app.exModular.models.ProductStock
+    const Stages = app.exModular.models.Stages
+    let productStock = null
+    let stages = null
+
+    return ProductStock.findById(productStockId)
+      .then((_productStock) => {
+        productStock = _productStock
+        // для каждой партии продукции в производство: получить этапы производства (в порядке следования очередности)
+        // для данного вида продукции:
+        return Stages.findAll({ where: { productId: productStock.productId } })
+      })
+      .then((_stages) => {
+        stages = _stages
+        // получить список ресурсов, требуемых для данного этапа производства
+      })
+  }
+  return Model
 }

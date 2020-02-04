@@ -1,4 +1,5 @@
 import uuid from 'uuid/v4'
+import { ProductStockType } from './model-product-stock'
 
 export const PlanCalc = (app) => {
   const Model = {
@@ -55,7 +56,8 @@ export const PlanCalc = (app) => {
     console.log(aPlan)
 
     // data objects:
-    const Plan = app.exModular.models.Plan
+    // const Plan = app.exModular.models.Plan
+    const ProductStock = app.exModular.models.ProductStock
     const PlanItem = app.exModular.models.PlanItem
 
     // databags:
@@ -74,6 +76,23 @@ export const PlanCalc = (app) => {
       })
       .then((_planCalc) => {
         planCalc = _planCalc // updated plan
+        // стадия А2.3: обрабатываем продукцию в производстве
+
+        return ProductStock.findAll({
+          orderBy: [
+            { column: 'date', order: 'asc' }
+          ],
+          where: {
+            type: ProductStockType.inProd.value
+          }
+        })
+      })
+      .then((_inProd) => {
+        // Получили все партии продукции в производстве на начало планирования. Требуется списать
+        // ресурсы и оприходовать результаты.
+        return app.exModular.services.serial(_inProd.map((item) => () => ProductStock.processProd(item.id, planCalc.id)))
+      })
+      .then(() => {
         // алгоритм обработки планов такой:
         /*
         Получаем список элементов планов - сортирован по датам, по типам продукции
