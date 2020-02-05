@@ -52,6 +52,9 @@ export const PlanCalc = (app) => {
   Model._create = app.exModular.storages.default.create(Model)
 
   Model.create = (aPlan) => {
+    const MRP = app.exModular.services.MRP
+    const Serial = app.exModular.services.serial
+
     console.log('New plan:')
     console.log(aPlan)
 
@@ -90,7 +93,12 @@ export const PlanCalc = (app) => {
       .then((_inProd) => {
         // Получили все партии продукции в производстве на начало планирования. Требуется списать
         // ресурсы и оприходовать результаты.
-        return app.exModular.services.serial(_inProd.map((item) => () => ProductStock.processProd(item.id, planCalc.id)))
+        if (_inProd) {
+          // если есть партии в производстве - обработать партии в производстве
+          return Serial(_inProd.map((item) => () => MRP.processInProd(item.id, planCalc.id)))
+        } else {
+          return {}
+        }
       })
       .then(() => {
         // алгоритм обработки планов такой:

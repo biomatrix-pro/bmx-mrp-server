@@ -12,51 +12,15 @@
     "qnt": 9
   },
   {
-    "id": "",
-    "stageId": "",
-    "resourceId": "",
-    "qnt": 0
+    "id": "3",
+    "stageId": "b-am-s1",
+    "resourceId": "gk",
+    "qnt": 11
   },
   {
-    "id": "",
-    "stageId": "",
-    "resourceId": "",
-    "qnt": 0
-  },
-  {
-    "id": "",
-    "stageId": "",
-    "resourceId": "",
-    "qnt": 0
-  },
-  {
-    "id": "",
-    "stageId": "",
-    "resourceId": "",
-    "qnt": 0
-  },
-  {
-    "id": "",
-    "stageId": "",
-    "resourceId": "",
-    "qnt": 0
-  },
-  {
-    "id": "",
-    "stageId": "",
-    "resourceId": "",
-    "qnt": 0
-  },
-  {
-    "id": "",
-    "stageId": "",
-    "resourceId": "",
-    "qnt": 0
-  },
-  {
-    "id": "",
-    "stageId": "",
-    "resourceId": "",
-    "qnt": 0
+    "id": "4",
+    "stageId": "b-am-s2",
+    "resourceId": "k-b-am",
+    "qnt": 1002
   }
 ]

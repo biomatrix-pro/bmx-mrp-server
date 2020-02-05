@@ -8,8 +8,8 @@ export const ResourceStockType = {
   used: { value: 4, caption: 'used' }
 }
 
-export const ResourceStock = () => {
-  return {
+export const ResourceStock = (app) => {
+  const Model = {
     name: 'ResourceStock',
     props: [
       {
@@ -80,7 +80,24 @@ export const ResourceStock = () => {
         caption: 'Описание',
         format: 'text',
         default: ''
+      },
+      {
+        name: 'planCalcId',
+        type: 'ref',
+        caption: 'Калькуляция',
+        description: 'Калькуляция, в рамках которой добавлена запись о движении ресурсов',
+        model: 'PlanCalc',
+        default: null
       }
     ]
   }
+  Model.resourceQntForDate = (resId, date) => {
+    const knex = Model.storage.db
+
+    return knex(Model.name)
+      .sum({ q: ['qnt'] })
+      .where('date', '<', date)
+      .andWhere({ resourceId: resId })
+  }
+  return Model
 }

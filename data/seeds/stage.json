@@ -8,5 +8,25 @@
     "inWorkingDays": true,
     "baseQnt": 1000,
     "comments": ""
+  },
+  {
+    "id": "b-am-s1",
+    "order": 1,
+    "productId": "b-am",
+    "caption": "Biomatrix, ампулы, этап 1",
+    "duration": 10,
+    "inWorkingDays": true,
+    "baseQnt": 1000,
+    "comments": ""
+  },
+  {
+    "id": "b-am-s2",
+    "order": 2,
+    "productId": "b-am",
+    "caption": "Biomatrix, ампулы, этап 2",
+    "duration": 5,
+    "inWorkingDays": true,
+    "baseQnt": 1000,
+    "comments": ""
   }
 ]

@@ -1,0 +1,14 @@
+[
+  {
+    "id": "conti",
+    "caption": "ContiPro sarl",
+    "resourceId": "gk",
+    "date": "2018-01-01",
+    "unit": "gr",
+    "orderMin": 500,
+    "orderStep": 500,
+    "inWorkingDays": true,
+    "orderDuration": 25,
+    "comments": ""
+  }
+]

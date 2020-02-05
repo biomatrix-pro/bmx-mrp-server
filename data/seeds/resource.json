@@ -88,5 +88,17 @@
     "caption": "Этикетка ( Пилинг Probio 30 мл)",
     "unit": "шт",
     "minStock": 0
+  },
+  {
+    "id": "gk",
+    "caption": "Гиалуроновая кислота",
+    "unit": "гр",
+    "minStock": 100
+  },
+  {
+    "id": "k-b-am",
+    "caption": "Коробка для Biomatrix в ампулах",
+    "unit": "шт",
+    "minStock": 0
   }
 ]

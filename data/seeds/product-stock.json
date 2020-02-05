@@ -21,9 +21,17 @@
     "id": "3",
     "date": "2020-01-27",
     "type": 1,
-    "productId": "bmx-am",
+    "productId": "b-am",
     "caption": "",
     "qnt": 13254,
     "price": 180.00
+  },
+  {
+    "id": "4",
+    "date": "2019-12-10",
+    "type": 2,
+    "productId": "b-am",
+    "caption": "В производстве - серия",
+    "qnt": 2100
   }
 ]

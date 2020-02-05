@@ -1,6 +1,6 @@
 [
   {
-    "id": "bmx-fl",
+    "id": "b-fl",
     "caption": "Biomatrix гель",
     "unit": "фл 6мл",
     "qntMin": 1000.0,
@@ -8,7 +8,7 @@
     "comments": "Biomatrix гель, флаконы 6мл"
   },
   {
-    "id": "bmx-am",
+    "id": "b-am",
     "caption": "Biomatrix гель",
     "unit": "ам 2мл",
     "qntMin": 1000.0,

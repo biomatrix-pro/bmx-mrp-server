@@ -8,6 +8,9 @@ export const InitMrp = (app) => () => {
     .then(() => app.exModular.services.seed('ProductStock', 'product-stock.json', { upsert: true }))
     .then(() => app.exModular.services.seed('Resource', 'resource.json', { upsert: true }))
     .then(() => app.exModular.services.seed('Stage', 'stage.json', { upsert: true }))
+    .then(() => app.exModular.services.seed('Vendor', 'vendor.json', { upsert: true }))
+    .then(() => app.exModular.services.seed('StageResource', 'stage-resource.json', { upsert: true }))
+    .then(() => app.exModular.services.seed('ResourceStock', 'resource-stock.json', { upsert: true }))
   /*
   return Promise.resolve()
     .then(() => app.exModular.models.Product.count())
