@@ -1,4 +1,5 @@
 import uuid from 'uuid/v4'
+import moment from 'moment-business-days'
 
 export const ResourceStockType = {
   unknown: { value: 0, caption: '(unknown)' },
@@ -91,13 +92,27 @@ export const ResourceStock = (app) => {
       }
     ]
   }
+
+  /**
+   * resourceQntForDate: получить количество указанного ресурса на указанный момент времени
+   * @param resId (-> Resource.id) идентификатор ресурса
+   * @param date (Date | Moment) указанный момент времени
+   * @return {Promise<unknown>} возвращает промис, разрешающийся количеством ресурса
+   */
   Model.resourceQntForDate = (resId, date) => {
     const knex = Model.storage.db
+    const aDate = moment(date)
 
     return knex(Model.name)
-      .sum({ q: ['qnt'] })
-      .where('date', '<', date)
+      .sum({ sq: ['qnt'] })
+      .where('date', '<', aDate.format('YYYY-DD-MM'))
       .andWhere({ resourceId: resId })
+      .then((res) => {
+        if (!res || !Array.isArray(res) || !res[0].sq) {
+          return 0
+        }
+        return res[0].sq
+      })
   }
   return Model
 }

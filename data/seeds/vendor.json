@@ -10,5 +10,17 @@
     "inWorkingDays": true,
     "orderDuration": 25,
     "comments": ""
+  },
+  {
+    "id": "preprint",
+    "caption": "преПринт ООО",
+    "resourceId": "k-b-am",
+    "date": "2019-01-01",
+    "unit": "шт",
+    "orderMin": 1000,
+    "orderStep": 500,
+    "inWorkingDays": true,
+    "orderDuration": 20,
+    "comments": ""
   }
 ]

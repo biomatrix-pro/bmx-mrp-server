@@ -8,5 +8,15 @@
     "price": 11200,
     "vendorId": "conti",
     "caption": "Нач ост ГК от Конти (с сентября 2019)"
+  },
+  {
+    "id": "2",
+    "type": 1,
+    "resourceId": "k-b-am",
+    "date": "2019-11-30",
+    "qnt": 4000,
+    "price": 156,
+    "vendorId": "preprint",
+    "caption": "Нач ост коробок на B-am от типографии Препринт"
   }
 ]
