@@ -40,7 +40,7 @@ export const MRP = (app) => {
    * processInProd: обработать записи о партиях продукции в производстве (на начало расчета MRP)
    * @param productStockId ( -> ProductStock.id) идентификатор записи о партии продукции отправленной в производство
    * @param planCalcId (-> PlanCalc.id) идентификатор калькуляции в рамках которой будут производится расчёты
-   * @return {Promise<T> | undefined}
+   * @return {Promise<T> | undefined} возвращает промис, разрешающийся в новую запись о произведенной продукции
    */
   MRP.processInProd = (productStockId, planCalcId) => {
     const ProductStock = app.exModular.models.ProductStock
@@ -138,6 +138,67 @@ export const MRP = (app) => {
         }
       })
       .catch((e) => { throw e })
+  }
+
+  MRP.processInTransit = (resourceStockId, planCalcId) => {
+    const PlanItem = app.exModular.models.PlanItem
+    const ResourceStock = app.exModular.models.ResourceStock
+    const Vendor = app.exModular.models.Vendor
+
+    let resourceStock = null
+    // найти запись о партии:
+    return ResourceStock.findById(resourceStockId)
+      .then((_resStock) => {
+        if (!_resStock) {
+          const errMsg = `ResourceStock record with id ${resourceStockId} not found`
+          console.log(`ERROR: ${errMsg}`)
+          throw Error(errMsg)
+        }
+        resourceStock = _resStock
+        // для каждой записи о транзите ресурсов - найти поставщика и получить сведения о длительности доставки
+        return Vendor.findById(resourceStock.vendorId)
+      })
+  }
+  /**
+   * processPlanItem: обработать элемент плана производства
+   * @param planItemId (-> PlanItem.id) идентификатор элемента плана производства
+   * @param planCalcId (-> PlanCalc.id) идентификатор калькуляции, в рамках которой делается обработка
+   * @return {Promise<T> | undefined}
+   */
+  MRP.processPlanItem = (planItemId, planCalcId) => {
+    const PlanItem = app.exModular.models.PlanItem
+    const ProductStock = app.exModular.models.ProductStock
+    const Stage = app.exModular.models.Stage
+    const StageResource = app.exModular.models.StageResource
+    const ResourceStock = app.exModular.models.ResourceStock
+
+    const Serial = app.exModular.services.serial
+
+    // А2.4. Берем текущую запись в плане производства
+    let planItem = null
+    return PlanItem.findById(planItemId)
+      .then((_planItem) => {
+        if (!_planItem) {
+          const errMsg = `PlanItem with id ${planItemId} not found`
+          console.log(`ERROR: ${errMsg}`)
+          throw Error(errMsg)
+        }
+        planItem = _planItem
+
+        // получаем остатки продукции на дату планирования:
+        console.log('get qntForDate for planItem:')
+        return ProductStock.qntForDate(planItem.productId, planItem.date)
+      })
+      .then((_qntForDate) => {
+        if (!_qntForDate) {
+          const errMsg = `Failed to get qntForDate for planItem ${planItemId} prodId ${planItem.productId}`
+          console.log(`ERROR: ${errMsg}`)
+          throw Error(errMsg)
+        }
+        console.log(_qntForDate)
+        // находим сведения обо всех этапах производства нужной продукции
+      })
+
   }
   return MRP
 }

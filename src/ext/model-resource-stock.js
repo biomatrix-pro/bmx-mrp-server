@@ -97,9 +97,17 @@ export const ResourceStock = (app) => {
    * resourceQntForDate: получить количество указанного ресурса на указанный момент времени
    * @param resId (-> Resource.id) идентификатор ресурса
    * @param date (Date | Moment) указанный момент времени
+   * @param types (Array, optional) типы записей, которые следует учитывать
    * @return {Promise<unknown>} возвращает промис, разрешающийся количеством ресурса
    */
-  Model.resourceQntForDate = (resId, date) => {
+  Model.resourceQntForDate = (resId, date, types) => {
+    if (!types) {
+      types = [
+        ResourceStockType.initial.value,
+        ResourceStockType.ordered.value,
+        ResourceStockType.used.value
+      ]
+    }
     const knex = Model.storage.db
     const aDate = moment(date)
 

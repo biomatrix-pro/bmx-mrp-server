@@ -1,4 +1,5 @@
 import uuid from 'uuid/v4'
+import moment from 'moment-business-days'
 
 export const ProductStockType = {
   unknown: { value: 0, caption: '(unknown)' },
@@ -9,7 +10,7 @@ export const ProductStockType = {
 }
 
 export const ProductStock = () => {
-  return {
+  const Model = {
     name: 'ProductStock',
     props: [
       {
@@ -74,4 +75,36 @@ export const ProductStock = () => {
       }
     ]
   }
+
+  /**
+   * qntForDate: получить количество продукции на указанный момент времени
+   * @param prodId (-> Product.id) идентификатор продукции
+   * @param date (Date | Moment) указанный момент времени
+   * @param types (Array) массив типов записей, которые необходимо учитывать
+   * @return {Promise<unknown>} возвращает промис, разрешающийся количеством
+   */
+  Model.qntForDate = (prodId, date, types) => {
+    if (!types) {
+      types = [ProductStockType.initial.value, ProductStockType.prod.value, ProductStockType.sales.value]
+    }
+    if (!Array.isArray(types)) {
+      types = [types]
+    }
+    const knex = Model.storage.db
+    const aDate = moment(date)
+
+    return knex(Model.name)
+      .sum({ sq: ['qnt'] })
+      .whereIn('type', types)
+      .andWhere('date', '<', aDate.format('YYYY-DD-MM'))
+      .andWhere({ productId: prodId })
+      .then((res) => {
+        if (!res || !Array.isArray(res) || !res[0].sq) {
+          return 0
+        }
+        return res[0].sq
+      })
+      .catch((e) => { throw e })
+  }
+  return Model
 }

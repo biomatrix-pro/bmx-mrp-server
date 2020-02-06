@@ -112,11 +112,11 @@ export const PlanCalc = (app) => {
           ]
         })
       })
-      .then((_sortedPlanItem) => {
-        sortedPlanItem = _sortedPlanItem
+      .then((_sortedPlanItems) => {
+        sortedPlanItem = _sortedPlanItems
         console.log('_sortedPlanItem')
-        console.log(_sortedPlanItem)
-        return planCalc
+        console.log(_sortedPlanItems)
+        return Serial(_sortedPlanItems.map((item) => () => MRP.processPlanItem(item.id, planCalc.id)))
       })
       .catch((e) => { throw e })
   }
