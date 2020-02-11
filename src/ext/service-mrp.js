@@ -148,7 +148,6 @@ export const MRP = (app) => {
    * @returns {PromiseLike<function(...[*]=)> | Promise<function(...[*]=)> | *}
    */
   MRP.processInTransit = (resourceStockId, planCalcId) => {
-    const PlanItem = app.exModular.models.PlanItem
     const ResourceStock = app.exModular.models.ResourceStock
     const Vendor = app.exModular.models.Vendor
 
@@ -180,7 +179,18 @@ export const MRP = (app) => {
         console.log('orderDuration:')
         console.log(vendor.orderDuration)
 
-        // теперь
+        // теперь необходимо сохранить сведения о поступлении ресурсов на склад в расчётную дату доставки
+        const aDate = MRP.daysAdd(resourceStock.date, vendor.orderDuration, vendor.inWorkingDays)
+        return ResourceStock.create({
+          date: aDate.format('YYYY-MM-DD'),
+          type: ResourceStockType.ordered.value,
+          caption: `inTransfer ${resourceStock.id} delivery finished`,
+          resourceId: resourceStock.resourceId,
+          qnt: resourceStock.qnt,
+          price: resourceStock.price,
+          vendorId: vendor.id,
+          planCalcId
+        })
       })
   }
   /**
@@ -222,7 +232,6 @@ export const MRP = (app) => {
         console.log(_qntForDate)
         // находим сведения обо всех этапах производства нужной продукции
       })
-
   }
   return MRP
 }
