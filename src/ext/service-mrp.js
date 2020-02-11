@@ -140,12 +140,20 @@ export const MRP = (app) => {
       .catch((e) => { throw e })
   }
 
+  /**
+   * Обработать ресурсы в транзите, то есть такие ресурсы, которые на начало планового периода
+   * находились в процессе доставки
+   * @param resourceStockId (-> ResourceStock.id) идентификатор записи в регистре учета остатков ресурсов
+   * @param planCalcId (-> PlanCalc.id) идентификатор калькуляции MRP, с которой связана эта запись
+   * @returns {PromiseLike<function(...[*]=)> | Promise<function(...[*]=)> | *}
+   */
   MRP.processInTransit = (resourceStockId, planCalcId) => {
     const PlanItem = app.exModular.models.PlanItem
     const ResourceStock = app.exModular.models.ResourceStock
     const Vendor = app.exModular.models.Vendor
 
     let resourceStock = null
+    let vendor = null
     // найти запись о партии:
     return ResourceStock.findById(resourceStockId)
       .then((_resStock) => {
@@ -155,8 +163,24 @@ export const MRP = (app) => {
           throw Error(errMsg)
         }
         resourceStock = _resStock
-        // для каждой записи о транзите ресурсов - найти поставщика и получить сведения о длительности доставки
+        // для каждой записи о транзите ресурсов - найти поставщика
         return Vendor.findById(resourceStock.vendorId)
+      })
+      .then((_vendor) => {
+        // проверить - нашли ли поставщика
+        if (!_vendor) {
+          const errMsg = `MRP.processInTransit: vendor id ${resourceStockId} not found`
+          console.log(`ERROR: ${errMsg}`)
+          throw Error(errMsg)
+        }
+        vendor = _vendor
+        console.log('Vendor:')
+        console.log(vendor)
+        // поставщик найден, нужно получить сведения о длительности доставки
+        console.log('orderDuration:')
+        console.log(vendor.orderDuration)
+
+        // теперь
       })
   }
   /**
