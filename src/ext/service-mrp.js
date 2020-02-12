@@ -208,11 +208,6 @@ export const MRP = (app) => {
   MRP.processPlanItem = (planItemId, planCalcId) => {
     const PlanItem = app.exModular.models.PlanItem
     const ProductStock = app.exModular.models.ProductStock
-    const Stage = app.exModular.models.Stage
-    const StageResource = app.exModular.models.StageResource
-    const ResourceStock = app.exModular.models.ResourceStock
-
-    const Serial = app.exModular.services.serial
 
     // А2.4. Берем текущую запись в плане производства
     let planItem = null
@@ -236,8 +231,62 @@ export const MRP = (app) => {
           throw Error(errMsg)
         }
         console.log(_qntForDate)
-        // находим сведения обо всех этапах производства нужной продукции
+        console.log(planItem.qnt)
+
+        // Хватает ли количества продукции на складе для выполнения плана?
+        if (planItem.qnt <= _qntForDate) {
+          // да, продукции хватает - фиксируем плановую отгрузку продукции для продажи
+          return ProductStock.create({
+            date: planItem.date,
+            type: ProductStockType.sales.value,
+            caption: 'Send for sales',
+            productId: planItem.productId,
+            qnt: -planItem.qnt,
+            price: 0,
+            planCalcId
+          })
+        } else {
+          // нет, продукции не хватает. Необходимо запланировать производство продукции и зафиксировать в этом случае выполнение плана:
+          return MRP.planManufacture(planItem.id, _qntForDate)
+            .then(() => {
+              // после запланированного производства партии продукции её должно хватать. На всякий случай проверим это:
+              return ProductStock.qntForDate(planItem.productId, planItem.date)
+            })
+            .then((_newQntForDate) => {
+              if (planItem.qnt <= _newQntForDate) {
+                // всё ок, продукции хватает, фиксируем передачу партии товара в продажи:
+                return ProductStock.create({
+                  date: planItem.date,
+                  type: ProductStockType.sales.value,
+                  caption: 'Send for sales',
+                  productId: planItem.productId,
+                  qnt: -planItem.qnt,
+                  price: 0,
+                  planCalcId
+                })
+              } else {
+                // проблема: продукции должно хватать, но её не хватает! Это ошибка
+                const errMsg = `MRP.processPlanItem: not enought product "${planItem.productId}" qnt after
+                 manufacturing: qntForDate ${_newQntForDate}, need qnt ${planItem.qnt}`
+                console.log(`ERROR: ${errMsg}`)
+                throw Error(errMsg)
+              }
+            })
+            .catch((e) => { throw e })
+        }
       })
+      .catch((e) => { throw e })
+  }
+
+  /**
+   * planManufacture: запланировать производство партии продукции
+   * @param planItemId идентификатор элемента плана, для которого нужно запланировать производство партии продукции
+   * @param qntForDate фактическое количество продукции на складе - оно должно быть меньше требуемого в плане
+   * @return {Promise<void>} возвращаем запись из ProductStock, которая приходует партию продукции из производства
+   */
+  MRP.planManufacture = (planItemId, qntForDate) => {
+    return Promise.resolve()
+      .catch((e) => { throw e })
   }
 
   /**
@@ -267,36 +316,29 @@ export const MRP = (app) => {
           throw Error(errMsg)
         }
 
-        // обработать все партии ресурсов в транзите:
+        // А2.2. Обработать все партии ресурсов в транзите:
         return ResourceStock.findAll({
-          orderBy: [
-            { column: 'date', order: 'asc' }
-          ],
-          where: {
-            type: ResourceStockType.inTransfer.value
-          }
+          orderBy: [{ column: 'date', order: 'asc' }],
+          where: { type: ResourceStockType.inTransfer.value }
         })
       })
       .then((_resourceStock) => {
         if (_resourceStock) {
           // записи о ресурсах в транзите найдены - необходимо их обработать
           return Serial(_resourceStock.map((item) => () => MRP.processInTransfer(item.id, planCalc.id)))
+        } else {
+          return {}
         }
       })
       .then(() => {
-        // стадия А2.3: обрабатываем продукцию в производстве
+        // стадия А2.3: обрабатываем продукцию в производстве. Нужно получить список
+        // партий продукции в производстве
         return ProductStock.findAll({
-          orderBy: [
-            { column: 'date', order: 'asc' }
-          ],
-          where: {
-            type: ProductStockType.inProd.value
-          }
+          orderBy: [{ column: 'date', order: 'asc' }],
+          where: { type: ProductStockType.inProd.value }
         })
       })
       .then((_inProd) => {
-        // Получили все партии продукции в производстве на начало планирования. Требуется списать
-        // ресурсы и оприходовать результаты.
         if (_inProd) {
           // если есть партии в производстве - обработать партии в производстве
           return Serial(_inProd.map((item) => () => MRP.processInProd(item.id, planCalc.id)))
@@ -305,25 +347,22 @@ export const MRP = (app) => {
         }
       })
       .then(() => {
-        // алгоритм обработки планов такой:
-        /*
-        Получаем список элементов планов - сортирован по датам, по типам продукции
-         */
+        // А2.4: обработать записи в таблице планов производства
         return PlanItem.findAll({
           orderBy: [
             { column: 'date', order: 'asc' },
-            { column: 'productId', order: 'asc'}
+            { column: 'productId', order: 'asc' }
           ]
         })
       })
       .then((_sortedPlanItems) => {
+        // получены таблицы отсортированных планов производства, обработать их:
         sortedPlanItem = _sortedPlanItems
         console.log('sortedPlanItem')
         console.log(sortedPlanItem)
         return Serial(_sortedPlanItems.map((item) => () => MRP.processPlanItem(item.id, planCalc.id)))
       })
       .catch((e) => { throw e })
-
   }
 
   return MRP
