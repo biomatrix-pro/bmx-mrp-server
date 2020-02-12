@@ -1,5 +1,6 @@
 import uuid from 'uuid/v4'
-import { ProductStockType } from './model-product-stock'
+
+const packageName = 'Model-PlanCalc'
 
 export const PlanCalc = (app) => {
   const Model = {
@@ -53,19 +54,12 @@ export const PlanCalc = (app) => {
 
   Model.create = (aPlan) => {
     const MRP = app.exModular.services.MRP
-    const Serial = app.exModular.services.serial
 
     console.log('New plan:')
     console.log(aPlan)
 
-    // data objects:
-    // const Plan = app.exModular.models.Plan
-    const ProductStock = app.exModular.models.ProductStock
-    const PlanItem = app.exModular.models.PlanItem
-
     // databags:
     let planCalc = null
-    let sortedPlanItem = null
 
     return Model._create(aPlan)
       .then((_planCalc) => {
@@ -79,48 +73,18 @@ export const PlanCalc = (app) => {
       })
       .then((_planCalc) => {
         planCalc = _planCalc // updated plan
-        // обработать все партии ресурсов в транзите: 
-        // стадия А2.3: обрабатываем продукцию в производстве
-
-        return ProductStock.findAll({
-          orderBy: [
-            { column: 'date', order: 'asc' }
-          ],
-          where: {
-            type: ProductStockType.inProd.value
-          }
-        })
-      })
-      .then((_inProd) => {
-        // Получили все партии продукции в производстве на начало планирования. Требуется списать
-        // ресурсы и оприходовать результаты.
-        if (_inProd) {
-          // если есть партии в производстве - обработать партии в производстве
-          return Serial(_inProd.map((item) => () => MRP.processInProd(item.id, planCalc.id)))
-        } else {
-          return {}
-        }
-      })
-      .then(() => {
-        // алгоритм обработки планов такой:
-        /*
-        Получаем список элементов планов - сортирован по датам, по типам продукции
-         */
-        return PlanItem.findAll({
-          orderBy: [
-            { column: 'date', order: 'asc' },
-            { column: 'productId', order: 'asc'}
-          ]
-        })
-      })
-      .then((_sortedPlanItems) => {
-        sortedPlanItem = _sortedPlanItems
-        console.log('_sortedPlanItem')
-        console.log(_sortedPlanItems)
-        return Serial(_sortedPlanItems.map((item) => () => MRP.processPlanItem(item.id, planCalc.id)))
+        return MRP.processPlanCalc(planCalc.id)
       })
       .catch((e) => { throw e })
   }
 
+  app.exModular.modules.Add({
+    moduleName: packageName,
+    dependency: [
+      'services',
+      'services.MRP',
+      'services.MRP.processPlanCalc'
+    ]
+  })
   return Model
 }

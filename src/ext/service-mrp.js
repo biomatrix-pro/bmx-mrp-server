@@ -147,7 +147,7 @@ export const MRP = (app) => {
    * @param planCalcId (-> PlanCalc.id) идентификатор калькуляции MRP, с которой связана эта запись
    * @returns {PromiseLike<function(...[*]=)> | Promise<function(...[*]=)> | *}
    */
-  MRP.processInTransit = (resourceStockId, planCalcId) => {
+  MRP.processInTransfer = (resourceStockId, planCalcId) => {
     const ResourceStock = app.exModular.models.ResourceStock
     const Vendor = app.exModular.models.Vendor
 
@@ -162,13 +162,19 @@ export const MRP = (app) => {
           throw Error(errMsg)
         }
         resourceStock = _resStock
+        if (resourceStock.type !== ResourceStockType.inTransfer.value) {
+          const errMsg = `MRP.processInTransfer: id ${resourceStockId} is not of "inTransfer" type`
+          console.log(`ERROR: ${errMsg}`)
+          throw Error(errMsg)
+        }
+
         // для каждой записи о транзите ресурсов - найти поставщика
         return Vendor.findById(resourceStock.vendorId)
       })
       .then((_vendor) => {
         // проверить - нашли ли поставщика
         if (!_vendor) {
-          const errMsg = `MRP.processInTransit: vendor id ${resourceStockId} not found`
+          const errMsg = `MRP.processInTransfer: vendor id ${resourceStockId} not found`
           console.log(`ERROR: ${errMsg}`)
           throw Error(errMsg)
         }
@@ -233,5 +239,92 @@ export const MRP = (app) => {
         // находим сведения обо всех этапах производства нужной продукции
       })
   }
+
+  /**
+   * Выполнить калькуляцию MRP
+   * @param planCalcId идентификатор калькуляции
+   * @return {Promise<promiseSerial>}
+   */
+  MRP.processPlanCalc = (planCalcId) => {
+    const PlanCalc = app.exModular.models.PlanCalc
+    const PlanItem = app.exModular.models.PlanItem
+    const ProductStock = app.exModular.models.ProductStock
+    // const Stage = app.exModular.models.Stage
+    // const StageResource = app.exModular.models.StageResource
+    const ResourceStock = app.exModular.models.ResourceStock
+
+    const Serial = app.exModular.services.serial
+
+    let planCalc = null
+    let sortedPlanItem = null
+
+    return PlanCalc.findById(planCalcId)
+      .then((_planCalc) => {
+        planCalc = _planCalc
+        if (!_planCalc) {
+          const errMsg = `PlanCalc object with id ${planCalcId} not found`
+          console.log(`ERROR: ${errMsg}`)
+          throw Error(errMsg)
+        }
+
+        // обработать все партии ресурсов в транзите:
+        return ResourceStock.findAll({
+          orderBy: [
+            { column: 'date', order: 'asc' }
+          ],
+          where: {
+            type: ResourceStockType.inTransfer.value
+          }
+        })
+      })
+      .then((_resourceStock) => {
+        if (_resourceStock) {
+          // записи о ресурсах в транзите найдены - необходимо их обработать
+          return Serial(_resourceStock.map((item) => () => MRP.processInTransfer(item.id, planCalc.id)))
+        }
+      })
+      .then(() => {
+        // стадия А2.3: обрабатываем продукцию в производстве
+        return ProductStock.findAll({
+          orderBy: [
+            { column: 'date', order: 'asc' }
+          ],
+          where: {
+            type: ProductStockType.inProd.value
+          }
+        })
+      })
+      .then((_inProd) => {
+        // Получили все партии продукции в производстве на начало планирования. Требуется списать
+        // ресурсы и оприходовать результаты.
+        if (_inProd) {
+          // если есть партии в производстве - обработать партии в производстве
+          return Serial(_inProd.map((item) => () => MRP.processInProd(item.id, planCalc.id)))
+        } else {
+          return {}
+        }
+      })
+      .then(() => {
+        // алгоритм обработки планов такой:
+        /*
+        Получаем список элементов планов - сортирован по датам, по типам продукции
+         */
+        return PlanItem.findAll({
+          orderBy: [
+            { column: 'date', order: 'asc' },
+            { column: 'productId', order: 'asc'}
+          ]
+        })
+      })
+      .then((_sortedPlanItems) => {
+        sortedPlanItem = _sortedPlanItems
+        console.log('sortedPlanItem')
+        console.log(sortedPlanItem)
+        return Serial(_sortedPlanItems.map((item) => () => MRP.processPlanItem(item.id, planCalc.id)))
+      })
+      .catch((e) => { throw e })
+
+  }
+
   return MRP
 }
