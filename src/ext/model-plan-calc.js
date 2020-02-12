@@ -79,6 +79,7 @@ export const PlanCalc = (app) => {
       })
       .then((_planCalc) => {
         planCalc = _planCalc // updated plan
+        // обработать все партии ресурсов в транзите: 
         // стадия А2.3: обрабатываем продукцию в производстве
 
         return ProductStock.findAll({

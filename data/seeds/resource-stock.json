@@ -14,9 +14,19 @@
     "type": 1,
     "resourceId": "k-b-am",
     "date": "2019-11-30",
-    "qnt": 4000,
+    "qnt": 1000,
     "price": 156,
     "vendorId": "preprint",
     "caption": "Нач ост коробок на B-am от типографии Препринт"
+  },
+  {
+    "id": "3",
+    "type": 2,
+    "resourceId": "k-b-am",
+    "date": "2019-12-10",
+    "qnt": 2500,
+    "price": 160,
+    "vendorId": "preprint",
+    "caption": "Новый заказ коробок на B-am от типографии Препринт"
   }
 ]
