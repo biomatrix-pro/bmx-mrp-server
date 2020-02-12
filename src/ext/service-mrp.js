@@ -43,10 +43,10 @@ export const MRP = (app) => {
    * @return {Promise<T> | undefined} возвращает промис, разрешающийся в новую запись о произведенной продукции
    */
   MRP.processInProd = (productStockId, planCalcId) => {
-    const ProductStock = app.exModular.models.ProductStock
     const Stage = app.exModular.models.Stage
     const StageResource = app.exModular.models.StageResource
     const ResourceStock = app.exModular.models.ResourceStock
+    const ProductStock = app.exModular.models.ProductStock
 
     const Serial = app.exModular.services.serial
 
@@ -66,7 +66,11 @@ export const MRP = (app) => {
         console.log(aDate.format('YYYY-MM-DD'))
         // для каждой партии продукции в производство: получить этапы производства (в порядке следования очередности)
         // для данного вида продукции:
-        return Stage.findAll({ where: { productId: productStock.productId }, orderBy: [{ column: 'order', order: 'asc' }] })
+        return Stage.findAll(
+          {
+            where: { productId: productStock.productId },
+            orderBy: [{ column: 'order', order: 'asc' }]
+          })
       })
       .then((_stages) => {
         // обработать список всех этапов производства
@@ -247,7 +251,7 @@ export const MRP = (app) => {
           })
         } else {
           // нет, продукции не хватает. Необходимо запланировать производство продукции и зафиксировать в этом случае выполнение плана:
-          return MRP.planManufacture(planItem.id, _qntForDate)
+          return MRP.planManufacture(planItem.id, _qntForDate, planCalcId)
             .then(() => {
               // после запланированного производства партии продукции её должно хватать. На всякий случай проверим это:
               return ProductStock.qntForDate(planItem.productId, planItem.date)
@@ -267,7 +271,7 @@ export const MRP = (app) => {
               } else {
                 // проблема: продукции должно хватать, но её не хватает! Это ошибка
                 const errMsg = `MRP.processPlanItem: not enought product "${planItem.productId}" qnt after
-                 manufacturing: qntForDate ${_newQntForDate}, need qnt ${planItem.qnt}`
+                  manufacturing: qntForDate ${_newQntForDate}, need qnt ${planItem.qnt}`
                 console.log(`ERROR: ${errMsg}`)
                 throw Error(errMsg)
               }
@@ -282,10 +286,58 @@ export const MRP = (app) => {
    * planManufacture: запланировать производство партии продукции
    * @param planItemId идентификатор элемента плана, для которого нужно запланировать производство партии продукции
    * @param qntForDate фактическое количество продукции на складе - оно должно быть меньше требуемого в плане
+   * @param planCalcId идентификатор калькуляции, в рамках которой производится планирование
    * @return {Promise<void>} возвращаем запись из ProductStock, которая приходует партию продукции из производства
    */
-  MRP.planManufacture = (planItemId, qntForDate) => {
-    return Promise.resolve()
+  MRP.planManufacture = (planItemId, qntForDate, planCalcId) => {
+    const PlanCalc = app.exModular.models.PlanCalc
+    const PlanItem = app.exModular.models.PlanItem
+    const Stage = app.exModular.models.Stage
+    const StageResource = app.exModular.models.StageResource
+    const ResourceStock = app.exModular.models.ResourceStock
+    const ProductStock = app.exModular.models.ProductStock
+
+    const Serial = app.exModular.services.serial
+
+    let planCalc = null
+    let planItem = null
+    let stages = null
+
+    // для начала получим переданные как параметры объекты:
+    return PlanCalc.findById(planCalcId)
+      .then((_planCalc) => {
+        if (!_planCalc) {
+          const errMsg = `MRP.planManufacture: PlanCalc object with id ${planCalcId} not found`
+          console.log(`ERROR: ${errMsg}`)
+          throw Error(errMsg)
+        }
+        planCalc = _planCalc // сохранили найденный объект
+        return PlanItem.findById(planItemId)
+      })
+      .then((_planItem) => {
+        if (!_planItem) {
+          const errMsg = `MRP.planManufacture: PlanItem object with id ${planItemId} not found`
+          console.log(`ERROR: ${errMsg}`)
+          throw Error(errMsg)
+        }
+        planItem = _planItem // сохранили найденный объект
+
+        // 2.5.1. Берём все этапы производства продукции:
+        return Stage.findAll(
+          {
+            where: { productId: planItem.productId },
+            orderBy: [{ column: 'order', order: 'asc' }]
+          })
+      })
+      .then((_stages) => {
+        // обработать список всех этапов производства
+        stages = _stages
+        if (!_stages || _stages.length < 1) {
+          const errMsg = `MRP.planManufacture: Stages for product ${planItem.productId} not found`
+          console.log(`ERROR: ${errMsg}`)
+          throw Error(errMsg)
+        }
+      })
       .catch((e) => { throw e })
   }
 
@@ -311,7 +363,7 @@ export const MRP = (app) => {
       .then((_planCalc) => {
         planCalc = _planCalc
         if (!_planCalc) {
-          const errMsg = `PlanCalc object with id ${planCalcId} not found`
+          const errMsg = `MRP.processPlanCalc: PlanCalc object with id ${planCalcId} not found`
           console.log(`ERROR: ${errMsg}`)
           throw Error(errMsg)
         }
