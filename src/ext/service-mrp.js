@@ -20,8 +20,8 @@ export const MRP = (app) => {
   /**
    * daysAdd: добавить к указанной дате нужное количество дней - рабочих или календарных
    * @param date исходная дата
-   * @param days сколько дней добавлять
-   * @param isWorkingDays добавлять ли рабочие дни, иначе будут добавлены календарные
+   * @param days количество - сколько дней добавлять
+   * @param isWorkingDays (boolean) если true, то количество дней указано как рабочие дни, если false - то календарные
    * @return {Moment} новая дата с добавленными днями (moment object)
    */
   MRP.daysAdd = (date, days, isWorkingDays) => {
@@ -33,6 +33,25 @@ export const MRP = (app) => {
       return aDate.businessAdd(days)
     } else {
       return aDate.add(days, 'days')
+    }
+  }
+
+  /**
+   * daysSubtract: вычесть из указанной дате нужное количество дней - рабочих или календарных
+   * @param date исходная дата
+   * @param days количество - сколько дней вычитать
+   * @param isWorkingDays (boolean) если true, то количество дней указано как рабочие дни, если false - то календарные
+   * @returns {Moment}
+   */
+  MRP.daysSubtract = (date, days, isWorkingDays) => {
+    if (isWorkingDays === undefined) {
+      isWorkingDays = false
+    }
+    const aDate = moment(date)
+    if (isWorkingDays) {
+      return aDate.businessSubtract(days)
+    } else {
+      return aDate.subtract(days, 'days')
     }
   }
 
@@ -140,6 +159,159 @@ export const MRP = (app) => {
             planCalcId
           })
         }
+      })
+      .catch((e) => { throw e })
+  }
+
+  /**
+   * planManufacture: запланировать производство партии продукции
+   * @param planItemId идентификатор элемента плана, для которого нужно запланировать производство партии продукции
+   * @param qntForDate фактическое количество продукции на складе - оно должно быть меньше требуемого в плане
+   * @param planCalcId идентификатор калькуляции, в рамках которой производится планирование
+   * @return {Promise<void>} возвращаем запись из ProductStock, которая приходует партию продукции из производства
+   */
+  MRP.planManufacture = (planItemId, qntForDate, planCalcId) => {
+    const PlanCalc = app.exModular.models.PlanCalc
+    const PlanItem = app.exModular.models.PlanItem
+    const Product = app.exModular.models.Product
+    const Stage = app.exModular.models.Stage
+    const StageResource = app.exModular.models.StageResource
+    const ResourceStock = app.exModular.models.ResourceStock
+    const ProductStock = app.exModular.models.ProductStock
+
+    const Serial = app.exModular.services.serial
+
+    let planCalc = null
+    let planItem = null
+    let stages = null
+    let aDate = null
+    let product = null
+    let qntForProd = null
+
+    // для начала получим переданные как параметры объекты:
+    return PlanCalc.findById(planCalcId)
+      .then((_planCalc) => {
+        if (!_planCalc) {
+          const errMsg = `MRP.planManufacture: PlanCalc object with id ${planCalcId} not found`
+          console.log(`ERROR: ${errMsg}`)
+          throw Error(errMsg)
+        }
+        planCalc = _planCalc // сохранили найденный объект
+        return PlanItem.findById(planItemId)
+      })
+      .then((_planItem) => {
+        if (!_planItem) {
+          const errMsg = `MRP.planManufacture: PlanItem object with id ${planItemId} not found`
+          console.log(`ERROR: ${errMsg}`)
+          throw Error(errMsg)
+        }
+        planItem = _planItem // сохранили найденный объект
+
+        // сохраним стартовую дату - это дата готовности партии продукции
+        aDate = moment(planItem.date)
+
+        // получим продукт, который планируем производить
+        return Product.findById(planItem.productId)
+      })
+      .then((_product) => {
+        if (!_product) {
+          const errMsg = `MRP.planManufacture: Product with id ${planItem.productId} not found`
+          console.log(`ERROR: ${errMsg}`)
+          throw Error(errMsg)
+        }
+        product = _product
+
+
+        // необходимо расcчитать количество продукта для производства:
+        if (qntForDate >= planItem.qnt) {
+          // ошибка: количество продукта должно быть меньше, чем на складе
+          const errMsg = `MRP.planManufacture: product qntForDate ${qntForDate} should be less than planItem.qnt ${planItem.qnt}!`
+          console.log(`ERROR: ${errMsg}`)
+          throw Error(errMsg)
+        }
+        // проверим параметры продукта для расчёта количества
+        if (!product.qntMin) {
+          product.qntMin = 0
+        }
+
+        if (!product.qntStep || product.qntStep < 1) {
+          product.qntStep = 1
+        }
+
+        // начинаем расчёт с минимальной партии
+        qntForProd = product.qntMin
+
+        // до тех пор, пока не запланировано производство достаточного объема продукции для покрытия плана,
+        while (qntForProd + qntForDate < planItem.qnt) {
+          qntForProd += product.qntStep // увеличиваем партию производства на указанную величину
+        }
+
+        // log
+        console.log(`qntForProd: ${qntForProd}`)
+
+        // 2.5.1. Берём все этапы производства продукции:
+        return Stage.findAll(
+          {
+            where: { productId: planItem.productId },
+            orderBy: [{ column: 'order', order: 'asc' }]
+          })
+      })
+      .then((_stages) => {
+        // обработать список всех этапов производства
+        stages = _stages
+        if (!_stages || _stages.length < 1) {
+          const errMsg = `MRP.planManufacture: Stages for product ${planItem.productId} not found`
+          console.log(`ERROR: ${errMsg}`)
+          throw Error(errMsg)
+        }
+        return Serial(_stages.map((stage) => () => {
+          // для каждого этапа:
+          // вычислим дату начала этапа:
+          aDate = MRP.daysSubtract(aDate, stage.duration, stage.inWorkingDays)
+
+          // log:
+          console.log(`stage: ${stage.id}, date start: ${aDate.format('YYYY-MM-DD')}`)
+
+          // если дата начала этапа менее текущей - это ошибка
+          if (aDate.isBefore(Date.now())) {
+            const errMsg = 'MRP.planManufacture: Date was past for planning'
+            console.log(`ERROR: ${errMsg}`)
+            throw Error(errMsg)
+          }
+
+          // 2.5.3: получаем список ресурсов
+          return StageResource.findAll({ where: { stageId: stage.id } })
+            .then((_stageResources) => {
+              // обработать список ресурсов
+              // для каждого требуемого на данной стадии ресурса:
+              return Serial(_stageResources.map((stageResource) => () => {
+                // обработать ресурс
+                // проверить остатки ресурса на заданную дату:
+                console.log(`Stage: resId ${stageResource.resourceId}, date ${aDate.format()}`)
+                return ResourceStock.resourceQntForDate(stageResource.resourceId, aDate)
+                  .then((_resQntForDate) => {
+                    console.log('_resQntForDate:')
+                    console.log(_resQntForDate)
+
+                    // рассчитать требуемое количество ресурсов для данного этапа
+                    const qnt = qntForProd * stageResource.qnt / stage.baseQnt
+                    if (qnt > _resQntForDate) {
+                      // 2.5.3.1. ресурсов недостаточно, нужно планировать поставку партии ресурсов:
+                      // TODO: planResOrder
+                    }
+                    // списать ресурсы, использованные для этапа производства
+                    return ResourceStock.create({
+                      type: ResourceStockType.used.value,
+                      resourceId: stageResource.resourceId,
+                      date: stage.date,
+                      qnt: -qnt,
+                      caption: 'In-prod, use res',
+                      planCalcId
+                    })
+                  })
+              }))
+            })
+        }))
       })
       .catch((e) => { throw e })
   }
@@ -277,65 +449,6 @@ export const MRP = (app) => {
               }
             })
             .catch((e) => { throw e })
-        }
-      })
-      .catch((e) => { throw e })
-  }
-
-  /**
-   * planManufacture: запланировать производство партии продукции
-   * @param planItemId идентификатор элемента плана, для которого нужно запланировать производство партии продукции
-   * @param qntForDate фактическое количество продукции на складе - оно должно быть меньше требуемого в плане
-   * @param planCalcId идентификатор калькуляции, в рамках которой производится планирование
-   * @return {Promise<void>} возвращаем запись из ProductStock, которая приходует партию продукции из производства
-   */
-  MRP.planManufacture = (planItemId, qntForDate, planCalcId) => {
-    const PlanCalc = app.exModular.models.PlanCalc
-    const PlanItem = app.exModular.models.PlanItem
-    const Stage = app.exModular.models.Stage
-    const StageResource = app.exModular.models.StageResource
-    const ResourceStock = app.exModular.models.ResourceStock
-    const ProductStock = app.exModular.models.ProductStock
-
-    const Serial = app.exModular.services.serial
-
-    let planCalc = null
-    let planItem = null
-    let stages = null
-
-    // для начала получим переданные как параметры объекты:
-    return PlanCalc.findById(planCalcId)
-      .then((_planCalc) => {
-        if (!_planCalc) {
-          const errMsg = `MRP.planManufacture: PlanCalc object with id ${planCalcId} not found`
-          console.log(`ERROR: ${errMsg}`)
-          throw Error(errMsg)
-        }
-        planCalc = _planCalc // сохранили найденный объект
-        return PlanItem.findById(planItemId)
-      })
-      .then((_planItem) => {
-        if (!_planItem) {
-          const errMsg = `MRP.planManufacture: PlanItem object with id ${planItemId} not found`
-          console.log(`ERROR: ${errMsg}`)
-          throw Error(errMsg)
-        }
-        planItem = _planItem // сохранили найденный объект
-
-        // 2.5.1. Берём все этапы производства продукции:
-        return Stage.findAll(
-          {
-            where: { productId: planItem.productId },
-            orderBy: [{ column: 'order', order: 'asc' }]
-          })
-      })
-      .then((_stages) => {
-        // обработать список всех этапов производства
-        stages = _stages
-        if (!_stages || _stages.length < 1) {
-          const errMsg = `MRP.planManufacture: Stages for product ${planItem.productId} not found`
-          console.log(`ERROR: ${errMsg}`)
-          throw Error(errMsg)
         }
       })
       .catch((e) => { throw e })
