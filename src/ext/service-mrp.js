@@ -289,22 +289,23 @@ export const MRP = (app) => {
                 // проверить остатки ресурса на заданную дату:
                 console.log(`Stage: resId ${stageResource.resourceId}, date ${aDate.format()}`)
                 return ResourceStock.resourceQntForDate(stageResource.resourceId, aDate)
-                  .then((_resQntForDate) => {
+                  .then((_qntForDate) => {
                     console.log('_resQntForDate:')
-                    console.log(_resQntForDate)
+                    console.log(_qntForDate)
 
                     // рассчитать требуемое количество ресурсов для данного этапа
-                    const qnt = qntForProd * stageResource.qnt / stage.baseQnt
-                    if (qnt > _resQntForDate) {
+                    const qntForStage = qntForProd * stageResource.qnt / stage.baseQnt
+                    if (qntForStage > _qntForDate) {
                       // 2.5.3.1. ресурсов недостаточно, нужно планировать поставку партии ресурсов:
                       // TODO: planResOrder
+                      return MRP.planResOrder(stageResource.resourceId, aDate, qntForStage, _qntForDate, planCalcId)
                     }
                     // списать ресурсы, использованные для этапа производства
                     return ResourceStock.create({
                       type: ResourceStockType.used.value,
                       resourceId: stageResource.resourceId,
                       date: stage.date,
-                      qnt: -qnt,
+                      qnt: -qntForStage,
                       caption: 'In-prod, use res',
                       planCalcId
                     })
@@ -316,6 +317,20 @@ export const MRP = (app) => {
       .catch((e) => { throw e })
   }
 
+  MRP.planResOrder = (resourceId, date, qntForStage, qntForDate, planCalcId) => {
+    const ResourceStock = app.exModular.models.ResourceStock
+
+    return MRP.vendorSelect(resourceId, date)
+      .then((_vendor) => {
+        if (!_vendor) {
+          const errMsg = `MRP.planResOrder: can not find vendor for resource ${resourceId} at date ${moment(date).format('YYYY-MM-DD')}`
+          console.log(`ERROR: ${errMsg}`)
+          throw Error(errMsg)
+        }
+      })
+      .catch((e) => { throw e })
+
+  }
   /**
    * Обработать ресурсы в транзите, то есть такие ресурсы, которые на начало планового периода
    * находились в процессе доставки
