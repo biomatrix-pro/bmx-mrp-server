@@ -84,6 +84,15 @@ export const Vendor = () => {
         default: 1
       },
       {
+        name: 'price',
+        type: 'decimal',
+        caption: 'Цена',
+        description: 'Цена ресурса от этого поставщика',
+        precision: 12,
+        scale: 2,
+        default: 0
+      },
+      {
         name: 'comments',
         type: 'text',
         caption: 'Примечания',

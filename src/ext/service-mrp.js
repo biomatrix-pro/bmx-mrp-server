@@ -1,6 +1,6 @@
 import moment from 'moment-business-days'
 import { ResourceStockType } from './model-resource-stock'
-import { ProductStockType } from './model-product-stock'
+import { ProductStock, ProductStockType } from './model-product-stock'
 
 const packageName = 'MRP'
 
@@ -177,7 +177,7 @@ export const MRP = (app) => {
     const Stage = app.exModular.models.Stage
     const StageResource = app.exModular.models.StageResource
     const ResourceStock = app.exModular.models.ResourceStock
-    const ProductStock = app.exModular.models.ProductStock
+    // const ProductStock = app.exModular.models.ProductStock
 
     const Serial = app.exModular.services.serial
 
@@ -220,7 +220,6 @@ export const MRP = (app) => {
           throw Error(errMsg)
         }
         product = _product
-
 
         // необходимо расcчитать количество продукта для производства:
         if (qntForDate >= planItem.qnt) {
@@ -287,6 +286,8 @@ export const MRP = (app) => {
               return Serial(_stageResources.map((stageResource) => () => {
                 // обработать ресурс
                 // проверить остатки ресурса на заданную дату:
+                let qntForStage = 0
+
                 console.log(`Stage: resId ${stageResource.resourceId}, date ${aDate.format()}`)
                 return ResourceStock.resourceQntForDate(stageResource.resourceId, aDate)
                   .then((_qntForDate) => {
@@ -294,13 +295,26 @@ export const MRP = (app) => {
                     console.log(_qntForDate)
 
                     // рассчитать требуемое количество ресурсов для данного этапа
-                    const qntForStage = qntForProd * stageResource.qnt / stage.baseQnt
+                    qntForStage = qntForProd * stageResource.qnt / stage.baseQnt
                     if (qntForStage > _qntForDate) {
                       // 2.5.3.1. ресурсов недостаточно, нужно планировать поставку партии ресурсов:
-                      // TODO: planResOrder
                       return MRP.planResOrder(stageResource.resourceId, aDate, qntForStage, _qntForDate, planCalcId)
+                        .then(() => ResourceStock.resourceQntForDate(stageResource.resourceId, aDate))
+                        .then((_qntForDate2) => {
+                          // проверим что ресурсов теперь, после оформления заказа, должно хватать:
+                          if (qntForStage > _qntForDate2) {
+                            const errMsg = 'MRP.planManufacture: qntForDate less then qntForStage even after order!'
+                            console.log(`ERROR: ${errMsg}`)
+                            throw Error(errMsg)
+                          }
+                        })
+                        .catch((e) => { throw e })
+                    } else {
+                      return {}
                     }
-                    // списать ресурсы, использованные для этапа производства
+                  })
+                  .then(() => {
+                    // списать ресурсы, использованные для этого этапа производства
                     return ResourceStock.create({
                       type: ResourceStockType.used.value,
                       resourceId: stageResource.resourceId,
@@ -314,12 +328,84 @@ export const MRP = (app) => {
             })
         }))
       })
+      .then(() => {
+        // необходимо оприходовать партию произведенной продукции
+        return ProductStock.create({
+          date: aDate.format('YYYY-MM-DD'),
+          type: ProductStockType.prod.value,
+          caption: 'Produced',
+          productId: planItem.productId,
+          qnt: qntForProd,
+          price: 0,
+          planCalcId
+        })
+      })
       .catch((e) => { throw e })
   }
 
+  /**
+   * vendorSelect: выбрать поставщика ресурса на указанную дату
+   * @param resourceId (-> Resource.id) идентификатор ресурса для выбора поставщика
+   * @param date (moment?) дата завершения поставки, на которую нужно выбрать поставщика
+   * @returns {Promise<Vendor>} промис разрешается записью поставщика (Vendor)
+   */
+  MRP.vendorSelect = (resourceId, date) => {
+    const Vendor = app.exModular.models.Vendor
+
+    // А2.6.1: выбираем поставщика
+    // получим список всех вендоров этого ресурса в обратном хронологическом порядке
+    return Vendor.findAll({
+      where: { resourceId },
+      orderBy: [{ column: 'date', order: 'desc' }]
+    })
+      .then((_vendors) => {
+        if (!_vendors) {
+          const errMsg = `MRP.vendorSelect: vendor list is empty for resource ${resourceId} at date ${moment(date).format('YYYY-MM-DD')}`
+          console.log(`ERROR: ${errMsg}`)
+          throw Error(errMsg)
+        }
+        let theVendor = null
+        // список вендоров получен, выбрать в нём нужного по дате:
+        for (let ndx = 0; ndx < _vendors.length; ndx++) {
+          // для каждого вендора:
+          const vendor = _vendors[ndx]
+          // рассчитать дату начала заказа:
+          const orderStart = MRP.daysSubtract(date, vendor.orderDuration, vendor.inWorkingDays)
+          if (moment(orderStart).isSameOrAfter(vendor.date)) {
+            // мы нашли поставщика
+            theVendor = vendor
+            break
+          }
+          // иначе переходим к следующему по хронологии поставщику
+        }
+
+        if (!theVendor) {
+          const errMsg = `MRP.vendorSelect: unable to find vendor for resource ${resourceId} at date ${moment(date).format('YYYY-MM-DD')}`
+          console.log(`ERROR: ${errMsg}`)
+          throw Error(errMsg)
+        }
+        return theVendor
+      })
+      .catch((e) => { throw e })
+  }
+
+  /**
+   * planResOrder: планировать поставку партии ресурсов (WIP)
+   * @param resourceId (-> Resource.id) ресурс, поставку которого мы планируем
+   * @param date (дата) дата, к которой ресурс должен был быть поставлен
+   * @param qntForStage количество ресурса, требуемое для производства
+   * @param qntForDate фактическое количество ресурсов на данную дату
+   * @param planCalcId (-> PlanCalc.id) идентификатор калькуляции MRP, с которой связан этот план поставки
+   * @returns {Promise<T>}
+   */
   MRP.planResOrder = (resourceId, date, qntForStage, qntForDate, planCalcId) => {
     const ResourceStock = app.exModular.models.ResourceStock
 
+    let vendor = null
+    const aDate = moment(date)
+    let orderStart = null
+
+    // А2.6.1: отыскиваем поставщика:
     return MRP.vendorSelect(resourceId, date)
       .then((_vendor) => {
         if (!_vendor) {
@@ -327,10 +413,107 @@ export const MRP = (app) => {
           console.log(`ERROR: ${errMsg}`)
           throw Error(errMsg)
         }
+
+        // поставщик найден
+        vendor = _vendor
+        console.log(`Selected vendor ${vendor.caption} for resource ${resourceId} for date ${moment(date).format('YYYY-MM-DD')}`)
+        console.log(`Duration: ${vendor.orderDuration}`)
+
+        // рассчитаем период заказа - дата начала заказа:
+        orderStart = MRP.daysSubtract(date, vendor.orderDuration, vendor.inWorkingDays)
+
+        // теперь нужно получить список заказов этого поставщика, который приходится на период заказа
+        return ResourceStock.findAll({
+          where: { type: ResourceStockType.ordered.value, resourceId, vendorId: vendor.id },
+          whereOp: [
+            { column: 'date', op: '>=', value: orderStart.format('YYYY-MM-DD') },
+            { column: 'date', op: '<=', value: aDate.format('YYYY-MM-DD') }
+          ],
+          orderBy: [ { column: 'date', order: 'desc' }]
+        })
+      })
+      .then((_resStock) => {
+        // сначала проверим параметры заказа у вендора
+        if (vendor.orderMin < 0) {
+          vendor.orderMin = 0
+        }
+        if (vendor.orderStep < 1) {
+          vendor.orderStep = 1
+        }
+
+        console.log('_resStock:')
+        console.log(_resStock)
+
+        // получили список заказов, которые поступают в дату нового заказа
+        if (!_resStock || _resStock.length === 0) {
+          // таких заказов нет - нужно просто разместить новый заказ:
+          // рассчитаем количество ресурсов в заказе на основании минимального количества и шага:
+          let orderQnt = vendor.orderMin
+          while (qntForDate + orderQnt < qntForStage) {
+            orderQnt += vendor.orderStep
+          }
+
+          // добавим в записи о партиях ресурсов 2 записи - первая о заказе, вторая о доставке
+          return ResourceStock.create({
+            date: orderStart.format('YYYY-MM-DD'), // дата заказа
+            type: ResourceStockType.inTransfer.value,
+            caption: `resOrder: inTransfer order for qntForStage ${qntForStage}`,
+            resourceId,
+            qnt: orderQnt,
+            qntReq: qntForStage,
+            price: vendor.price,
+            vendorId: vendor.id,
+            planCalcId
+          })
+            .then((_inTransferStock) => ResourceStock.create({
+              date: aDate.format('YYYY-MM-DD'), // дата поступления
+              type: ResourceStockType.ordered.value,
+              caption: `resOrder: ordered for qntForStage ${qntForStage}`,
+              resourceId,
+              qnt: orderQnt,
+              qntReq: qntForStage,
+              price: vendor.price,
+              vendorId: vendor.id,
+              inTransferId: _inTransferStock.id, // ссылка на запись о заказе
+              planCalcId
+            }))
+        } else {
+          // есть запись о ресурсах,  поступающих в нужный период:
+          if (_resStock.length > 1) {
+            console.log('WARNING! Multiply records found — strange!')
+          }
+          let resOrder = _resStock[0] // берем самую первую найденную запись
+
+          // берём текущий заказ и увеличиваем его:
+          // теперь должно хватать на потребность прошлого заказа и текущего
+          let orderQnt = vendor.orderMin
+          while (qntForDate + orderQnt < (qntForStage + resOrder.qntReq)) {
+            orderQnt += vendor.orderStep
+          }
+          resOrder.qnt = orderQnt
+          resOrder.qntReq = (qntForStage + resOrder.qntReq)
+
+          // обновим данные о заказе:
+          return ResourceStock.update(resOrder)
+            .then((_resOrder) => {
+              resOrder = _resOrder
+              return ResourceStock.findById(resOrder.inTransferId)
+            })
+            .then((_inTransfer) => {
+              if (!_inTransfer) {
+                console.log(`WARNING! Not found inTransfer for order ${resOrder.id}`)
+                return {}
+              } else {
+                _inTransfer.qnt = orderQnt
+                _inTransfer.qntReq = (qntForStage + resOrder.qntReq)
+                return ResourceStock.update(_inTransfer)
+              }
+            })
+        }
       })
       .catch((e) => { throw e })
-
   }
+
   /**
    * Обработать ресурсы в транзите, то есть такие ресурсы, которые на начало планового периода
    * находились в процессе доставки
@@ -344,7 +527,7 @@ export const MRP = (app) => {
 
     let resourceStock = null
     let vendor = null
-    // найти запись о партии:
+    // найти запись о заказе партии:
     return ResourceStock.findById(resourceStockId)
       .then((_resStock) => {
         if (!_resStock) {
@@ -386,6 +569,7 @@ export const MRP = (app) => {
           qnt: resourceStock.qnt,
           price: resourceStock.price,
           vendorId: vendor.id,
+          inTransferId: resourceStock.id,
           planCalcId
         })
       })

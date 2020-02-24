@@ -89,6 +89,23 @@ export const ResourceStock = (app) => {
         description: 'Калькуляция, в рамках которой добавлена запись о движении ресурсов',
         model: 'PlanCalc',
         default: null
+      },
+      {
+        name: 'qntReq',
+        type: 'decimal',
+        caption: 'Потребность',
+        description: 'Количество ресурса, которое необходимо для производства - справочно',
+        precision: 12,
+        scale: 2,
+        default: 0
+      },
+      {
+        name: 'inTransferId',
+        type: 'ref',
+        caption: 'Заказ',
+        description: 'Заказ ресурсов в статусе транзит, с которым связана эта партия',
+        model: 'ResourceStock',
+        default: null
       }
     ]
   }
