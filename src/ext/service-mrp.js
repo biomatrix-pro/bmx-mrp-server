@@ -181,9 +181,7 @@ export const MRP = (app) => {
 
     const Serial = app.exModular.services.serial
 
-    let planCalc = null
     let planItem = null
-    let stages = null
     let aDate = null
     let product = null
     let qntForProd = null
@@ -196,7 +194,6 @@ export const MRP = (app) => {
           console.log(`ERROR: ${errMsg}`)
           throw Error(errMsg)
         }
-        planCalc = _planCalc // сохранили найденный объект
         return PlanItem.findById(planItemId)
       })
       .then((_planItem) => {
@@ -257,7 +254,6 @@ export const MRP = (app) => {
       })
       .then((_stages) => {
         // обработать список всех этапов производства
-        stages = _stages
         if (!_stages || _stages.length < 1) {
           const errMsg = `MRP.planManufacture: Stages for product ${planItem.productId} not found`
           console.log(`ERROR: ${errMsg}`)
@@ -429,7 +425,7 @@ export const MRP = (app) => {
             { column: 'date', op: '>=', value: orderStart.format('YYYY-MM-DD') },
             { column: 'date', op: '<=', value: aDate.format('YYYY-MM-DD') }
           ],
-          orderBy: [ { column: 'date', order: 'desc' }]
+          orderBy: [{ column: 'date', order: 'desc' }]
         })
       })
       .then((_resStock) => {
