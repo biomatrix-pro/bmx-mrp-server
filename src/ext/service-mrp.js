@@ -515,7 +515,7 @@ export const MRP = (app) => {
    * находились в процессе доставки
    * @param resourceStockId (-> ResourceStock.id) идентификатор записи в регистре учета остатков ресурсов
    * @param planCalcId (-> PlanCalc.id) идентификатор калькуляции MRP, с которой связана эта запись
-   * @returns {PromiseLike<function(...[*]=)> | Promise<function(...[*]=)> | *}
+   * @returns промис с записью об обработанном транзите
    */
   MRP.processInTransfer = (resourceStockId, planCalcId) => {
     const ResourceStock = app.exModular.models.ResourceStock
@@ -574,7 +574,7 @@ export const MRP = (app) => {
    * processPlanItem: обработать элемент плана производства
    * @param planItemId (-> PlanItem.id) идентификатор элемента плана производства
    * @param planCalcId (-> PlanCalc.id) идентификатор калькуляции, в рамках которой делается обработка
-   * @return {Promise<T> | undefined}
+   * @return промис с записью ProductStock о запланированном производстве
    */
   MRP.processPlanItem = (planItemId, planCalcId) => {
     const PlanItem = app.exModular.models.PlanItem

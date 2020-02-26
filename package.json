@@ -8,6 +8,7 @@
   "scripts": {
     "start": "cross-env DEBUG='ex-modular:*' babel-node src/app.js",
     "start:fresh": "rm -f ./data/db.sqlite && cross-env DEBUG='ex-modular:*' babel-node src/app.js",
+    "docs:ext": "jsdoc2md -c ./jsdoc.json ./src/ext/*.js > ./src/ext/readme.md",
     "clean": "rimraf lib",
     "test": "mocha ./test/**/*.js",
     "cover": "nyc npm run test",
@@ -59,6 +60,7 @@
     "eslint-plugin-react": "^7.18.0",
     "eslint-plugin-standard": "^4.0.1",
     "husky": "^4.2.1",
+    "jsdoc-to-markdown": "^5.0.3",
     "mocha": "^7.0.1",
     "nyc": "^15.0.0",
     "rimraf": "^3.0.1",

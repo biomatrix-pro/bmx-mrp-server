@@ -1,7 +1,7 @@
 const packageName = 'Auth-password'
 
 export const AuthPassword = (app) => {
-  app.exModular.modules.Add({
+  const Module = {
     moduleName: packageName,
     dependency: [
       'services.errors',
@@ -16,14 +16,17 @@ export const AuthPassword = (app) => {
       'models.User.count',
       'access.addAdmin',
       'routes.Add'
-    ]
-  })
+    ],
+    module: {}
+  }
+
+  app.exModular.modules.Add(Module)
 
   const Errors = app.exModular.services.errors
   const User = app.exModular.models.User
   const Session = app.exModular.models.Session
 
-  const login = (req, res) => {
+  Module.module.login = (req, res) => {
     if (!req.data) {
       throw new Errors.ServerGenericError(
         `${packageName}.signup: Invalid request handling: req.data not initialized, use middleware to parse body`)
@@ -67,7 +70,7 @@ export const AuthPassword = (app) => {
       })
   }
 
-  const logout = (req, res) => {
+  Module.module.logout = (req, res) => {
     // console.log('Auth.Logout')
     if (!req || !req.user || !req.user.session) {
       return new Errors.ServerNotAllowed('User session not found')
@@ -105,7 +108,7 @@ export const AuthPassword = (app) => {
 
   const Validator = app.exModular.services.validator
   // define routes for this module
-  app.exModular.routes.Add([
+  Module.module.routes = [
     {
       method: 'POST',
       name: 'Auth.Login',
@@ -144,7 +147,9 @@ export const AuthPassword = (app) => {
       type: 'Auth',
       object: 'Logout'
     }
-  ])
+  ]
+
+  app.exModular.routes.Add(Module.module.routes)
 
   return app
 }
