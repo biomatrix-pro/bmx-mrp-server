@@ -1,7 +1,7 @@
 const packageName = 'Signup-open'
 
 export const SignupOpen = (app) => {
-  app.exModular.modules.Add({
+  const Module = {
     moduleName: packageName,
     dependency: [
       'services.errors',
@@ -16,10 +16,13 @@ export const SignupOpen = (app) => {
       'models.User.count',
       'access.addAdmin',
       'routes.Add'
-    ]
-  })
+    ],
+    module: {}
+  }
 
-  const signup = (req, res) => {
+  app.exModular.modules.Add(Module)
+
+  Module.module.signup = (req, res) => {
     const Errors = app.exModular.services.errors
     const User = app.exModular.models.User
 
@@ -63,14 +66,15 @@ export const SignupOpen = (app) => {
   }
 
   const Validator = app.exModular.services.validator
+
   // define routes for this module
-  app.exModular.routes.Add([
+  Module.module.routes = [
     {
       method: 'POST',
       name: 'Auth.Signup',
       description: 'Open signup via username/password',
       path: '/auth/signup',
-      handler: signup,
+      handler: Module.module.signup,
       validate: Validator.checkBodyForModelName('User', { optionalId: true }),
       /*
       beforeHandler: [ app.exModular.auth.optional ],
@@ -78,7 +82,9 @@ export const SignupOpen = (app) => {
       type: 'Auth',
       object: 'Signup'
     }
-  ])
+  ]
+
+  app.exModular.routes.Add(Module.module.routes)
 
   return app
 }

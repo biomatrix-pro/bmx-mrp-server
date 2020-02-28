@@ -114,7 +114,7 @@ export const AuthPassword = (app) => {
       name: 'Auth.Login',
       description: 'Login via username/password, return token',
       path: '/auth/login',
-      handler: login,
+      handler: Module.module.login,
       validate: Validator.checkBodyForModel({
         name: 'AuthPassword',
         props: [
@@ -142,7 +142,7 @@ export const AuthPassword = (app) => {
       method: 'GET',
       name: 'Auth.Logout',
       path: '/auth/logout',
-      handler: logout,
+      handler: Module.module.logout,
       validate: app.exModular.auth.check,
       type: 'Auth',
       object: 'Logout'

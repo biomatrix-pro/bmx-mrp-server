@@ -3,16 +3,19 @@ import { accessLoggedIn, accessAdmin } from './init-access'
 const packageName = 'Access-simple'
 
 export const AccessSimple = (app) => {
-  app.exModular.modules.Add({
+  const Module = {
     moduleName: packageName,
     dependency: [
       'models',
       'models.UserGroup',
       'models.UserGroup.usersAdd'
-    ]
-  })
+    ],
+    module: {}
+  }
 
-  const registerLoggedUser = (user) => {
+  app.exModular.modules.Add(Module)
+
+  Module.module.registerLoggedUser = (user) => {
     if (!user || !user.id) {
       throw Error(`${packageName}.registerLoggedUser: invalid param "user" - ${user.toString()}`)
     }
@@ -21,7 +24,7 @@ export const AccessSimple = (app) => {
       .catch((e) => { throw e })
   }
 
-  const unregisterLoggedUser = (user) => {
+  Module.module.unregisterLoggedUser = (user) => {
     if (!user || !user.id) {
       throw Error(`${packageName}.unregisterLoggedUser: invalid param "user" - ${user.toString()}`)
     }
@@ -30,7 +33,7 @@ export const AccessSimple = (app) => {
       .catch((e) => { throw e })
   }
 
-  const addAdmin = (user) => {
+  Module.module.addAdmin = (user) => {
     if (!user || !user.id) {
       throw Error(`${packageName}.addAdmin: invalid param "user" - ${user.toString()}`)
     }
@@ -39,9 +42,5 @@ export const AccessSimple = (app) => {
       .catch((e) => { throw e })
   }
 
-  return {
-    registerLoggedUser,
-    unregisterLoggedUser,
-    addAdmin
-  }
+  return Module.module
 }
