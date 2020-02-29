@@ -28,6 +28,7 @@ export const UserGroup = (app, options) => {
       {
         name: 'users',
         type: 'refs',
+        model: 'User',
         default: []
       }
     ]

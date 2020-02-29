@@ -5,6 +5,7 @@
 opt:
 * where: `object`: k-v pairs of field / value
 * whereOp: `array`: [{ column, op, value }]
+* whereIn: `array`: [{ column, ids }]
 * orderBy: `array`: [{ column, order: 'asc/desc' }]
 
 ## Access-Simple

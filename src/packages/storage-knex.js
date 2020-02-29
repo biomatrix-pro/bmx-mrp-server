@@ -223,12 +223,14 @@ export default (app) => {
         const methodRemove = `${prop.name}Remove`
         const methodClear = `${prop.name}Clear`
         const methodCount = `${prop.name}Count`
+        const methodList = `${prop.name}List`
 
         // define methods:
         modelMethods.push({ name: methodAdd, handler: Model.storage.refAdd(Model, prop) })
         modelMethods.push({ name: methodRemove, handler: Model.storage.refRemove(Model, prop) })
         modelMethods.push({ name: methodClear, handler: Model.storage.refClear(Model, prop) })
         modelMethods.push({ name: methodCount, handler: Model.storage.refCount(Model, prop) })
+        modelMethods.push({ name: methodList, handler: Model.storage.refList(Model, prop) })
       })
 
       modelMethods.push({ name: 'dataInit', handler: Model.storage.dataInit(Model) })
@@ -608,10 +610,30 @@ export default (app) => {
       return Model.findById(id)
         .then((item) => {
           if (!item) {
-            throw new Error(`${Model.name}.${prop.name}Add: item with id ${id} not found`)
+            throw new Error(`${Model.name}.${prop.name}Remove: item with id ${id} not found`)
           }
           _.pullAll(item[prop.name], items)
           return Model.update(item)
+        })
+        .catch((err) => { throw err })
+    },
+
+    refList: (Model, prop) => (id) => {
+      return Model.findById(id)
+        .then((item) => {
+          if (!item) {
+            throw new Error(`${Model.name}.${prop.name}Embed: item with id ${id} not found`)
+          }
+          const ids = item[prop.name]
+          const RefModelName = prop.model
+          if (!RefModelName) {
+            throw new Error(`${Model.name}.${prop.name}Embed: model name for refs property ${prop.name} not defined`)
+          }
+          const RefModel = app.exModular.models[RefModelName]
+          if (!RefModel) {
+            throw new Error(`${Model.name}.${prop.name}Embed: model ${RefModelName} for refs property ${prop.name} not found`)
+          }
+          return RefModel.findAll({ whereIn: [{ column: 'id', ids }] })
         })
         .catch((err) => { throw err })
     },
@@ -620,7 +642,7 @@ export default (app) => {
       return Model.findById(id)
         .then((item) => {
           if (!item) {
-            throw new Error(`${Model.name}.${prop.name}Add: item with id ${id} not found`)
+            throw new Error(`${Model.name}.${prop.name}Clear: item with id ${id} not found`)
           }
           item[prop.name] = []
           return Model.update(item)
@@ -632,7 +654,7 @@ export default (app) => {
       return Model.findById(id)
         .then((item) => {
           if (!item) {
-            throw new Error(`${Model.name}.${prop.name}Add: item with id ${id} not found`)
+            throw new Error(`${Model.name}.${prop.name}Count: item with id ${id} not found`)
           }
           return item[prop.name].length
         })

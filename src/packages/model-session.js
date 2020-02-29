@@ -19,6 +19,7 @@ export const Session = (app, options) => {
       {
         name: 'userId',
         type: 'ref',
+        model: 'User',
         default: null
       },
       {
