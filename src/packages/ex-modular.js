@@ -78,6 +78,8 @@ export const exModular = (app) => {
         }
       })
     })
+
+    // TODO: check models with references - if all model properties are defined and valid
   }
 
   // init models

@@ -57,7 +57,6 @@ export const AuthPassword = (app) => {
       })
       .then((session) => {
         res.json({ token: app.exModular.auth.encode(session.id) })
-        return app.exModular.access.registerLoggedUser(user)
       })
       .catch((error) => {
         // console.log('login: error')
@@ -86,10 +85,7 @@ export const AuthPassword = (app) => {
 
         // destroy current session
         // remove current user from logged-in group
-        return Promise.all([
-          Session.removeById(session.id),
-          app.exModular.access.unregisterLoggedUser(req.user)
-        ])
+        return Session.removeById(session.id)
       })
       .then((data) => {
         res.status(200).send()

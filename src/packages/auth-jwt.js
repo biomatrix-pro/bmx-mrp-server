@@ -71,7 +71,12 @@ export const AuthJwt = (app) => {
         next(e)
       }
     } else {
-      next(new Error('Auth failed, no auth header or unknown scheme'))
+      // next(new Error('Auth failed, no auth header or unknown scheme'))
+      req.user = app.exModular.access.ACCESS_GUEST
+      req.user.session = null
+      req.user.jwt = null
+      next()
+      // TODO: replace error with setting virtual Guest user:
     }
   }
 

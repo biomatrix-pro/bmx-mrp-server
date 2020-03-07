@@ -1,3 +1,33 @@
+# ExModular project
+
+ExModular is Express-based app toolkit with features:
+
+* declarative module system for models, routes, controllers
+* user, userGroup 
+* password auth
+* JWT tokens
+* sessions
+* route permissions: individual user or userGroups
+* storage (knex-based) with some ORM for typed access to data objects
+* app init with seeding system and sample data 
+
+## Declarative module system
+
+Declaratively define models, routes, controllers.
+
+## exModular.services
+
+Services API:
+
+* controller
+* errors
+* mailer
+* codegen
+* serial
+* validator
+* wrap
+
+
 ## Storage-knex
 
 ### findAll(opt)

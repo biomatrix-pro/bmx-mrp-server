@@ -19,13 +19,16 @@ export const crudRoutes = [
 ]
 
 export const routeList = (app, Model) => {
+  const objectName = `${Model.name}.${listRouteName}`
   return {
     method: 'GET',
-    name: `${Model.name}.${listRouteName}`,
+    name: objectName,
     description: `Get list of "${Model.name}"`,
     path: `/${Model.name.toLowerCase()}`,
     handler: app.exModular.services.controller.list(Model),
     validate: [
+      app.exModular.auth.check,
+      app.exModular.access.check(objectName),
       app.exModular.services.validator.listFilterValidator(Model)
     ],
     type: 'Model',
@@ -34,13 +37,16 @@ export const routeList = (app, Model) => {
 }
 
 export const routeCreate = (app, Model) => {
+  const objectName = `${Model.name}.${createRouteName}`
   return {
     method: 'POST',
-    name: `${Model.name}.${createRouteName}`,
+    name: objectName,
     description: `Create new "${Model.name}"`,
     path: `/${Model.name.toLowerCase()}`,
     handler: app.exModular.services.controller.create(Model),
     validate: [
+      app.exModular.auth.check,
+      app.exModular.access.check(objectName),
       app.exModular.services.validator.checkBodyForModel(Model)
     ],
     type: 'Model',
@@ -49,38 +55,51 @@ export const routeCreate = (app, Model) => {
 }
 
 export const routeRemoveAll = (app, Model) => {
+  const objectName = `${Model.name}.${removeAllRouteName}`
   return {
     method: 'DELETE',
-    name: `${Model.name}.${removeAllRouteName}`,
+    name: objectName,
     description: `Delete all items from "${Model.name}"`,
     path: `/${Model.name.toLowerCase()}`,
     handler: app.exModular.services.controller.removeAll(Model),
+    validate: [
+      app.exModular.auth.check,
+      app.exModular.access.check(objectName)
+    ],
     type: 'Model',
     object: Model
   }
 }
 
 export const routeItem = (app, Model) => {
+  const objectName = `${Model.name}.${itemRouteName}`
   return {
     method: 'GET',
-    name: `${Model.name}.${itemRouteName}`,
+    name: objectName,
     description: `Get single item of "${Model.name}" by id`,
     path: `/${Model.name.toLowerCase()}/:id`,
     handler: app.exModular.services.controller.item(Model),
-    validate: app.exModular.services.validator.paramId(Model),
+    validate: [
+      app.exModular.auth.check,
+      app.exModular.access.check(objectName),
+      app.exModular.services.validator.paramId(Model)
+    ],
     type: 'Model',
     object: Model
   }
 }
 
 export const routeSave = (app, Model) => {
+  const objectName = `${Model.name}.${saveRouteName}`
   return {
     method: 'PUT',
-    name: `${Model.name}.${saveRouteName}`,
+    name: objectName,
     description: `Save (update) single item in "${Model.name}"`,
     path: `/${Model.name.toLowerCase()}/:id`,
     handler: app.exModular.services.controller.save(Model),
     validate: [
+      app.exModular.auth.check,
+      app.exModular.access.check(objectName),
       app.exModular.services.validator.paramId(Model),
       app.exModular.services.validator.checkBodyForModel(Model)
     ],
@@ -90,13 +109,18 @@ export const routeSave = (app, Model) => {
 }
 
 export const routeRemove = (app, Model) => {
+  const objectName = `${Model.name}.${removeRouteName}`
   return {
     method: 'DELETE',
-    name: `${Model.name}.${removeRouteName}`,
+    name: objectName,
     description: `Delete single item in "${Model.name}" by id`,
     path: `/${Model.name.toLowerCase()}/:id`,
     handler: app.exModular.services.controller.remove(Model),
-    validate: app.exModular.services.validator.paramId(Model),
+    validate: [
+      app.exModular.auth.check,
+      app.exModular.access.check(objectName),
+      app.exModular.services.validator.paramId(Model)
+    ],
     type: 'Model',
     object: Model
   }
