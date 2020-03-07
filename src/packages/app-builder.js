@@ -20,6 +20,7 @@ import { Serial } from './service-serial'
 import { User } from './model-user'
 import { UserGroup } from './model-user-group'
 import { Session } from './model-session'
+import { AccessObject } from './model-access-object'
 
 import { AuthJwt as Auth } from './auth-jwt'
 import { AccessSimple as Access } from './access-simple'
@@ -95,6 +96,7 @@ export const appBuilder = (express, options) => {
       app.exModular.modelAdd(User(app))
       app.exModular.modelAdd(UserGroup(app))
       app.exModular.modelAdd(Session(app))
+      app.exModular.modelAdd(AccessObject(app))
 
       // configure app with modules:
       SignupOpen(app)

@@ -106,7 +106,7 @@ export const AccessSimple = (app) => {
    * @param objectName: имя объекта, к которому будет проверяться доступ
    * @returns middleware которое проверяет наличие доступа к указанному объекту
    */
-  Module.module.access = (objectName) => (req, res, next) => {
+  Module.module.check = (objectName) => (req, res, next) => {
     Module.module.CheckPermission(req.user, objectName)
       .then((_permission) => {
         if (!_permission) {
