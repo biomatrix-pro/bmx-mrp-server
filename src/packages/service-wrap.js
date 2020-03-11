@@ -9,11 +9,20 @@ export const Wrap = (app) => (fn) => (req, res, next) => {
   try {
     if (fn.length === 2) {
       fn(req, res)
-        .catch((err) => { processErr(next, err) })
+        .catch((err) => {
+          res.error = err
+          processErr(next, err)
+        })
     } else if (fn.length === 3) {
       fn(req, res, next)
         .then(() => next())
-        .catch((err) => { processErr(next, err) })
+        .catch((err) => {
+          res.error = err
+          processErr(next, err)
+        })
     }
-  } catch (err) { processErr(next, err) }
+  } catch (err) {
+    res.error = err
+    processErr(next, err)
+  }
 }

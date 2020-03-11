@@ -127,21 +127,17 @@ export const AuthPassword = (app) => {
             default: null
           }
         ]
-      }, { optionalId: true }),
+      }, { optionalId: true })
       /*
       beforeHandler: [ app.exModular.auth.optional ],
       */
-      type: 'Auth',
-      object: 'Login'
     },
     {
       method: 'GET',
       name: 'Auth.Logout',
       path: '/auth/logout',
       handler: Module.module.logout,
-      validate: app.exModular.auth.check,
-      type: 'Auth',
-      object: 'Logout'
+      validate: app.exModular.auth.check
     }
   ]
 

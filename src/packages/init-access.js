@@ -1,7 +1,8 @@
-import { ACCESS_ADMIN_GROUP_ID } from './const-access'
+import { ACCESS_ADMIN_GROUP_ID, ACCESS_GUEST_ID, AccessSystemType } from './const-access'
 import { AccessObjectType } from './model-access-object'
 
 export const InitAccess = (app) => () => {
+  const User = app.exModular.models.User
   const UserGroup = app.exModular.models.UserGroup
   const AccessObject = app.exModular.models.AccessObject
 
@@ -13,12 +14,27 @@ export const InitAccess = (app) => () => {
       if (!item) {
         return UserGroup.create({
           id: ACCESS_ADMIN_GROUP_ID,
-          name: 'Admin',
-          systemType: 'Admin',
+          name: AccessSystemType.Admin.caption,
+          systemType: AccessSystemType.Admin.value,
           users: []
         })
       }
       return item
+    })
+    .then(() => User.findById(ACCESS_GUEST_ID))
+    .then((item) => {
+      if (!item) {
+        return User.create({
+          id: ACCESS_GUEST_ID,
+          name: '(GUEST)',
+          disabled: true
+        })
+      }
+      return item
+    })
+    .then((item) => {
+      app.exModular.access.ACCESS_GUEST = item
+      return {}
     })
     .then(() => {
       return Serial(app.exModular.routes.map((route) => () => {

@@ -40,7 +40,7 @@ export const AuthJwt = (app) => {
     const User = app.exModular.models.User
     const Errors = app.exModular.services.errors
 
-    const auth = app.auth.getTokenFromReq(req)
+    const auth = app.exModular.auth.getTokenFromReq(req)
     if (auth && auth.scheme === 'bearer') {
       // we have some token
       try {
@@ -76,7 +76,6 @@ export const AuthJwt = (app) => {
       req.user.session = null
       req.user.jwt = null
       next()
-      // TODO: replace error with setting virtual Guest user:
     }
   }
 

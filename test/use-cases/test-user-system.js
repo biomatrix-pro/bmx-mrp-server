@@ -24,7 +24,7 @@ import {
 chai.use(dirtyChai)
 
 // test case:
-describe('ex-modular tests', function () {
+describe('ex-modular test: user system', function () {
   env.config()
   process.env.NODE_ENV = 'test' // just to be sure
   let app = null
@@ -53,6 +53,7 @@ describe('ex-modular tests', function () {
         context.request = supertest(app)
         done()
       })
+      .then(() => app.exModular.storages.Clear())
       .catch((err) => {
         done(err)
       })
@@ -64,13 +65,75 @@ describe('ex-modular tests', function () {
       .catch(done)
   })
 
+  /*
   beforeEach((done) => {
     app.exModular.storages.Clear()
       .then(() => done())
       .catch(done)
-  })
+  }) */
 
-  describe('User test:', function () {
+  /* Test plan:
+
+  u-s-1: Создать первого пользователя
+    1-1: проверить что аккаунт успешно создан
+    1-2: проверить что получен токен
+    1-3: проверить что он администратор
+
+Создать пользовательские группы: менеджеры и сотрудники. От имени администратора группы создаются успешно.
+
+Создать два новых пользователя: первого и второго.
+
+Проверить, что от имени первого и второго пользователя нельзя создать группу.
+
+От имени администратора дать доступ группе менеджеров и сотрудников к ресурсу «Заметки» на чтение с правом передоверия.
+
+Дать доступ к ресурсу Заметки группе менеджеров на запись с правом передоверия.
+
+Добавить первого пользователя к менеджерам.
+
+Добавить второго пользователя к сотрудникам.
+
+Проверить что первый и второй пользователь могут получить доступ к Заметкам на чтение.
+
+Проверить что сотрудник не имеет прав на создание записи.
+
+Проверить что мегеджер имеет право на создание записи.
+   */
+  describe('User system test', function () {
+    it('u-s-1: register first user account', function (done) {
+      return signupUser(context, UserAdmin)
+        .then((res) => {
+          // 1-1: check if account created ok
+          expect(res.body).to.exist('Body should exist')
+          expect(res.body).to.be.an('object')
+          expect(res.body.email).to.exist()
+          expect(res.body.email).to.be.equal(UserAdmin.email)
+          return loginAs(context, UserAdmin)
+        })
+        .then((res) => {
+          // 1-1: check if we had some token
+          expect(res.body).to.exist('res.body should exist')
+          expect(res.body.token).to.exist('res.body.token should exist')
+
+          context.adminToken = res.body.token
+          return meGroups(context)
+        })
+        .then((res) => {
+          // 1-2: check if user is admin
+          expect(res.body).to.exist('Body should exist')
+          expect(res.body).to.be.an('array').that.not.empty()
+          expect(res.body).to.include('')
+
+
+
+        })
+        .then(() => { done() })
+        .catch((e) => { done(e) })
+
+    })
+
+
+    /*
     it('Generate a lot of users', function () {
       let ndx = 1
       return signupUser(context, UserAdmin)
@@ -117,6 +180,6 @@ describe('ex-modular tests', function () {
         .then(() => signupUser(context, { name: `User${ndx}`, email: `user${ndx}@email.net`, password: `passw${ndx++}`, isAdmin: false }))
         .then(() => signupUser(context, { name: `User${ndx}`, email: `user${ndx}@email.net`, password: `passw${ndx++}`, isAdmin: false }))
         .then(() => signupUser(context, { name: `User${ndx}`, email: `user${ndx}@email.net`, password: `passw${ndx++}`, isAdmin: false }))
-    })
+    }) */
   })
 })

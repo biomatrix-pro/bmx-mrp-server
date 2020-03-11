@@ -30,9 +30,7 @@ export const routeList = (app, Model) => {
       app.exModular.auth.check,
       app.exModular.access.check(objectName),
       app.exModular.services.validator.listFilterValidator(Model)
-    ],
-    type: 'Model',
-    object: Model
+    ]
   }
 }
 
@@ -48,9 +46,7 @@ export const routeCreate = (app, Model) => {
       app.exModular.auth.check,
       app.exModular.access.check(objectName),
       app.exModular.services.validator.checkBodyForModel(Model)
-    ],
-    type: 'Model',
-    object: Model
+    ]
   }
 }
 
@@ -65,9 +61,7 @@ export const routeRemoveAll = (app, Model) => {
     validate: [
       app.exModular.auth.check,
       app.exModular.access.check(objectName)
-    ],
-    type: 'Model',
-    object: Model
+    ]
   }
 }
 
@@ -83,9 +77,7 @@ export const routeItem = (app, Model) => {
       app.exModular.auth.check,
       app.exModular.access.check(objectName),
       app.exModular.services.validator.paramId(Model)
-    ],
-    type: 'Model',
-    object: Model
+    ]
   }
 }
 
@@ -102,9 +94,7 @@ export const routeSave = (app, Model) => {
       app.exModular.access.check(objectName),
       app.exModular.services.validator.paramId(Model),
       app.exModular.services.validator.checkBodyForModel(Model)
-    ],
-    type: 'Model',
-    object: Model
+    ]
   }
 }
 
@@ -120,9 +110,7 @@ export const routeRemove = (app, Model) => {
       app.exModular.auth.check,
       app.exModular.access.check(objectName),
       app.exModular.services.validator.paramId(Model)
-    ],
-    type: 'Model',
-    object: Model
+    ]
   }
 }
 
@@ -197,13 +185,32 @@ export const RouteBuilder = (app) => {
       .then(() => {
         app.exModular.routes.map((route) => {
           let handlers = []
+
+          if (route.before) {
+            if (!Array.isArray(route.before)) {
+              route.before = [route.before]
+            }
+            handlers = _.concat(handlers, _.flattenDeep(route.before))
+          }
+
           if (route.validate) {
             if (!Array.isArray(route.validate)) {
               route.validate = [route.validate]
             }
             handlers = _.concat(handlers, _.flattenDeep(route.validate))
           }
-          handlers = _.concat(handlers, Wrap(route.handler))
+
+          if (route.handler) {
+            handlers = _.concat(handlers, Wrap(route.handler))
+          }
+
+          if (route.after) {
+            if (!Array.isArray(route.after)) {
+              route.after = [route.after]
+            }
+            handlers = _.concat(handlers, _.flattenDeep(route.after))
+          }
+
           switch (route.method) {
             case 'GET':
               app.get(route.path, handlers)

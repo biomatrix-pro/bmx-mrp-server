@@ -16,6 +16,7 @@ import { Controller } from './service-controller'
 import { Codegen } from './service-codegen'
 import { Seed } from './sevice-seed'
 import { Serial } from './service-serial'
+import { SendJson } from './service-send-json'
 
 import { User } from './model-user'
 import { UserGroup } from './model-user-group'
@@ -28,6 +29,7 @@ import { AccessSimple as Access } from './access-simple'
 import { InitAccess } from './init-access'
 import { SignupOpen } from './signup-open'
 import { AuthPassword } from './auth-password'
+import { Me } from './me'
 
 export const appBuilder = (express, options) => {
   if (!express) {
@@ -86,6 +88,7 @@ export const appBuilder = (express, options) => {
       app.exModular.services.controller = Controller(app)
       app.exModular.services.seed = Seed(app)
       app.exModular.services.serial = Serial(app)
+      app.exModular.services.sendJson = SendJson(app)
       app.exModular.auth = Auth(app)
       app.exModular.access = Access(app)
 
@@ -101,6 +104,7 @@ export const appBuilder = (express, options) => {
       // configure app with modules:
       SignupOpen(app)
       AuthPassword(app)
+      Me(app)
 
       Codegen(app)
 
@@ -109,18 +113,6 @@ export const appBuilder = (express, options) => {
 
       // check dependings among installed modules (plugins):
       app.exModular.checkDeps()
-
-      // app.routeBuilder = RouteBuilder(app)
-      // app.routeBuilder.routerForAllModels()
-      //
-      // // init routes:
-      // app.use('/', indexRouter)
-      //
-      // // catch 404 and forward to error handler
-      // app.use(function (req, res, next) {
-      //   next(createError(404))
-      // })
-      //
 
       return app
     })
