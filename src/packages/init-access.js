@@ -9,11 +9,11 @@ export const InitAccess = (app) => () => {
   const Serial = app.exModular.services.serial
 
   return Promise.resolve()
-    .then(() => UserGroup.findById(ACCESS.ACCESS_ADMIN_GROUP_ID))
+    .then(() => UserGroup.findById(ACCESS.ADMIN_GROUP_ID))
     .then((item) => {
       if (!item) {
         return UserGroup.create({
-          id: ACCESS.ACCESS_ADMIN_GROUP_ID,
+          id: ACCESS.ADMIN_GROUP_ID,
           name: ACCESS.AccessSystemType.Admin.caption,
           systemType: ACCESS.AccessSystemType.Admin.value,
           users: []
@@ -21,11 +21,11 @@ export const InitAccess = (app) => () => {
       }
       return item
     })
-    .then(() => User.findById(ACCESS.ACCESS_GUEST_ID))
+    .then(() => User.findById(ACCESS.GUEST_ID))
     .then((item) => {
       if (!item) {
         return User.create({
-          id: ACCESS.ACCESS_GUEST_ID,
+          id: ACCESS.GUEST_ID,
           name: '(GUEST)',
           disabled: true
         })

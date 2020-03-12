@@ -17,7 +17,7 @@ import {
   // userDelete,
   // userSave
 } from '../client/client-api'
-import { ACCESS_ADMIN_GROUP_ID } from '../../src/packages/const-access'
+import { ADMIN_GROUP_ID } from '../../src/packages/const-access'
 
 /**
 
@@ -136,7 +136,7 @@ describe('ex-modular test: user system', function () {
           // 1-c3: user is admin
           expect(res.body).to.exist('Body should exist')
           expect(res.body).to.be.an('array').that.not.empty()
-          const _adminGroupNdx = _.findIndex(res.body, (item) => item.id === ACCESS_ADMIN_GROUP_ID)
+          const _adminGroupNdx = _.findIndex(res.body, (item) => item.id === ADMIN_GROUP_ID)
           expect(_adminGroupNdx).not.equal(-1)
         })
         .catch((e) => { throw e })
