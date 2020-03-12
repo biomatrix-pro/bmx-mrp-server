@@ -1,11 +1,5 @@
-import _ from 'lodash'
-import {
-  ACCESS_ADMIN_GROUP_ID,
-  ACCESS_DENY,
-  ACCESS_ALLOW,
-  ACCESS_UNKNOW,
-  ACCESS_GUEST_ID
-} from './const-access'
+// import _ from 'lodash'
+import * as ACCESS from './const-access'
 
 const packageName = 'Access-simple'
 
@@ -24,7 +18,7 @@ export const AccessSimple = (app) => {
   app.exModular.modules.Add(Module)
 
   Module.module.ACCESS_GUEST = {
-    id: ACCESS_GUEST_ID,
+    id: ACCESS.ACCESS_GUEST_ID,
     name: '(Guest)',
     email: '',
     password: '',
@@ -41,7 +35,7 @@ export const AccessSimple = (app) => {
       throw Error(`${packageName}.addAdmin: invalid param "user" - ${user.toString()}`)
     }
 
-    return app.exModular.models.UserGroup.usersAdd(ACCESS_ADMIN_GROUP_ID, user.id)
+    return app.exModular.models.UserGroup.usersAdd(ACCESS.ACCESS_ADMIN_GROUP_ID, user.id)
       .catch((e) => { throw e })
   }
 
@@ -55,7 +49,7 @@ export const AccessSimple = (app) => {
       throw Error(`${packageName}.addAdmin: invalid param "user" - ${user.toString()}`)
     }
 
-    return app.exModular.models.UserGroup.findById(ACCESS_ADMIN_GROUP_ID)
+    return app.exModular.models.UserGroup.findById(ACCESS.ACCESS_ADMIN_GROUP_ID)
       .then((_adminGroup) => {
         if (!_adminGroup) {
           throw Error(`${packageName}.isAdmin: can not find admin group`)
@@ -109,11 +103,11 @@ export const AccessSimple = (app) => {
   Module.module.check = (objectName) => (req, res, next) => {
     Module.module.CheckPermission(req.user, objectName)
       .then((_permission) => {
-        if (!_permission) {
+        if (_permission === undefined) {
           return next(Error('Failed to check permission'))
         }
-        if (_permission === ACCESS_UNKNOW || _permission === ACCESS_DENY) {
-          return next(app.exModular.services.errors.ServerNotAllowed())
+        if (_permission === ACCESS.ACCESS_UNKNOWN || _permission === ACCESS.ACCESS_DENY) {
+          return next(new app.exModular.services.errors.ServerNotAllowed())
         }
         return next()
       })
@@ -136,7 +130,7 @@ export const AccessSimple = (app) => {
         if (_isAdmin) {
           // user is admin, so all permissions granted for all objects:
           console.log('user is admin, allow')
-          return Promise.resolve(ACCESS_ALLOW)
+          return Promise.resolve(ACCESS.ACCESS_ALLOW)
         }
 
         // find access object
@@ -144,7 +138,7 @@ export const AccessSimple = (app) => {
           .then((_accessObject) => {
             if (!_accessObject) {
               console.log('object not defined, DENY')
-              return Promise.resolve(ACCESS_DENY) // no object defined, DENY
+              return Promise.resolve(ACCESS.ACCESS_DENY) // no object defined, DENY
             }
             accessObject = _accessObject
 
@@ -159,7 +153,7 @@ export const AccessSimple = (app) => {
                     .then((_userGroups) => {
                       if (!_userGroups) {
                         // failed to get user groups, so no permissions are defined, return DENY:
-                        return Promise.resolve(ACCESS_DENY) // no object defined, DENY
+                        return Promise.resolve(ACCESS.ACCESS_DENY) // no object defined, DENY
                       }
                       userGroups = _userGroups
 
@@ -170,7 +164,7 @@ export const AccessSimple = (app) => {
                           .then((_permissionGroup) => {
                             // if permisison is not defined - return UNKNOWN
                             if (!_permissionGroup) {
-                              return ACCESS_UNKNOW
+                              return ACCESS.ACCESS_UNKNOW
                             }
                             // otherwise - return specific permission
                             return _permissionGroup.permission
@@ -184,11 +178,11 @@ export const AccessSimple = (app) => {
                           }
 
                           // by default - group result will be DENY
-                          let groupRes = ACCESS_DENY
+                          let groupRes = ACCESS.ACCESS_DENY
                           _groupResult.map((res) => {
                             // if any group have ALLOW, group result will be ALLOW
-                            if (res === ACCESS_ALLOW) {
-                              groupRes = ACCESS_ALLOW
+                            if (res === ACCESS.ACCESS_ALLOW) {
+                              groupRes = ACCESS.ACCESS_ALLOW
                             }
                           })
                           return Promise.resolve(groupRes)

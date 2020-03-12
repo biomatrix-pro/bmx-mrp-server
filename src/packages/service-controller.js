@@ -29,7 +29,7 @@ export const Controller = (app) => {
       // console.log('parsed:')
       // console.log(f)
     } catch (e) {
-      throw app.exModular.services.errors.ServerInvalidParameters('filter', 'object',
+      throw new app.exModular.services.errors.ServerInvalidParameters('filter', 'object',
         'Request\'s filter property is invalid JSON object')
     }
 
@@ -84,14 +84,14 @@ export const Controller = (app) => {
         // check if prop is exist in Model: (? dot-accessed fields in associations)
         const prop = _.find(Model.props, { name: propName })
         if (!prop) {
-          throw app.exModular.services.errors.ServerInvalidParameters(`filter.${propName}`, 'object',
+          throw new app.exModular.services.errors.ServerInvalidParameters(`filter.${propName}`, 'object',
             `Request's filter param "${propName}" not found in model "${Model.name}"`)
         }
         if (Array.isArray(val)) {
           // if value is array:
           // console.log('is array')
           if (op !== '') {
-            throw app.exModular.services.errors.ServerInvalidParameters('filter', 'object',
+            throw new app.exModular.services.errors.ServerInvalidParameters('filter', 'object',
               'Request\'s filter property have invalid syntax - operation combined with array of values')
           }
           if (val.length === 1) {
@@ -133,17 +133,17 @@ export const Controller = (app) => {
       // console.log('parsed:')
       // console.log(f)
     } catch (e) {
-      throw app.exModular.services.errors.ServerInvalidParameters('sort', 'object',
+      throw new app.exModular.services.errors.ServerInvalidParameters('sort', 'object',
         'Request\'s sort property is invalid JSON array')
     }
 
     if (!Array.isArray(f)) {
-      throw app.exModular.services.errors.ServerInvalidParameters('sort', 'object',
+      throw new app.exModular.services.errors.ServerInvalidParameters('sort', 'object',
         'Request\'s sort property is not an array')
     }
 
     if (f.length % 2) {
-      throw app.exModular.services.errors.ServerInvalidParameters('sort', 'object',
+      throw new app.exModular.services.errors.ServerInvalidParameters('sort', 'object',
         'Request\'s sort property should be an array with tuples (number of items should be multiply of 2)')
     }
 
@@ -153,7 +153,7 @@ export const Controller = (app) => {
 
     for (let ndx = 0; ndx < f.length; ndx += 2) {
       if (!_.find(Model.props, { name: f[ndx] })) {
-        throw app.exModular.services.errors.ServerInvalidParameters(`sort[${ndx}]`, 'object',
+        throw new app.exModular.services.errors.ServerInvalidParameters(`sort[${ndx}]`, 'object',
           `Sort field "${f[ndx]}" not found in model "${Model.name}"`)
       }
       ret.orderBy.push({ column: f[ndx], order: f[ndx + 1].toLowerCase() })
@@ -180,17 +180,17 @@ export const Controller = (app) => {
         // console.log('parsed:')
         // console.log(f)
       } catch (e) {
-        throw app.exModular.services.errors.ServerInvalidParameters('range', 'object',
+        throw new app.exModular.services.errors.ServerInvalidParameters('range', 'object',
           'Request\'s range query parameter is mailformed JSON object - should be array')
       }
 
       if (!Array.isArray(f)) {
-        throw app.exModular.services.errors.ServerInvalidParameters('range', 'object',
+        throw new app.exModular.services.errors.ServerInvalidParameters('range', 'object',
           'Request\'s range property is not an array')
       }
 
       if (f.length !== 2) {
-        throw app.exModular.services.errors.ServerInvalidParameters('range', 'object',
+        throw new app.exModular.services.errors.ServerInvalidParameters('range', 'object',
           'Request\'s range property should be an array with two values - range start and end')
       }
 
@@ -293,7 +293,7 @@ export const Controller = (app) => {
     return Model.findById(req.params.id)
       .then((foundData) => {
         if (!foundData) {
-          throw app.exModular.services.errors.ServerNotFound(Model.name, req.params.id, `${Model.name} with id ${req.params.id} not found`)
+          throw new app.exModular.services.errors.ServerNotFound(Model.name, req.params.id, `${Model.name} with id ${req.params.id} not found`)
         }
         res.status(200).json(foundData)
         return foundData

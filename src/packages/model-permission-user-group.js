@@ -2,14 +2,14 @@ import uuid from 'uuid/v4'
 import { AccessPermissionType } from './const-access'
 // import _ from 'lodash'
 
-export const PermissionUser = (app, options) => {
+export const PermissionUserGroup = (app, options) => {
   if (!options) {
     options = {}
   }
   // options.storage = options.storage || 'default'
 
   const Model = {
-    name: 'PermissionUser',
+    name: 'PermissionUserGroup',
     priority: 0,
     props: [
       {

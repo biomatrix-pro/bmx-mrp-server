@@ -42,7 +42,7 @@ export const SignupOpen = (app) => {
 
     return User.count()
       .then((userCount) => {
-        if (userCount === 0) {
+        if (userCount === 1) {
           addUserAsAdmin = true
         }
         return User.create(req.data)

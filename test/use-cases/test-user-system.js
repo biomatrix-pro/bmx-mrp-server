@@ -13,7 +13,7 @@ import {
   UserAdmin,
   // UserFirst,
   // userList,
-  signupUser, meGroups, userGroupAdd, UserFirst, UserSecond
+  signupUser, meGroups, userGroupAdd, UserFirst, UserSecond, expected
   // userDelete,
   // userSave
 } from '../client/client-api'
@@ -55,10 +55,7 @@ describe('ex-modular test: user system', function () {
         context.request = supertest(app)
         done()
       })
-      .then(() => app.exModular.storages.Clear())
-      .catch((err) => {
-        done(err)
-      })
+      .catch(done)
   })
 
   after((done) => {
@@ -67,12 +64,11 @@ describe('ex-modular test: user system', function () {
       .catch(done)
   })
 
-  /*
   beforeEach((done) => {
     app.exModular.storages.Clear()
       .then(() => done())
       .catch(done)
-  }) */
+  })
 
   /* Test plan:
 
@@ -90,10 +86,16 @@ describe('ex-modular test: user system', function () {
   u-s-3: Создать два новых пользователя:
    3-1: первый пользователь
     3-1-c1: пользователь создан успешно
+    3-1-c2: можно входить в систему под этим пользователем
    3-2: второй пользователь
     3-2-c1: пользователь создан успешно
+    3-2-c2: можно входить в систему под этим пользователем
 
-Проверить, что от имени первого и второго пользователя нельзя создать группу.
+  u-s-4: проверить, что от имени пользователя нельзя создать группу:
+    4-1: первого пользователя
+      4-1-c1: ожидать ошибку
+    4-2: второго  пользователя
+      4-1-c1: ожидать ошибку
 
 От имени администратора дать доступ группе менеджеров и сотрудников к ресурсу «Заметки» на чтение с правом передоверия.
 
@@ -142,8 +144,13 @@ describe('ex-modular test: user system', function () {
 
     describe('u-s-2: create user groups', function () {
       it('2-1: Managers group', function () {
-        context.token = context.adminToken
-        return userGroupAdd(context, { name: 'Managers' })
+        return signupUser(context, UserAdmin)
+          .then(() => loginAs(context, UserAdmin))
+          .then((res) => {
+            context.adminToken = res.body.token
+            context.token = context.adminToken
+            return userGroupAdd(context, { name: 'Managers' })
+          })
           .then((res) => {
             // 2-1-c1: check if group created ok
             expect(res.body).to.exist('Body should exist')
@@ -156,8 +163,13 @@ describe('ex-modular test: user system', function () {
           .catch((e) => { throw e })
       })
       it('2-2: Employee group', function () {
-        context.token = context.adminToken
-        return userGroupAdd(context, { name: 'Employee' })
+        return signupUser(context, UserAdmin)
+          .then(() => loginAs(context, UserAdmin))
+          .then((res) => {
+            context.adminToken = res.body.token
+            context.token = context.adminToken
+            return userGroupAdd(context, { name: 'Employee' })
+          })
           .then((res) => {
             // 2-2-c1: check if group created ok
             expect(res.body).to.exist('Body should exist')
@@ -183,7 +195,13 @@ describe('ex-modular test: user system', function () {
             expect(res.body.name).to.be.equal(UserFirst.name)
             expect(res.body.email).to.be.equal(UserFirst.email)
 
-            context.userFirst = res.body.id
+            return loginAs(context, UserFirst)
+          })
+          .then((res) => {
+            // 3-1-c2: check if we can login as that user
+            expect(res.body).to.exist('res.body should exist')
+            expect(res.body.token).to.exist('res.body.token should exist')
+            context.UserFirst = res.body.token
           })
           .catch((e) => { throw e })
       })
@@ -198,7 +216,55 @@ describe('ex-modular test: user system', function () {
             expect(res.body.name).to.be.equal(UserSecond.name)
             expect(res.body.email).to.be.equal(UserSecond.email)
 
-            context.userFirst = res.body.id
+            return loginAs(context, UserSecond)
+          })
+          .then((res) => {
+            // 3-2-c2: check if we can login as that user
+            expect(res.body).to.exist('res.body should exist')
+            expect(res.body.token).to.exist('res.body.token should exist')
+            context.UserSecond = res.body.token
+          })
+          .catch((e) => { throw e })
+      })
+    })
+
+    describe('u-s-4: not-admin user can not create user group', function () {
+      it('3-1: UserFirst can not create user group', function () {
+        return signupUser(context, UserAdmin)
+          .then(() => signupUser(context, UserFirst))
+          .then(() => loginAs(context, UserFirst))
+          .then((res) => {
+            expect(res.body).to.exist('res.body should exist')
+            expect(res.body.token).to.exist('res.body.token should exist')
+            context.UserFirst = res.body.token
+            context.token = context.UserFirst
+            return userGroupAdd(context, { name: 'Some group name' }, expected.ErrCodeForbidden)
+          })
+          .then((res) => {
+            // 3-1-c1: check if user created ok
+            expect(res.body).to.exist('Body should exist')
+            expect(res.body).to.be.an('object')
+            expect(res.body.err).to.exist()
+          })
+          .catch((e) => { throw e })
+      })
+
+      it('3-2: UserSecond can not create user group', function () {
+        return signupUser(context, UserAdmin)
+          .then(() => signupUser(context, UserSecond))
+          .then(() => loginAs(context, UserSecond))
+          .then((res) => {
+            expect(res.body).to.exist('res.body should exist')
+            expect(res.body.token).to.exist('res.body.token should exist')
+            context.UserSecond = res.body.token
+            context.token = context.UserSecond
+            return userGroupAdd(context, { name: 'Some group name' }, expected.ErrCodeForbidden)
+          })
+          .then((res) => {
+            // 3-1-c1: check if user created ok
+            expect(res.body).to.exist('Body should exist')
+            expect(res.body).to.be.an('object')
+            expect(res.body.err).to.exist()
           })
           .catch((e) => { throw e })
       })

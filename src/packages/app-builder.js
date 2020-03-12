@@ -22,6 +22,8 @@ import { User } from './model-user'
 import { UserGroup } from './model-user-group'
 import { Session } from './model-session'
 import { AccessObject } from './model-access-object'
+import { PermissionUser } from './model-permission-user'
+import { PermissionUserGroup } from './model-permission-user-group'
 
 import { AuthJwt as Auth } from './auth-jwt'
 import { AccessSimple as Access } from './access-simple'
@@ -100,6 +102,8 @@ export const appBuilder = (express, options) => {
       app.exModular.modelAdd(UserGroup(app))
       app.exModular.modelAdd(Session(app))
       app.exModular.modelAdd(AccessObject(app))
+      app.exModular.modelAdd(PermissionUser(app))
+      app.exModular.modelAdd(PermissionUserGroup(app))
 
       // configure app with modules:
       SignupOpen(app)
