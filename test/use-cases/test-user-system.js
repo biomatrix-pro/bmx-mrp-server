@@ -4,6 +4,7 @@ import supertest from 'supertest'
 import chai, { expect } from 'chai'
 import dirtyChai from 'dirty-chai'
 import env from 'dotenv-safe'
+import _ from 'lodash'
 
 import App from '../../src/packages/app-builder'
 
@@ -12,10 +13,11 @@ import {
   UserAdmin,
   // UserFirst,
   // userList,
-  signupUser
+  signupUser, meGroups
   // userDelete,
   // userSave
 } from '../client/client-api'
+import { ACCESS_ADMIN_GROUP_ID } from '../../src/packages/const-access'
 
 /**
 
@@ -100,7 +102,7 @@ describe('ex-modular test: user system', function () {
 Проверить что мегеджер имеет право на создание записи.
    */
   describe('User system test', function () {
-    it('u-s-1: register first user account', function (done) {
+    it('u-s-1: register first user account', function () {
       return signupUser(context, UserAdmin)
         .then((res) => {
           // 1-1: check if account created ok
@@ -116,22 +118,19 @@ describe('ex-modular test: user system', function () {
           expect(res.body.token).to.exist('res.body.token should exist')
 
           context.adminToken = res.body.token
+
+          context.token = context.adminToken
           return meGroups(context)
         })
         .then((res) => {
           // 1-2: check if user is admin
           expect(res.body).to.exist('Body should exist')
           expect(res.body).to.be.an('array').that.not.empty()
-          expect(res.body).to.include('')
-
-
-
+          const _adminGroupNdx = _.findIndex(res.body, (item) => item.id === ACCESS_ADMIN_GROUP_ID)
+          expect(_adminGroupNdx).not.equal(-1)
         })
-        .then(() => { done() })
-        .catch((e) => { done(e) })
-
+        .catch((e) => { throw e })
     })
-
 
     /*
     it('Generate a lot of users', function () {

@@ -60,7 +60,7 @@ export const AccessSimple = (app) => {
         if (!_adminGroup) {
           throw Error(`${packageName}.isAdmin: can not find admin group`)
         }
-        return _.findIndex(_adminGroup.users, user.id) !== -1
+        return _adminGroup.users.indexOf(user.id) !== -1
       })
       .catch((e) => { throw e })
   }
@@ -79,7 +79,7 @@ export const AccessSimple = (app) => {
       .then((_userGroups) => {
         const ret = []
         _userGroups.map((userGroup) => {
-          const userIndex = _.findIndex(userGroup.users, user.id)
+          const userIndex = userGroup.users.indexOf(user.id)
           if (userIndex !== -1) {
             ret.push(userGroup)
           }

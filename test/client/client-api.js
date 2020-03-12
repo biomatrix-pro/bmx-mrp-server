@@ -62,6 +62,12 @@ export const logout = (context, expectedCode) => context.request.get(`${context.
   .accept('text')
   .expect(expectedCode || expected.Ok)
 
+export const meGroups = (context, expectedCode) => context.request.get(`${context.apiRoot}/me/groups`)
+  .set('Authorization', `${context.authSchema} ${context.token}`)
+  .type('json')
+  .accept('json')
+  .expect(expectedCode || expected.Ok)
+
 export const inviteCreate = (context, data, expectedCode) => context.request.post(`${context.apiRoot}/auth/invites`)
   .set('Authorization', `${context.authSchema} ${context.token}`)
   .send(data)
