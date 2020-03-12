@@ -24,6 +24,7 @@ export const UserSecond = {
 
 export const expected = {
   Ok: 200,
+  OkCreated: 201,
   ErrCodeNotLogged: 401,
   ErrCodeForbidden: 403,
   ErrCodeNotFound: 404,
@@ -94,27 +95,27 @@ export const userGroupList = (context, expectedCode) => context.request.get(`${c
   .accept('json')
   .expect(expectedCode || expected.Ok)
 
-export const userGroupAdd = (context, data, expectedCode) => context.request.post(`${context.apiRoot}/user-groups`)
+export const userGroupAdd = (context, data, expectedCode) => context.request.post(`${context.apiRoot}/usergroup`)
+  .set('Authorization', `${context.authSchema} ${context.token}`)
+  .send(data)
+  .type('json')
+  .accept('json')
+  .expect(expectedCode || expected.OkCreated)
+
+export const userGroupItem = (context, groupId, expectedCode) => context.request.get(`${context.apiRoot}/usergroup/${groupId}`)
+  .set('Authorization', `${context.authSchema} ${context.token}`)
+  .type('json')
+  .accept('json')
+  .expect(expectedCode || expected.Ok)
+
+export const userGroupSave = (context, data, expectedCode) => context.request.put(`${context.apiRoot}/usergroup/${data.id}`)
   .set('Authorization', `${context.authSchema} ${context.token}`)
   .send(data)
   .type('json')
   .accept('json')
   .expect(expectedCode || expected.Ok)
 
-export const userGroupItem = (context, groupId, expectedCode) => context.request.get(`${context.apiRoot}/user-groups/${groupId}`)
-  .set('Authorization', `${context.authSchema} ${context.token}`)
-  .type('json')
-  .accept('json')
-  .expect(expectedCode || expected.Ok)
-
-export const userGroupSave = (context, data, expectedCode) => context.request.put(`${context.apiRoot}/user-groups/${data.id}`)
-  .set('Authorization', `${context.authSchema} ${context.token}`)
-  .send(data)
-  .type('json')
-  .accept('json')
-  .expect(expectedCode || expected.Ok)
-
-export const userGroupDelete = (context, groupId, expectedCode) => context.request.delete(`${context.apiRoot}/user-groups/${groupId}`)
+export const userGroupDelete = (context, groupId, expectedCode) => context.request.delete(`${context.apiRoot}/usergroup/${groupId}`)
   .set('Authorization', `${context.authSchema} ${context.token}`)
   .type('json')
   .accept('json')

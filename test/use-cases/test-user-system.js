@@ -13,7 +13,7 @@ import {
   UserAdmin,
   // UserFirst,
   // userList,
-  signupUser, meGroups
+  signupUser, meGroups, userGroupAdd
   // userDelete,
   // userSave
 } from '../client/client-api'
@@ -76,12 +76,13 @@ describe('ex-modular test: user system', function () {
 
   /* Test plan:
 
-  u-s-1: Создать первого пользователя
+  u-s-1: Создать первого пользователя:
     1-1: проверить что аккаунт успешно создан
     1-2: проверить что получен токен
     1-3: проверить что он администратор
 
-Создать пользовательские группы: менеджеры и сотрудники. От имени администратора группы создаются успешно.
+  u-s-2: Создать пользовательские группы: менеджеры и сотрудники:
+    2-1: Проверить - от имени администратора группы создаются успешно
 
 Создать два новых пользователя: первого и второго.
 
@@ -130,6 +131,37 @@ describe('ex-modular test: user system', function () {
           expect(_adminGroupNdx).not.equal(-1)
         })
         .catch((e) => { throw e })
+    })
+
+    describe('u-s-2: create user groups', function () {
+      it('2-1: Managers group', function () {
+        context.token = context.adminToken
+        return userGroupAdd(context, { name: 'Managers', systemType: '', users: [] })
+          .then((res) => {
+            // 2-1-1: check if group created ok
+            expect(res.body).to.exist('Body should exist')
+            expect(res.body).to.be.an('object')
+            expect(res.body.id).to.exist()
+            expect(res.body.name).to.be.equal('Managers')
+
+            context.groupManagers = res.body.id
+          })
+          .catch((e) => { throw e })
+      })
+      it('2-2: Employee group', function () {
+        context.token = context.adminToken
+        return userGroupAdd(context, { name: 'Employee', systemType: '', users: [] })
+          .then((res) => {
+            // 2-1-1: check if group created ok
+            expect(res.body).to.exist('Body should exist')
+            expect(res.body).to.be.an('object')
+            expect(res.body.id).to.exist()
+            expect(res.body.name).to.be.equal('Employee')
+
+            context.groupEmployee = res.body.id
+          })
+          .catch((e) => { throw e })
+      })
     })
 
     /*
