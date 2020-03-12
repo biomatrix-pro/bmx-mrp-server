@@ -54,7 +54,7 @@ export const SignupOpen = (app) => {
         }
       })
       .then(() => {
-        res.json(user)
+        res.status(201).json(user)
       })
       .catch((error) => {
         if (error instanceof Errors.ServerError) {

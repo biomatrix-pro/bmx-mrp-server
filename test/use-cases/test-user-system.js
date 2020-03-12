@@ -13,7 +13,7 @@ import {
   UserAdmin,
   // UserFirst,
   // userList,
-  signupUser, meGroups, userGroupAdd
+  signupUser, meGroups, userGroupAdd, UserFirst, UserSecond
   // userDelete,
   // userSave
 } from '../client/client-api'
@@ -77,14 +77,21 @@ describe('ex-modular test: user system', function () {
   /* Test plan:
 
   u-s-1: Создать первого пользователя:
-    1-1: проверить что аккаунт успешно создан
-    1-2: проверить что получен токен
-    1-3: проверить что он администратор
+    1-c1: проверить что аккаунт успешно создан
+    1-c2: проверить что получен токен
+    1-c3: проверить что он администратор
 
-  u-s-2: Создать пользовательские группы: менеджеры и сотрудники:
-    2-1: Проверить - от имени администратора группы создаются успешно
+  u-s-2: Создать пользовательские группы:
+    2-1 группа "менеджеры":
+      2-1-c1: проверить что всё ок
+    2-2: группа "сотрудники":
+      2-2-c1: проверить что группа создана
 
-Создать два новых пользователя: первого и второго.
+  u-s-3: Создать два новых пользователя:
+   3-1: первый пользователь
+    3-1-c1: пользователь создан успешно
+   3-2: второй пользователь
+    3-2-c1: пользователь создан успешно
 
 Проверить, что от имени первого и второго пользователя нельзя создать группу.
 
@@ -106,7 +113,7 @@ describe('ex-modular test: user system', function () {
     it('u-s-1: register first user account', function () {
       return signupUser(context, UserAdmin)
         .then((res) => {
-          // 1-1: check if account created ok
+          // 1-c1: user account created ok
           expect(res.body).to.exist('Body should exist')
           expect(res.body).to.be.an('object')
           expect(res.body.email).to.exist()
@@ -114,7 +121,7 @@ describe('ex-modular test: user system', function () {
           return loginAs(context, UserAdmin)
         })
         .then((res) => {
-          // 1-1: check if we had some token
+          // 1-c2: we have some token
           expect(res.body).to.exist('res.body should exist')
           expect(res.body.token).to.exist('res.body.token should exist')
 
@@ -124,7 +131,7 @@ describe('ex-modular test: user system', function () {
           return meGroups(context)
         })
         .then((res) => {
-          // 1-2: check if user is admin
+          // 1-c3: user is admin
           expect(res.body).to.exist('Body should exist')
           expect(res.body).to.be.an('array').that.not.empty()
           const _adminGroupNdx = _.findIndex(res.body, (item) => item.id === ACCESS_ADMIN_GROUP_ID)
@@ -138,7 +145,7 @@ describe('ex-modular test: user system', function () {
         context.token = context.adminToken
         return userGroupAdd(context, { name: 'Managers' })
           .then((res) => {
-            // 2-1-1: check if group created ok
+            // 2-1-c1: check if group created ok
             expect(res.body).to.exist('Body should exist')
             expect(res.body).to.be.an('object')
             expect(res.body.id).to.exist()
@@ -152,13 +159,46 @@ describe('ex-modular test: user system', function () {
         context.token = context.adminToken
         return userGroupAdd(context, { name: 'Employee' })
           .then((res) => {
-            // 2-1-1: check if group created ok
+            // 2-2-c1: check if group created ok
             expect(res.body).to.exist('Body should exist')
             expect(res.body).to.be.an('object')
             expect(res.body.id).to.exist()
             expect(res.body.name).to.be.equal('Employee')
 
             context.groupEmployee = res.body.id
+          })
+          .catch((e) => { throw e })
+      })
+    })
+
+    describe('u-s-3: create users', function () {
+      it('3-1: UserFirst', function () {
+        context.token = context.adminToken
+        return signupUser(context, UserFirst)
+          .then((res) => {
+            // 3-1-c1: check if user created ok
+            expect(res.body).to.exist('Body should exist')
+            expect(res.body).to.be.an('object')
+            expect(res.body.id).to.exist()
+            expect(res.body.name).to.be.equal(UserFirst.name)
+            expect(res.body.email).to.be.equal(UserFirst.email)
+
+            context.userFirst = res.body.id
+          })
+          .catch((e) => { throw e })
+      })
+      it('3-2: UserSecond', function () {
+        context.token = context.adminToken
+        return signupUser(context, UserSecond)
+          .then((res) => {
+            // 3-2-c1: check if user created ok
+            expect(res.body).to.exist('Body should exist')
+            expect(res.body).to.be.an('object')
+            expect(res.body.id).to.exist()
+            expect(res.body.name).to.be.equal(UserSecond.name)
+            expect(res.body.email).to.be.equal(UserSecond.email)
+
+            context.userFirst = res.body.id
           })
           .catch((e) => { throw e })
       })

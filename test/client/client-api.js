@@ -36,7 +36,7 @@ export const expected = {
 export const signupUser = (context, user, expectedCode) => context.request.post(`${context.apiRoot}/auth/signup`)
   .type('json')
   .accept('json')
-  .expect(expectedCode || expected.Ok)
+  .expect(expectedCode || expected.OkCreated)
   .send(user || UserAdmin)
 
 export const loginAs = (context, user, expectedCode) => context.request.post(`${context.apiRoot}/auth/login`)
