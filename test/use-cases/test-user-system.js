@@ -136,7 +136,7 @@ describe('ex-modular test: user system', function () {
     describe('u-s-2: create user groups', function () {
       it('2-1: Managers group', function () {
         context.token = context.adminToken
-        return userGroupAdd(context, { name: 'Managers', systemType: '', users: [] })
+        return userGroupAdd(context, { name: 'Managers' })
           .then((res) => {
             // 2-1-1: check if group created ok
             expect(res.body).to.exist('Body should exist')
@@ -150,7 +150,7 @@ describe('ex-modular test: user system', function () {
       })
       it('2-2: Employee group', function () {
         context.token = context.adminToken
-        return userGroupAdd(context, { name: 'Employee', systemType: '', users: [] })
+        return userGroupAdd(context, { name: 'Employee' })
           .then((res) => {
             // 2-1-1: check if group created ok
             expect(res.body).to.exist('Body should exist')

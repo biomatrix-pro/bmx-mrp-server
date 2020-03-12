@@ -26,7 +26,11 @@ export const Validator = (app) => {
       } else if (prop.type === 'id' && (options && !options.optionalId)) {
         validations.push(body([prop.name]).optional().isString().withMessage(`${Model.name}.${prop.name} should be string UUID`))
       } else if (prop.type === 'refs') {
-        validations.push(body([prop.name]).isArray({ min: 0 }).withMessage('Users should be specified as array'))
+        let v = body([prop.name]).isArray({ min: 0 }).withMessage('Users should be specified as array')
+        if (prop.default) {
+          v = v.optional()
+        }
+        validations.push(v)
       } else if (prop.type === 'ref') {
         validations.push(body([prop.name]).optional().isString().withMessage(`${Model.name}.${prop.name} should be string UUID`))
       }
