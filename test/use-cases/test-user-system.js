@@ -13,11 +13,11 @@ import {
   UserAdmin,
   // UserFirst,
   // userList,
-  signupUser, meGroups, userGroupAdd, UserFirst, UserSecond, expected
+  signupUser, meGroups, userGroupAdd, UserFirst, UserSecond, expected, permissionUserGroupCreate
   // userDelete,
   // userSave
 } from '../client/client-api'
-import { ADMIN_GROUP_ID } from '../../src/packages/const-access'
+import { AccessPermissionType, ADMIN_GROUP_ID } from '../../src/packages/const-access'
 
 /**
 
@@ -97,7 +97,9 @@ describe('ex-modular test: user system', function () {
     4-2: второго  пользователя
       4-1-c1: ожидать ошибку
 
-От имени администратора дать доступ группе менеджеров и сотрудников к ресурсу «Заметки» на чтение с правом передоверия.
+  u-s-5: дать доступ от администратора на объект Note:
+    5-1: группе менеджеров - на чтение и запись с правом передоверия;
+    5-2: группе сотрудников - на чтение
 
 Дать доступ к ресурсу Заметки группе менеджеров на запись с правом передоверия.
 
@@ -229,7 +231,7 @@ describe('ex-modular test: user system', function () {
     })
 
     describe('u-s-4: not-admin user can not create user group', function () {
-      it('3-1: UserFirst can not create user group', function () {
+      it('4-1: UserFirst can not create user group', function () {
         return signupUser(context, UserAdmin)
           .then(() => signupUser(context, UserFirst))
           .then(() => loginAs(context, UserFirst))
@@ -249,7 +251,7 @@ describe('ex-modular test: user system', function () {
           .catch((e) => { throw e })
       })
 
-      it('3-2: UserSecond can not create user group', function () {
+      it('4-2: UserSecond can not create user group', function () {
         return signupUser(context, UserAdmin)
           .then(() => signupUser(context, UserSecond))
           .then(() => loginAs(context, UserSecond))
@@ -265,6 +267,42 @@ describe('ex-modular test: user system', function () {
             expect(res.body).to.exist('Body should exist')
             expect(res.body).to.be.an('object')
             expect(res.body.err).to.exist()
+          })
+          .catch((e) => { throw e })
+      })
+    })
+
+    describe('u-s-5: admin user delegate permissions to Note object', function () {
+      it('5-1: add permission for Managers group', function () {
+        return signupUser(context, UserAdmin)
+          .then(() => loginAs(context, UserAdmin))
+          .then((res) => {
+            context.adminToken = res.body.token
+            context.token = context.adminToken
+            return userGroupAdd(context, { name: 'Managers' })
+          })
+          .then((res) => {
+            // 2-1-c1: check if group created ok
+            expect(res.body).to.exist('Body should exist')
+            expect(res.body).to.be.an('object')
+            expect(res.body.id).to.exist()
+            expect(res.body.name).to.be.equal('Managers')
+
+            context.groupManagers = res.body.id
+
+            return permissionUserGroupCreate(context,
+              {
+                userGroupId: context.groupManagers,
+                accessObjectId: 'Note.list',
+                value: AccessPermissionType.ALLOW.value
+              })
+          })
+          .then((res) => {
+            // 2-1-c1: check if group created ok
+            expect(res.body).to.exist('Body should exist')
+            expect(res.body).to.be.an('object')
+            expect(res.body.id).to.exist()
+            expect(res.body.err).to.not.exist()
           })
           .catch((e) => { throw e })
       })

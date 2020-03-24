@@ -172,20 +172,20 @@ export const aclUserCreate = (context, userId, data, expectedCode) => context.re
   .accept('json')
   .expect(expectedCode || expected.Ok)
 
-export const aclUserGroupList = (context, groupId, expectedCode) =>
-  context.request.get(`${context.apiRoot}/acl/user-group-acls/${groupId}`)
+export const permissionUserGroupList = (context, expectedCode) =>
+  context.request.get(`${context.apiRoot}/permissionusergroup`)
     .set('Authorization', `${context.authSchema} ${context.token}`)
     .type('json')
     .accept('json')
     .expect(expectedCode || expected.Ok)
 
-export const aclUserGroupCreate = (context, groupId, data, expectedCode) =>
-  context.request.post(`${context.apiRoot}/acl/user-group-acls/${groupId}`)
+export const permissionUserGroupCreate = (context, data, expectedCode) =>
+  context.request.post(`${context.apiRoot}/permissionusergroup`)
     .set('Authorization', `${context.authSchema} ${context.token}`)
     .send(data)
     .type('json')
     .accept('json')
-    .expect(expectedCode || expected.Ok)
+    .expect(expectedCode || expected.OkCreated)
 
 export const me = (context, expectedCode) => context.request.get(`${context.apiRoot}/me`)
   .set('Authorization', `${context.authSchema} ${context.token}`)

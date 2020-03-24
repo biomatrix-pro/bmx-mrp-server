@@ -3,7 +3,7 @@ import { body, param, validationResult, matchedData, query } from 'express-valid
 const packageName = 'Service.Validator'
 
 export const Validator = (app) => {
-  app.exModular.modules.Add({ moduleName: packageName, dependency: ['services.errors', 'services.errors.ServerInvalidParams']})
+  app.exModular.modules.Add({ moduleName: packageName, dependency: ['services.errors', 'services.errors.ServerInvalidParams'] })
 
   const validateData = (req, res, next) => {
     try {
@@ -33,6 +33,9 @@ export const Validator = (app) => {
         validations.push(v)
       } else if (prop.type === 'ref') {
         validations.push(body([prop.name]).optional().isString().withMessage(`${Model.name}.${prop.name} should be string UUID`))
+      } else if (prop.type === 'enum') {
+        const aValues = prop.format.map((item) => item.value)
+        validations.push(body([prop.name]).isIn(aValues).withMessage(`${Model.name}.${prop.name} should have predefined enum values: ${aValues}`))
       }
     })
     validations.push(validateData)
