@@ -45,7 +45,7 @@ export const routeCreate = (app, Model) => {
     validate: [
       app.exModular.auth.check,
       app.exModular.access.check(objectName),
-      app.exModular.services.validator.checkBodyForModel(Model)
+      app.exModular.services.validator.checkBodyForArrayOfModel(Model, { optionalId: true })
     ]
   }
 }

@@ -17,7 +17,7 @@ import {
   // userDelete,
   // userSave
 } from '../client/client-api'
-import { AccessPermissionType, ADMIN_GROUP_ID } from '../../src/packages/const-access'
+import * as ACCESS from '../../src/packages/const-access'
 
 /**
 
@@ -138,7 +138,7 @@ describe('ex-modular test: user system', function () {
           // 1-c3: user is admin
           expect(res.body).to.exist('Body should exist')
           expect(res.body).to.be.an('array').that.not.empty()
-          const _adminGroupNdx = _.findIndex(res.body, (item) => item.id === ADMIN_GROUP_ID)
+          const _adminGroupNdx = _.findIndex(res.body, (item) => item.id === ACCESS.ADMIN_GROUP_ID)
           expect(_adminGroupNdx).not.equal(-1)
         })
         .catch((e) => { throw e })
@@ -273,7 +273,7 @@ describe('ex-modular test: user system', function () {
     })
 
     describe('u-s-5: admin user delegate permissions to Note object', function () {
-      it('5-1: add permission for Managers group', function () {
+      it('5-1: add permission for Managers group - read/write', function () {
         return signupUser(context, UserAdmin)
           .then(() => loginAs(context, UserAdmin))
           .then((res) => {
@@ -291,11 +291,11 @@ describe('ex-modular test: user system', function () {
             context.groupManagers = res.body.id
 
             return permissionUserGroupCreate(context,
-              {
+              [{
                 userGroupId: context.groupManagers,
                 accessObjectId: 'Note.list',
-                value: AccessPermissionType.ALLOW.value
-              })
+                value: ACCESS.AccessPermissionType.ALLOW.value
+              }])
           })
           .then((res) => {
             // 2-1-c1: check if group created ok

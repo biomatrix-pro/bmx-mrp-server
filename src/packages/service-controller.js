@@ -264,21 +264,44 @@ export const Controller = (app) => {
         'req.data', '', 'save: no req.data')
     }
 
-    // perform create instance:
-    return Model.create(req.data)
-      .then((item) => {
-        res.set('Location', `${req.path}/${item.id}`)
-        res.set('Content-Location', `${req.path}/${item.id}`)
-        res.status(201).json(item)
-        return item
-      })
-      .catch((error) => {
-        if (error instanceof app.exModular.services.errors.ServerError) {
-          throw error
-        } else {
-          throw new app.exModular.services.errors.ServerGenericError(error)
-        }
-      })
+    // check if we need to create series of data:
+    if (req.data._items && Array.isArray(req.data._items)) {
+      return app.exModular.services.serial(req.data._items.map((item) => () => {
+        return Model.create(item)
+          .catch((error) => {
+            if (error instanceof app.exModular.services.errors.ServerError) {
+              throw error
+            } else {
+              throw new app.exModular.services.errors.ServerGenericError(error)
+            }
+          })
+      }))
+        .then((_items) => {
+          if (_items && Array.isArray(_items) && _items.length === 1) {
+            res.set('Location', `${req.path}/${_items[0].id}`)
+            res.set('Content-Location', `${req.path}/${_items[0].id}`)
+            res.status(201).json(_items[0])
+          } else {
+            res.status(201).json(_items)
+          }
+        })
+    } else {
+      // perform create single instance:
+      return Model.create(req.data)
+        .then((item) => {
+          res.set('Location', `${req.path}/${item.id}`)
+          res.set('Content-Location', `${req.path}/${item.id}`)
+          res.status(201).json(item)
+          return item
+        })
+        .catch((error) => {
+          if (error instanceof app.exModular.services.errors.ServerError) {
+            throw error
+          } else {
+            throw new app.exModular.services.errors.ServerGenericError(error)
+          }
+        })
+    }
   }
 
   const item = (Model) => (req, res) => {

@@ -75,7 +75,7 @@ export const SignupOpen = (app) => {
       description: 'Open signup via username/password',
       path: '/auth/signup',
       handler: Module.module.signup,
-      validate: Validator.checkBodyForModelName('User', { optionalId: true }),
+      validate: [Validator.checkBodyForModelName('User', { optionalId: true })],
       /*
       beforeHandler: [ app.exModular.auth.optional ],
       */
