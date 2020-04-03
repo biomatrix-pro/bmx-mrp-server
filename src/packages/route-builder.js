@@ -65,20 +65,46 @@ export const routeRemoveAll = (app, Model) => {
   }
 }
 
+export const routeItemForRefs = (app, Model) => {
+  const r = []
+
+  r.push(_.filter(Model.props, { type: 'refs' }).map((prop) => {
+    return [
+      {
+        method: 'POST',
+        name: `${Model.name}.${prop.name}.${createRouteName}`,
+        description: `Add item[s] to refs field "${Model.name}.${prop.name}"`,
+        path: `/${Model.name.toLowerCase()}/:id/${prop.name.toLowerCase()}`,
+        handler: app.exModular.services.controller.refsCreate(Model, prop),
+        validate: [
+          app.exModular.auth.check,
+          app.exModular.access.check(`${Model.name}.${createRouteName}`),
+          app.exModular.services.validator.paramId(Model),
+          app.exModular.services.validator.checkBodyForArrayOfRefs(Model, prop)
+        ]
+      }
+    ]
+  }))
+  return r
+}
+
 export const routeItem = (app, Model) => {
   const objectName = `${Model.name}.${itemRouteName}`
-  return {
-    method: 'GET',
-    name: objectName,
-    description: `Get single item of "${Model.name}" by id`,
-    path: `/${Model.name.toLowerCase()}/:id`,
-    handler: app.exModular.services.controller.item(Model),
-    validate: [
-      app.exModular.auth.check,
-      app.exModular.access.check(objectName),
-      app.exModular.services.validator.paramId(Model)
-    ]
-  }
+  return [
+    {
+      method: 'GET',
+      name: objectName,
+      description: `Get single item of "${Model.name}" by id`,
+      path: `/${Model.name.toLowerCase()}/:id`,
+      handler: app.exModular.services.controller.item(Model),
+      validate: [
+        app.exModular.auth.check,
+        app.exModular.access.check(objectName),
+        app.exModular.services.validator.paramId(Model)
+      ]
+    },
+    routeItemForRefs(app, Model)
+  ]
 }
 
 export const routeSave = (app, Model) => {
@@ -155,7 +181,7 @@ export const RouteBuilder = (app) => {
       throw new Error('generateRoute: invalid model param')
     }
 
-    // generate routes and regiter them
+    // generate routes and register them
     app.exModular.routes.Add(opt.map((routeName) => {
       switch (routeName) {
         case listRouteName: return routeList(app, model)

@@ -113,13 +113,17 @@ export const exModular = (app) => {
     ex.services.serial(ex.init)
       .catch((e) => { throw e })
 
+  /**
+   * routes.Add: add routes to list of all routes in app
+   * @param routes (Array<route> | Route): array or single route
+   */
   ex.routes.Add = (routes) => {
     if (!routes) return
     // convert routes to array
     if (!Array.isArray(routes)) {
       routes = [routes]
     }
-    routes.map((item) => {
+    (_.flattenDeep(routes)).map((item) => {
       ex.routes.push(item)
     })
   }

@@ -602,6 +602,9 @@ export default (app) => {
           if (!item) {
             throw new Error(`${Model.name}.${prop.name}Add: item with id ${id} not found`)
           }
+          if (!Array.isArray(items)) {
+            items = [items]
+          }
           item[prop.name] = _.union(item[prop.name], items)
           return Model.update(item)
         })

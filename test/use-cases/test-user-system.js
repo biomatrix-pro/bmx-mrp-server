@@ -9,11 +9,15 @@ import _ from 'lodash'
 import App from '../../src/packages/app-builder'
 
 import {
-  loginAs,
   UserAdmin,
+  UserFirst, UserSecond, expected,
   // UserFirst,
   // userList,
-  signupUser, meGroups, userGroupAdd, UserFirst, UserSecond, expected, permissionUserGroupCreate
+  loginAs, signupUser,
+  meGroups,
+  userGroupAdd,
+  userGroupUsersAdd,
+  permissionUserGroupCreate
   // userDelete,
   // userSave
 } from '../client/client-api'
@@ -79,7 +83,7 @@ describe('ex-modular test: user system', function () {
 
   u-s-2: Создать пользовательские группы:
     2-1 группа "менеджеры":
-      2-1-c1: проверить что всё ок
+      2-1-c1: проверить что группа создана
     2-2: группа "сотрудники":
       2-2-c1: проверить что группа создана
 
@@ -97,9 +101,13 @@ describe('ex-modular test: user system', function () {
     4-2: второго  пользователя
       4-1-c1: ожидать ошибку
 
-  u-s-5: дать доступ от администратора на объект Note:
-    5-1: группе менеджеров - на чтение и запись с правом передоверия;
-    5-2: группе сотрудников - на чтение
+  u-s-5: добавить пользователей в группу:
+    4-1: создать группу менеджеров и добавить туда первого пользователя
+    4-2: создать группу сотрудников и добавить туда второго пользователя
+
+  u-s-6: дать доступ от администратора на объект Note:
+    6-1: группе менеджеров - на чтение и запись, с правом передоверия
+    6-2: группе сотрудников - на чтение
 
 Дать доступ к ресурсу Заметки группе менеджеров на запись с правом передоверия.
 
@@ -272,8 +280,56 @@ describe('ex-modular test: user system', function () {
       })
     })
 
-    describe('u-s-5: admin user delegate permissions to Note object', function () {
-      it('5-1: add permission for Managers group - read/write', function () {
+    describe('u-s-5: create user groups and add users to groups', function () {
+      it('5-1: add Managers group and UserFirst to that group', function () {
+        return signupUser(context, UserAdmin)
+          .then(() => loginAs(context, UserAdmin))
+          .then((res) => {
+            context.adminToken = res.body.token
+            context.token = context.adminToken
+
+            return userGroupAdd(context, { name: 'Managers' })
+          })
+          .then((res) => {
+            // 5-1-c1: check if group created ok
+            expect(res.body).to.exist('Body should exist')
+            expect(res.body).to.be.an('object')
+            expect(res.body.id).to.exist()
+            expect(res.body.name).to.be.equal('Managers')
+
+            context.groupManagers = res.body.id
+
+            // create user
+            return signupUser(context, UserFirst)
+          })
+          .then((res) => {
+            // 5-1-c2:
+            expect(res.body).to.exist('res.body should exist')
+            expect(res.body.id).to.exist('res.body.id should exist')
+
+            context.UserFirstId = res.body.id
+            return loginAs(context, UserFirst)
+          })
+          .then((res) => {
+            // 5-1-c2:
+            expect(res.body).to.exist('res.body should exist')
+            expect(res.body.token).to.exist('res.body.token should exist')
+            context.UserFirst = res.body.token
+
+            context.token = context.adminToken
+            return userGroupUsersAdd(context, context.groupManagers, [context.UserFirstId])
+          })
+          .then((res) => {
+            // 5-1-c4: users are added to group:
+            expect(res.body).to.exist('Body should exist')
+            expect(res.body).to.be.an('array').that.have.lengthOf(1)
+          })
+          .catch((e) => { throw e })
+      })
+    })
+
+    describe('u-s-6: admin user delegate permissions to Note object', function () {
+      it('6-1: add permission for Managers group - read/write', function () {
         return signupUser(context, UserAdmin)
           .then(() => loginAs(context, UserAdmin))
           .then((res) => {
@@ -290,18 +346,67 @@ describe('ex-modular test: user system', function () {
 
             context.groupManagers = res.body.id
 
-            return permissionUserGroupCreate(context,
-              [{
-                userGroupId: context.groupManagers,
-                accessObjectId: 'Note.list',
-                value: ACCESS.AccessPermissionType.ALLOW.value
-              }])
+            const perms = [
+              { userGroupId: context.groupManagers, accessObjectId: 'Note.list', value: ACCESS.AccessPermissionType.ALLOW.value },
+              { userGroupId: context.groupManagers, accessObjectId: 'Note.item', value: ACCESS.AccessPermissionType.ALLOW.value },
+              { userGroupId: context.groupManagers, accessObjectId: 'Note.create', value: ACCESS.AccessPermissionType.ALLOW.value },
+              { userGroupId: context.groupManagers, accessObjectId: 'Note.remove', value: ACCESS.AccessPermissionType.ALLOW.value },
+              { userGroupId: context.groupManagers, accessObjectId: 'Note.removeAll', value: ACCESS.AccessPermissionType.ALLOW.value },
+            ]
+
+            return permissionUserGroupCreate(context, perms)
+          })
+          .then((res) => {
+            // 2-1-c1: check if group created ok
+            expect(res.body).to.exist('Body should exist')
+            expect(res.body).to.be.an('array').that.have.lengthOf(5)
+            expect(res.body.err).to.not.exist()
+
+            // create user
+            return signupUser(context, UserFirst)
+          })
+          .then(() => loginAs(context, UserFirst))
+          .then((res) => {
+            expect(res.body).to.exist('res.body should exist')
+            expect(res.body.token).to.exist('res.body.token should exist')
+            context.UserFirst = res.body.token
+            return userGroupAdd(context, { name: 'Some group name' }, expected.ErrCodeForbidden)
+          })
+          .then((res) => {
+            // 3-1-c1: check if user created ok
+            expect(res.body).to.exist('Body should exist')
+            expect(res.body).to.be.an('object')
+            expect(res.body.err).to.exist()
+          })
+          .catch((e) => { throw e })
+      })
+      it('6-2: add permission for Employees group - read only', function () {
+        return signupUser(context, UserAdmin)
+          .then(() => loginAs(context, UserAdmin))
+          .then((res) => {
+            context.adminToken = res.body.token
+            context.token = context.adminToken
+            return userGroupAdd(context, { name: 'Employee' })
           })
           .then((res) => {
             // 2-1-c1: check if group created ok
             expect(res.body).to.exist('Body should exist')
             expect(res.body).to.be.an('object')
             expect(res.body.id).to.exist()
+            expect(res.body.name).to.be.equal('Employee')
+
+            context.groupEmployee = res.body.id
+
+            const perms = [
+              { userGroupId: context.groupEmployee, accessObjectId: 'Note.list', value: ACCESS.AccessPermissionType.ALLOW.value },
+              { userGroupId: context.groupEmployee, accessObjectId: 'Note.item', value: ACCESS.AccessPermissionType.ALLOW.value },
+            ]
+            return permissionUserGroupCreate(context, perms)
+          })
+          .then((res) => {
+            // 2-1-c1: check if group created ok
+            expect(res.body).to.exist('Body should exist')
+            expect(res.body).to.be.an('array').that.have.lengthOf(2)
             expect(res.body.err).to.not.exist()
           })
           .catch((e) => { throw e })

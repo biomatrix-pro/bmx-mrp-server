@@ -261,7 +261,7 @@ export const Controller = (app) => {
   const create = (Model) => (req, res) => {
     if (!req.data) {
       throw new app.exModular.services.errors.ServerInvalidParameters(
-        'req.data', '', 'save: no req.data')
+        'req.data', '', `${Model.name}.controller.create: no req.data`)
     }
 
     // check if we need to create series of data:
@@ -336,7 +336,7 @@ export const Controller = (app) => {
       throw new app.exModular.services.errors.ServerInvalidParameters(
         'req.data',
         '',
-        'save: no req.data')
+        `${Model.name}.controller.save: no req.data`)
     }
     // validate that req have id param
     if (!req.params.id) {
@@ -412,12 +412,49 @@ export const Controller = (app) => {
         }
       })
   }
+
+  /**
+   * refsCreate: add item[s] to refs field, returns new refs field value
+   * @param Model
+   * @param prop
+   */
+  const refsCreate = (Model, prop) => (req, res) => {
+    // validate that body have properly shaped object:
+    if (!req.data) {
+      throw new app.exModular.services.errors.ServerInvalidParameters(
+        'req.data',
+        '',
+        `${Model.name}.controller.${prop.name}.create: no req.data`)
+    }
+    // validate that req have id param
+    if (!req.params.id) {
+      throw new app.exModular.services.errors.ServerInvalidParameters(
+        'req.params.id',
+        '',
+        `${Model.name}.controller.${prop.name}.create: no req.params.id`)
+    }
+
+    const fn = Model[`${prop.name}Add`]
+    return fn(req.params.id, req.data)
+      .then((_items) => {
+        return res.status(201).json(_items[prop.name])
+      })
+      .catch((error) => {
+        if (error instanceof app.exModular.services.errors.ServerError) {
+          throw error
+        } else {
+          throw new app.exModular.services.errors.ServerGenericError(error)
+        }
+      })
+  }
+
   return {
     create,
     list,
     item,
     save,
     remove,
-    removeAll
+    removeAll,
+    refsCreate
   }
 }

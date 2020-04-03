@@ -127,12 +127,12 @@ export const userGroupUsersList = (context, groupId, expectedCode) => context.re
   .accept('json')
   .expect(expectedCode || expected.Ok)
 
-export const userGroupUsersAdd = (context, groupId, users, expectedCode) => context.request.post(`${context.apiRoot}/user-groups/${groupId}/users`)
+export const userGroupUsersAdd = (context, groupId, users, expectedCode) => context.request.post(`${context.apiRoot}/usergroup/${groupId}/users`)
   .set('Authorization', `${context.authSchema} ${context.token}`)
-  .send({ users })
+  .send(users)
   .type('json')
   .accept('json')
-  .expect(expectedCode || expected.Ok)
+  .expect(expectedCode || expected.OkCreated)
 
 export const userGroupUsersRemove = (context, groupId, users, expectedCode) => context.request.delete(`${context.apiRoot}/user-groups/${groupId}/users`)
   .set('Authorization', `${context.authSchema} ${context.token}`)

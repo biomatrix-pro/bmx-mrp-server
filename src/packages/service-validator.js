@@ -1,4 +1,5 @@
 import { body, param, validationResult, matchedData, query, oneOf } from 'express-validator'
+import validator from 'validator'
 
 const packageName = 'Service.Validator'
 
@@ -105,6 +106,27 @@ export const Validator = (app) => {
     return [prepareDate, validations, saveValidatedData]
   }
 
+  const checkBodyForArrayOfRefs = (Model, prop) => {
+    const validate = (req, res, next) => {
+      if (!Array.isArray(req.body)) {
+        req.body = [req.body]
+      }
+      req.body.map((item) => {
+        if (!validator.isUUID(item)) {
+          const err = new app.exModular.services.errors.ServerInvalidParameters(
+            `${Model.name}.${prop.name}`,
+            'refs',
+            'not UUID'
+          )
+          next(err)
+        }
+      })
+      req.data = req.body
+      next()
+    }
+    return [validate]
+  }
+
   const applyValidationsToReq = (validations, req) => {
     return Promise.all(validations.map((validation) => validation.run(req)))
       .then(() => {
@@ -126,7 +148,8 @@ export const Validator = (app) => {
     checkBodyForModel,
     checkBodyForModelName,
     checkBodyForArrayOfModel,
-    validateData: saveValidatedData,
+    checkBodyForArrayOfRefs,
+    saveValidatedData,
     applyValidationsToReq,
     paramId,
     listFilterValidator
