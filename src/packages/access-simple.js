@@ -119,17 +119,17 @@ export const AccessSimple = (app) => {
       throw Error(`${packageName}.CheckPermission: invalid param "user" - ${user.toString()}`)
     }
 
-    console.log(`CheckPermission( ${user}, ${objectName})`)
+    // console.log(`CheckPermission( ${user.id}, ${user.name}: ${objectName})`)
 
     // check if user is admin
     let accessObject = null
     let userGroups = null
     return Module.module.isAdmin(user)
       .then((_isAdmin) => {
-        console.log(`Check isAdmin(user): ${_isAdmin}`)
+        // console.log(`Check isAdmin(user): ${_isAdmin}`)
         if (_isAdmin) {
           // user is admin, so all permissions granted for all objects:
-          console.log('user is admin, allow')
+          // console.log('user is admin, allow')
           return Promise.resolve(ACCESS.ALLOW)
         }
 
@@ -137,7 +137,7 @@ export const AccessSimple = (app) => {
         return app.exModular.models.AccessObject.findOne({ where: { objectName } })
           .then((_accessObject) => {
             if (!_accessObject) {
-              console.log('object not defined, DENY')
+              // console.log('object not defined, DENY')
               return Promise.resolve(ACCESS.DENY) // no object defined, DENY
             }
             accessObject = _accessObject
@@ -149,25 +149,33 @@ export const AccessSimple = (app) => {
                 if (!_permissionUser) {
                   // no specific permissions for that object / user defined, so continue with groups:
                   // first - we should get all groups defined for user:
+                  // console.log('no specific permissions for user')
                   return Module.module.getUserGroups(user)
                     .then((_userGroups) => {
                       if (!_userGroups) {
                         // failed to get user groups, so no permissions are defined, return DENY:
+                        // console.log('Object not defined, DENY')
                         return Promise.resolve(ACCESS.DENY) // no object defined, DENY
                       }
                       userGroups = _userGroups
+                      // console.log('User groups:')
+                      // console.log(_userGroups)
 
                       // for each user's group we should get specific permission:
                       return app.exModular.services.serial(userGroups.map((userGroup) => () => {
+                        // console.log(`UserGroup ${userGroup.name}`)
                         return app.exModular.models.PermissionUserGroup.findOne(
                           { where: { userGroupId: userGroup.id, accessObjectId: accessObject.id } })
                           .then((_permissionGroup) => {
                             // if permisison is not defined - return UNKNOWN
                             if (!_permissionGroup) {
+                              // console.log('Not found')
                               return ACCESS.ACCESS_UNKNOW
                             }
                             // otherwise - return specific permission
-                            return _permissionGroup.permission
+                            // console.log('Found')
+                            // console.log(_permissionGroup.value)
+                            return _permissionGroup.value
                           })
                       }))
                         .then((_groupResult) => {

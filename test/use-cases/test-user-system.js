@@ -17,11 +17,13 @@ import {
   meGroups,
   userGroupAdd,
   userGroupUsersAdd,
-  permissionUserGroupCreate
+  permissionUserGroupCreate,
+  noteAdd
   // userDelete,
   // userSave
 } from '../client/client-api'
 import * as ACCESS from '../../src/packages/const-access'
+import { ExtTest } from '../../src/ext-test/ext-test'
 
 /**
 
@@ -47,6 +49,7 @@ describe('ex-modular test: user system', function () {
     App()
       .then((a) => {
         app = a
+        ExtTest(app)
       })
       .then(() => app.exModular.storages.Init()) // init storages
       .then(() => app.exModular.modelsInit())
@@ -102,8 +105,7 @@ describe('ex-modular test: user system', function () {
       4-1-c1: ожидать ошибку
 
   u-s-5: добавить пользователей в группу:
-    4-1: создать группу менеджеров и добавить туда первого пользователя
-    4-2: создать группу сотрудников и добавить туда второго пользователя
+    5-1: создать группу менеджеров и добавить туда первого пользователя
 
   u-s-6: дать доступ от администратора на объект Note:
     6-1: группе менеджеров - на чтение и запись, с правом передоверия
@@ -323,6 +325,13 @@ describe('ex-modular test: user system', function () {
             // 5-1-c4: users are added to group:
             expect(res.body).to.exist('Body should exist')
             expect(res.body).to.be.an('array').that.have.lengthOf(1)
+            context.token = context.UserFirst
+            return meGroups(context)
+          })
+          .then((res) => {
+            // 5-1-c5: check that group is added to user's profile:
+            expect(res.body).to.exist('Body should exist')
+            expect(res.body).to.be.an('array').that.have.lengthOf(1)
           })
           .catch((e) => { throw e })
       })
@@ -338,7 +347,7 @@ describe('ex-modular test: user system', function () {
             return userGroupAdd(context, { name: 'Managers' })
           })
           .then((res) => {
-            // 2-1-c1: check if group created ok
+            // 6-1-c1: check if group created ok
             expect(res.body).to.exist('Body should exist')
             expect(res.body).to.be.an('object')
             expect(res.body.id).to.exist()
@@ -351,13 +360,13 @@ describe('ex-modular test: user system', function () {
               { userGroupId: context.groupManagers, accessObjectId: 'Note.item', value: ACCESS.AccessPermissionType.ALLOW.value },
               { userGroupId: context.groupManagers, accessObjectId: 'Note.create', value: ACCESS.AccessPermissionType.ALLOW.value },
               { userGroupId: context.groupManagers, accessObjectId: 'Note.remove', value: ACCESS.AccessPermissionType.ALLOW.value },
-              { userGroupId: context.groupManagers, accessObjectId: 'Note.removeAll', value: ACCESS.AccessPermissionType.ALLOW.value },
+              { userGroupId: context.groupManagers, accessObjectId: 'Note.removeAll', value: ACCESS.AccessPermissionType.ALLOW.value }
             ]
 
             return permissionUserGroupCreate(context, perms)
           })
           .then((res) => {
-            // 2-1-c1: check if group created ok
+            // 6-1-c2: permissians are added
             expect(res.body).to.exist('Body should exist')
             expect(res.body).to.be.an('array').that.have.lengthOf(5)
             expect(res.body.err).to.not.exist()
@@ -365,18 +374,30 @@ describe('ex-modular test: user system', function () {
             // create user
             return signupUser(context, UserFirst)
           })
-          .then(() => loginAs(context, UserFirst))
+          .then((res) => {
+            context.UserFirstId = res.body.id
+            return loginAs(context, UserFirst)
+          })
           .then((res) => {
             expect(res.body).to.exist('res.body should exist')
             expect(res.body.token).to.exist('res.body.token should exist')
             context.UserFirst = res.body.token
-            return userGroupAdd(context, { name: 'Some group name' }, expected.ErrCodeForbidden)
+
+            context.token = context.adminToken
+            return userGroupUsersAdd(context, context.groupManagers, [context.UserFirstId])
           })
           .then((res) => {
-            // 3-1-c1: check if user created ok
             expect(res.body).to.exist('Body should exist')
-            expect(res.body).to.be.an('object')
-            expect(res.body.err).to.exist()
+            expect(res.body).to.be.an('array').that.have.lengthOf(1)
+            context.token = context.UserFirst
+            return noteAdd(context, { caption: 'some note' })
+          })
+          .then((res) => {
+            // 6-1-c3: note were added
+            expect(res.body).to.exist('Body should exist')
+            expect(res.body).to.be.an('object').that.have.property('id')
+            expect(res.body).have.property('caption')
+            expect(res.body.err).to.not.exist()
           })
           .catch((e) => { throw e })
       })
@@ -399,7 +420,7 @@ describe('ex-modular test: user system', function () {
 
             const perms = [
               { userGroupId: context.groupEmployee, accessObjectId: 'Note.list', value: ACCESS.AccessPermissionType.ALLOW.value },
-              { userGroupId: context.groupEmployee, accessObjectId: 'Note.item', value: ACCESS.AccessPermissionType.ALLOW.value },
+              { userGroupId: context.groupEmployee, accessObjectId: 'Note.item', value: ACCESS.AccessPermissionType.ALLOW.value }
             ]
             return permissionUserGroupCreate(context, perms)
           })

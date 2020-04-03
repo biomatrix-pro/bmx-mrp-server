@@ -236,3 +236,10 @@ export const userPermissions = (context, userId, expectedCode) => context.reques
   .type('json')
   .accept('json')
   .expect(expectedCode || expected.Ok)
+
+export const noteAdd = (context, data, expectedCode) => context.request.post(`${context.apiRoot}/note`)
+  .set('Authorization', `${context.authSchema} ${context.token}`)
+  .send(data)
+  .type('json')
+  .accept('json')
+  .expect(expectedCode || expected.OkCreated)
