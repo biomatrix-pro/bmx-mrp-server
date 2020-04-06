@@ -69,7 +69,7 @@ export const PlanCalc = (app) => {
         _planCalc.createdAt = Date.now()
         console.log('plan started, plan calc:')
         console.log(_planCalc)
-        return Model.update(_planCalc)
+        return Model.update(_planCalc.id, _planCalc)
       })
       .then((_planCalc) => {
         planCalc = _planCalc // updated plan

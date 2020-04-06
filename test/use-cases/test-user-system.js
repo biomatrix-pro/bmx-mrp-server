@@ -18,7 +18,7 @@ import {
   userGroupAdd,
   userGroupUsersAdd,
   permissionUserGroupCreate,
-  noteAdd
+  noteAdd, noteSave
   // userDelete,
   // userSave
 } from '../client/client-api'
@@ -123,6 +123,35 @@ describe('ex-modular test: user system', function () {
 
 Проверить что мегеджер имеет право на создание записи.
    */
+  describe('Storage system test', function () {
+    it('s-1: storage.update:', function () {
+      return signupUser(context, UserAdmin)
+        .then((res) => loginAs(context, UserAdmin))
+        .then((res) => {
+          context.adminToken = res.body.token
+          context.token = context.adminToken
+          return noteAdd(context, { caption: '1' })
+        })
+        .then((res) => {
+          expect(res.body).to.exist('Body should exist')
+          expect(res.body).to.be.an('object')
+          expect(res.body.caption).to.exist()
+          expect(res.body.caption).to.be.equal('1')
+          expect(res.body.description).to.exist()
+          expect(res.body.description).to.be.equal('')
+          context.noteId = res.body.id
+          return noteSave(context, context.noteId, { description: '2' })
+        })
+        .then((res) => {
+          expect(res.body).to.exist('Body should exist')
+          expect(res.body).to.be.an('object')
+          expect(res.body.description).to.exist()
+          expect(res.body.description).to.be.equal('2')
+        })
+        .catch((e) => { throw e })
+    })
+  })
+
   describe('User system test', function () {
     it('u-s-1: register first user account', function () {
       return signupUser(context, UserAdmin)

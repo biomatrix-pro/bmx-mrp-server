@@ -490,7 +490,7 @@ export const MRP = (app) => {
           resOrder.qntReq = (qntForStage + resOrder.qntReq)
 
           // обновим данные о заказе:
-          return ResourceStock.update(resOrder)
+          return ResourceStock.update(resOrder.id, resOrder)
             .then((_resOrder) => {
               resOrder = _resOrder
               return ResourceStock.findById(resOrder.inTransferId)
@@ -502,7 +502,7 @@ export const MRP = (app) => {
               } else {
                 _inTransfer.qnt = orderQnt
                 _inTransfer.qntReq = (qntForStage + resOrder.qntReq)
-                return ResourceStock.update(_inTransfer)
+                return ResourceStock.update(_inTransfer.id, _inTransfer)
               }
             })
         }

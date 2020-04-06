@@ -43,7 +43,7 @@ export const Seed = (app) => {
                   if (!found) {
                     return Model.create(item)
                   }
-                  return Model.update(item)
+                  return Model.update(item.id, item)
                 })
                 .catch((e) => { throw e })
             ))

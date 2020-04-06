@@ -243,3 +243,10 @@ export const noteAdd = (context, data, expectedCode) => context.request.post(`${
   .type('json')
   .accept('json')
   .expect(expectedCode || expected.OkCreated)
+
+export const noteSave = (context, aId, data, expectedCode) => context.request.put(`${context.apiRoot}/note/${aId}`)
+  .set('Authorization', `${context.authSchema} ${context.token}`)
+  .send(data)
+  .type('json')
+  .accept('json')
+  .expect(expectedCode || expected.Ok)

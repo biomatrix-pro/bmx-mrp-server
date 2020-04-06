@@ -2,9 +2,10 @@ import _ from 'lodash'
 import fs from 'fs'
 import moment from 'moment'
 
-export const processBeforeSaveToStorage = (Model, item) => {
+export const processBeforeSaveToStorage = (Model, item, opts) => {
   // console.log(`processBeforeSaveToStorage(${Model.name}, ${JSON.stringify(item)})\n`)
   const aItem = _.merge({}, item)
+  opts = opts || { defaults: true }
 
   // check if all keys are defined in model
   const aKeys = Object.keys(aItem)
@@ -18,7 +19,7 @@ export const processBeforeSaveToStorage = (Model, item) => {
 
   // process all default props if they are not defined in item:
   Model.props.map((prop) => {
-    if (prop.default && (!item[prop.name] || item[prop.name] === null || item[prop.name] === undefined)) {
+    if (opts.defaults && prop.default && (!item[prop.name] || item[prop.name] === null || item[prop.name] === undefined)) {
       if (typeof prop.default === 'function') {
         aItem[prop.name] = prop.default(aItem)
       } else {
@@ -545,9 +546,9 @@ export default (app) => {
         })
     },
 
-    update: (Model) => (item) => {
-      if (!item.id) {
-        return Promise.reject(new Error(`${Model.name}.update: item.id should have proper value`))
+    update: (Model) => (aId, item) => {
+      if (!aId) {
+        return Promise.reject(new Error(`${Model.name}.update: aId param should have value`))
       }
       if (!Model || !Model.storage || !Model.storage.db) {
         return Promise.reject(new Error(`${Model.name}.update: some Model's properties are invalid:
@@ -559,12 +560,12 @@ export default (app) => {
 
       // console.log('item:')
       // console.log(item)
-      const aKeys = Object.keys(item)
-      const aItem = processBeforeSaveToStorage(Model, item)
-      // console.log('aItem:')
-      // console.log(aItem)
+      // const aKeys = Object.keys(item)
+      const aItem = processBeforeSaveToStorage(Model, item, { defaults: false })
+      console.log('aItem:')
+      console.log(aItem)
       // process all item's props
-      aKeys.map((key) => {
+      /* aKeys.map((key) => {
         aItem[key] = item[key]
 
         // exec beforeSet hook:
@@ -581,15 +582,15 @@ export default (app) => {
         if (item[key] && aProp.type === 'refs') {
           aItem[key] = item[key].join(',')
         }
-      })
+      }) */
 
       // console.log('processed aItem:')
       // console.log(aItem)
       // process all props in item:
       return knex(Model.name)
-        .where(Model.key, item.id)
+        .where(Model.key, aId)
         .update(aItem)
-        .then(() => Model.findById(item.id))
+        .then((res) => Model.findById(aItem.id ? aItem.id : aId))
         .catch((err) => { throw err })
     },
 
@@ -606,7 +607,7 @@ export default (app) => {
             items = [items]
           }
           item[prop.name] = _.union(item[prop.name], items)
-          return Model.update(item)
+          return Model.update(id, item)
         })
         .catch((err) => { throw err })
     },
@@ -621,7 +622,7 @@ export default (app) => {
             throw new Error(`${Model.name}.${prop.name}Remove: item with id ${id} not found`)
           }
           _.pullAll(item[prop.name], items)
-          return Model.update(item)
+          return Model.update(id, item)
         })
         .catch((err) => { throw err })
     },
@@ -653,7 +654,7 @@ export default (app) => {
             throw new Error(`${Model.name}.${prop.name}Clear: item with id ${id} not found`)
           }
           item[prop.name] = []
-          return Model.update(item)
+          return Model.update(id, item)
         })
         .catch((err) => { throw err })
     },

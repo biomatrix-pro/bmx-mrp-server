@@ -346,10 +346,8 @@ export const Controller = (app) => {
         'save: no req.params.id')
     }
 
-    req.data.id = req.params.id
-
     // perform create instance:
-    return Model.update(req.data)
+    return Model.update(req.params.id, req.data)
       .then((foundData) => {
         res.status(200).json(foundData)
         return foundData

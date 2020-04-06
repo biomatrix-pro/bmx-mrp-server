@@ -119,7 +119,7 @@ export const routeSave = (app, Model) => {
       app.exModular.auth.check,
       app.exModular.access.check(objectName),
       app.exModular.services.validator.paramId(Model),
-      app.exModular.services.validator.checkBodyForModel(Model)
+      app.exModular.services.validator.checkBodyForModel(Model, { optionalId: true })
     ]
   }
 }

@@ -15,7 +15,15 @@ export const Note = (app) => {
       {
         name: 'caption',
         type: 'text',
-        caption: 'Описание',
+        caption: 'Заголовок',
+        format: 'text',
+        size: 127,
+        default: ''
+      },
+      {
+        name: 'description',
+        type: 'text',
+        caption: 'Примечание',
         format: 'text',
         size: 127,
         default: ''

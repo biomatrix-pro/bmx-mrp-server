@@ -42,7 +42,7 @@ export const Session = (app, options) => {
             _.assign(item, res)
             item.createdAt = new Date()
             item.id = res.id
-            return Model.update(item)
+            return Model.update(item.id, item)
           }
         })
         .catch((e) => { throw e })
