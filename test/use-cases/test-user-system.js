@@ -145,8 +145,22 @@ describe('ex-modular test: user system', function () {
         .then((res) => {
           expect(res.body).to.exist('Body should exist')
           expect(res.body).to.be.an('object')
+          expect(res.body.caption).to.exist()
+          expect(res.body.caption).to.be.equal('1')
           expect(res.body.description).to.exist()
           expect(res.body.description).to.be.equal('2')
+
+          return noteSave(context, context.noteId, { id: '42', description: '3' })
+        })
+        .then((res) => {
+          expect(res.body).to.exist('Body should exist')
+          expect(res.body).to.be.an('object')
+          expect(res.body.id).to.exist()
+          expect(res.body.id).to.be.equal('42')
+          expect(res.body.caption).to.exist()
+          expect(res.body.caption).to.be.equal('1')
+          expect(res.body.description).to.exist()
+          expect(res.body.description).to.be.equal('3')
         })
         .catch((e) => { throw e })
     })

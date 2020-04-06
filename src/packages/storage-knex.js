@@ -562,8 +562,8 @@ export default (app) => {
       // console.log(item)
       // const aKeys = Object.keys(item)
       const aItem = processBeforeSaveToStorage(Model, item, { defaults: false })
-      console.log('aItem:')
-      console.log(aItem)
+      // console.log('aItem:')
+      // console.log(aItem)
       // process all item's props
       /* aKeys.map((key) => {
         aItem[key] = item[key]
