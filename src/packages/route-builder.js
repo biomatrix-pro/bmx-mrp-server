@@ -82,6 +82,31 @@ export const routeItemForRefs = (app, Model) => {
           app.exModular.services.validator.paramId(Model),
           app.exModular.services.validator.checkBodyForArrayOfRefs(Model, prop)
         ]
+      },
+      {
+        method: 'GET',
+        name: `${Model.name}.${prop.name}.${listRouteName}`,
+        description: `List item[s] of refs field "${Model.name}.${prop.name}"`,
+        path: `/${Model.name.toLowerCase()}/:id/${prop.name.toLowerCase()}`,
+        handler: app.exModular.services.controller.refsList(Model, prop),
+        validate: [
+          app.exModular.auth.check,
+          app.exModular.access.check(`${Model.name}.${listRouteName}`),
+          app.exModular.services.validator.paramId(Model)
+        ]
+      },
+      {
+        method: 'DELETE',
+        name: `${Model.name}.${prop.name}.${removeRouteName}`,
+        description: `Remove item[s] of refs field "${Model.name}.${prop.name}"`,
+        path: `/${Model.name.toLowerCase()}/:id/${prop.name.toLowerCase()}`,
+        handler: app.exModular.services.controller.refsRemove(Model, prop),
+        validate: [
+          app.exModular.auth.check,
+          app.exModular.access.check(`${Model.name}.${removeRouteName}`),
+          app.exModular.services.validator.paramId(Model),
+          app.exModular.services.validator.checkBodyForArrayOfRefs(Model, prop)
+        ]
       }
     ]
   }))

@@ -107,24 +107,25 @@ export const Validator = (app) => {
   }
 
   const checkBodyForArrayOfRefs = (Model, prop) => {
-    const validate = (req, res, next) => {
-      if (!Array.isArray(req.body)) {
-        req.body = [req.body]
-      }
-      req.body.map((item) => {
-        if (!validator.isUUID(item)) {
-          const err = new app.exModular.services.errors.ServerInvalidParameters(
-            `${Model.name}.${prop.name}`,
-            'refs',
-            'not UUID'
-          )
-          next(err)
+    return [
+      (req, res, next) => {
+        if (!Array.isArray(req.body)) {
+          req.body = [req.body]
         }
-      })
-      req.data = req.body
-      next()
-    }
-    return [validate]
+        req.body.map((item) => {
+          if (!validator.isUUID(item)) {
+            const err = new app.exModular.services.errors.ServerInvalidParameters(
+              `${Model.name}.${prop.name}`,
+              'refs',
+              'not UUID'
+            )
+            next(err)
+          }
+        })
+        req.data = req.body
+        next()
+      }
+    ]
   }
 
   const applyValidationsToReq = (validations, req) => {

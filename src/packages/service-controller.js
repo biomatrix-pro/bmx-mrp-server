@@ -422,20 +422,71 @@ export const Controller = (app) => {
       throw new app.exModular.services.errors.ServerInvalidParameters(
         'req.data',
         '',
-        `${Model.name}.controller.${prop.name}.create: no req.data`)
+        `${Model.name}.controller.${prop.name}.refsCreate: no req.data`)
     }
     // validate that req have id param
     if (!req.params.id) {
       throw new app.exModular.services.errors.ServerInvalidParameters(
         'req.params.id',
         '',
-        `${Model.name}.controller.${prop.name}.create: no req.params.id`)
+        `${Model.name}.controller.${prop.name}.refsCreate: no req.params.id`)
     }
 
     const fn = Model[`${prop.name}Add`]
     return fn(req.params.id, req.data)
       .then((_items) => {
         return res.status(201).json(_items[prop.name])
+      })
+      .catch((error) => {
+        if (error instanceof app.exModular.services.errors.ServerError) {
+          throw error
+        } else {
+          throw new app.exModular.services.errors.ServerGenericError(error)
+        }
+      })
+  }
+
+  const refsList = (Model, prop) => (req, res) => {
+    // validate that req have id param
+    if (!req.params.id) {
+      throw new app.exModular.services.errors.ServerInvalidParameters(
+        'req.params.id',
+        '',
+        `${Model.name}.controller.${prop.name}.refsList: no req.params.id`)
+    }
+    return Model.findById(req.params.id)
+      .then((_item) => {
+        return res.status(200).json(_item[prop.name])
+      })
+      .catch((error) => {
+        if (error instanceof app.exModular.services.errors.ServerError) {
+          throw error
+        } else {
+          throw new app.exModular.services.errors.ServerGenericError(error)
+        }
+      })
+  }
+
+  const refsRemove = (Model, prop) => (req, res) => {
+    // validate that body have properly shaped object:
+    if (!req.data) {
+      throw new app.exModular.services.errors.ServerInvalidParameters(
+        'req.data',
+        '',
+        `${Model.name}.controller.${prop.name}.refsRemove: no req.data`)
+    }
+    // validate that req have id param
+    if (!req.params.id) {
+      throw new app.exModular.services.errors.ServerInvalidParameters(
+        'req.params.id',
+        '',
+        `${Model.name}.controller.${prop.name}.refsRemove: no req.params.id`)
+    }
+
+    const fn = Model[`${prop.name}Remove`]
+    return fn(req.params.id, req.data)
+      .then((_items) => {
+        return res.status(200).json(_items[prop.name])
       })
       .catch((error) => {
         if (error instanceof app.exModular.services.errors.ServerError) {
@@ -453,6 +504,8 @@ export const Controller = (app) => {
     save,
     remove,
     removeAll,
-    refsCreate
+    refsCreate,
+    refsList,
+    refsRemove
   }
 }

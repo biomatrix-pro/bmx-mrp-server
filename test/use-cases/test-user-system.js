@@ -18,7 +18,7 @@ import {
   userGroupAdd,
   userGroupUsersAdd,
   permissionUserGroupCreate,
-  noteAdd, noteSave
+  noteAdd, noteSave, userGroupUsersList, userGroupUsersRemove
   // userDelete,
   // userSave
 } from '../client/client-api'
@@ -161,6 +161,64 @@ describe('ex-modular test: user system', function () {
           expect(res.body.caption).to.be.equal('1')
           expect(res.body.description).to.exist()
           expect(res.body.description).to.be.equal('3')
+        })
+        .catch((e) => { throw e })
+    })
+    it('s-2: storage.refs: add, list, remove methods test', function () {
+      return signupUser(context, UserAdmin)
+        .then((res) => {
+          context.UserAdminId = res.body.id
+          return loginAs(context, UserAdmin)
+        })
+        .then((res) => {
+          context.adminToken = res.body.token
+          context.token = context.adminToken
+          return userGroupAdd(context, { name: 'Managers' })
+        })
+        .then((res) => {
+          context.groupManagers = res.body.id
+
+          // create user
+          return signupUser(context, UserFirst)
+        })
+        .then((res) => {
+          context.UserFirstId = res.body.id
+          return loginAs(context, UserFirst)
+        })
+        .then((res) => {
+          context.UserFirst = res.body.token
+          context.token = context.adminToken
+
+          return userGroupUsersAdd(context, context.groupManagers, [context.UserFirstId, context.UserAdminId])
+        })
+        .then((res) => {
+          // 2-c1:
+          expect(res.body).to.exist('Body should exist')
+          expect(res.body).to.be.an('array').that.have.lengthOf(2)
+          return userGroupUsersList(context, context.groupManagers)
+        })
+        .then((res) => {
+          // 2-c2:
+          expect(res.body).to.exist('Body should exist')
+          expect(res.body).to.be.an('array').that.have.lengthOf(2)
+          expect(res.body).to.include(context.UserFirstId)
+          expect(res.body).to.include(context.UserAdminId)
+
+          return userGroupUsersRemove(context, context.groupManagers, [context.UserFirstId])
+        })
+        .then((res) => {
+          // 2-c3:
+          expect(res.body).to.exist('Body should exist')
+          expect(res.body).to.be.an('array').that.have.lengthOf(1)
+          expect(res.body).not.to.include(context.UserFirstId)
+          expect(res.body).to.include(context.UserAdminId)
+
+          return userGroupUsersRemove(context, context.groupManagers, [context.UserAdminId])
+        })
+        .then((res) => {
+          // 2-c4:
+          expect(res.body).to.exist('Body should exist')
+          expect(res.body).to.be.an('array').that.have.lengthOf(0)
         })
         .catch((e) => { throw e })
     })

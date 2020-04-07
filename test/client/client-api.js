@@ -121,7 +121,7 @@ export const userGroupDelete = (context, groupId, expectedCode) => context.reque
   .accept('json')
   .expect(expectedCode || expected.Ok)
 
-export const userGroupUsersList = (context, groupId, expectedCode) => context.request.get(`${context.apiRoot}/user-groups/${groupId}/users`)
+export const userGroupUsersList = (context, groupId, expectedCode) => context.request.get(`${context.apiRoot}/usergroup/${groupId}/users`)
   .set('Authorization', `${context.authSchema} ${context.token}`)
   .type('json')
   .accept('json')
@@ -134,9 +134,9 @@ export const userGroupUsersAdd = (context, groupId, users, expectedCode) => cont
   .accept('json')
   .expect(expectedCode || expected.OkCreated)
 
-export const userGroupUsersRemove = (context, groupId, users, expectedCode) => context.request.delete(`${context.apiRoot}/user-groups/${groupId}/users`)
+export const userGroupUsersRemove = (context, groupId, users, expectedCode) => context.request.delete(`${context.apiRoot}/usergroup/${groupId}/users`)
   .set('Authorization', `${context.authSchema} ${context.token}`)
-  .send({ users })
+  .send(users)
   .type('json')
   .accept('json')
   .expect(expectedCode || expected.Ok)
