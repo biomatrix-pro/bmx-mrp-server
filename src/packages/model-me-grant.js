@@ -1,29 +1,28 @@
 import uuid from 'uuid/v4'
 import { AccessPermissionType } from './const-access'
-// import _ from 'lodash'
 
-export const PermissionUser = (app, options) => {
+export const MeGrant = (app, options) => {
   if (!options) {
     options = {}
   }
   // options.storage = options.storage || 'default'
 
   const Model = {
-    name: 'PermissionUser',
+    name: 'MeGrant',
     priority: 0,
     props: [
       {
         name: 'id',
         type: 'id',
         caption: 'Id',
-        description: 'Идентификатор разрешений для пользователя',
+        description: 'Идентификатор выданных передоверий',
         default: () => uuid()
       },
       {
         name: 'userId',
         type: 'ref',
         caption: 'Пользователь',
-        description: 'Пользователь, к которому относится данное разрешение',
+        description: 'Пользователь, к которому относится данное передоверие',
         model: 'User',
         default: null
       },
@@ -31,7 +30,7 @@ export const PermissionUser = (app, options) => {
         name: 'accessObjectId',
         type: 'ref',
         caption: 'Объект',
-        description: 'Объект, на которое данное разрешение выдано',
+        description: 'Объект, на которое данное передоверие выдано',
         model: 'AccessObject',
         default: null
       },
@@ -39,7 +38,7 @@ export const PermissionUser = (app, options) => {
         name: 'permission',
         type: 'enum',
         caption: 'Разрешение',
-        description: 'Какое именно разрешение выдано',
+        description: 'Какое именно передоверие выдано',
         format: [
           AccessPermissionType.unknown,
           AccessPermissionType.DENY,
@@ -48,11 +47,12 @@ export const PermissionUser = (app, options) => {
         default: AccessPermissionType.unknown.value
       },
       {
-        name: 'withGrant',
-        type: 'boolean',
-        caption: 'Передоверие',
-        description: 'Есть ли право передоверить это разрешение',
-        default: false
+        name: 'permissionUserId',
+        type: 'ref',
+        model: 'PermissionUser',
+        caption: 'Разрешение',
+        description: 'Ссылка на разрешение, которое в рамках передоверия сформировано в системе',
+        default: null
       }
     ]
   }

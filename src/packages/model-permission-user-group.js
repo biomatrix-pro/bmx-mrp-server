@@ -46,6 +46,13 @@ export const PermissionUserGroup = (app, options) => {
           AccessPermissionType.ALLOW
         ],
         default: AccessPermissionType.unknown.value
+      },
+      {
+        name: 'withGrant',
+        type: 'boolean',
+        caption: 'Передоверие',
+        description: 'Есть ли право передоверить это разрешение',
+        default: false
       }
     ]
   }

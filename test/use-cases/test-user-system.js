@@ -477,20 +477,18 @@ describe('ex-modular test: user system', function () {
           })
           .then((res) => {
             context.UserFirstId = res.body.id
+
             return loginAs(context, UserFirst)
           })
           .then((res) => {
-            expect(res.body).to.exist('res.body should exist')
-            expect(res.body.token).to.exist('res.body.token should exist')
             context.UserFirst = res.body.token
-
             context.token = context.adminToken
+
             return userGroupUsersAdd(context, context.groupManagers, [context.UserFirstId])
           })
           .then((res) => {
-            expect(res.body).to.exist('Body should exist')
-            expect(res.body).to.be.an('array').that.have.lengthOf(1)
             context.token = context.UserFirst
+
             return noteAdd(context, { caption: 'some note' })
           })
           .then((res) => {
@@ -498,6 +496,7 @@ describe('ex-modular test: user system', function () {
             expect(res.body).to.exist('Body should exist')
             expect(res.body).to.be.an('object').that.have.property('id')
             expect(res.body).have.property('caption')
+            expect(res.body).have.property('description')
             expect(res.body.err).to.not.exist()
           })
           .catch((e) => { throw e })
@@ -511,7 +510,7 @@ describe('ex-modular test: user system', function () {
             return userGroupAdd(context, { name: 'Employee' })
           })
           .then((res) => {
-            // 2-1-c1: check if group created ok
+            // 6-2-c1: check if group created ok
             expect(res.body).to.exist('Body should exist')
             expect(res.body).to.be.an('object')
             expect(res.body.id).to.exist()
@@ -526,9 +525,88 @@ describe('ex-modular test: user system', function () {
             return permissionUserGroupCreate(context, perms)
           })
           .then((res) => {
-            // 2-1-c1: check if group created ok
+            // 6-2-c2: permissions has been added
             expect(res.body).to.exist('Body should exist')
             expect(res.body).to.be.an('array').that.have.lengthOf(2)
+            expect(res.body.err).to.not.exist()
+
+            context.token = context.UserFirst
+
+            // create user
+            return signupUser(context, UserFirst)
+          })
+          .then((res) => {
+            context.UserFirstId = res.body.id
+
+            return loginAs(context, UserFirst)
+          })
+          .then((res) => {
+            context.UserFirst = res.body.token
+            context.token = context.adminToken
+
+            return userGroupUsersAdd(context, context.groupEmployee, [context.UserFirstId])
+          })
+          .then((res) => {
+            context.token = context.UserFirst
+
+            return noteAdd(context, { caption: 'some note' }, expected.ErrCodeForbidden)
+          })
+          .then((res) => {
+            // 6-2-c3: note can not be added - forbidden
+            expect(res.body).to.exist('Body should exist')
+            expect(res.body).to.be.an('object')
+            expect(res.body.err).to.exist()
+          })
+          .catch((e) => { throw e })
+      })
+      it('6-3: grant read/write permissions to other user', function () {
+        return signupUser(context, UserAdmin)
+          .then(() => loginAs(context, UserAdmin))
+          .then((res) => {
+            context.adminToken = res.body.token
+            context.token = context.adminToken
+            return userGroupAdd(context, { name: 'Managers' })
+          })
+          .then((res) => {
+            context.groupManagers = res.body.id
+
+            const perms = [
+              { userGroupId: context.groupManagers, accessObjectId: 'Note.list', value: ACCESS.AccessPermissionType.ALLOW.value },
+              { userGroupId: context.groupManagers, accessObjectId: 'Note.item', value: ACCESS.AccessPermissionType.ALLOW.value },
+              { userGroupId: context.groupManagers, accessObjectId: 'Note.create', value: ACCESS.AccessPermissionType.ALLOW.value },
+              { userGroupId: context.groupManagers, accessObjectId: 'Note.remove', value: ACCESS.AccessPermissionType.ALLOW.value },
+              { userGroupId: context.groupManagers, accessObjectId: 'Note.removeAll', value: ACCESS.AccessPermissionType.ALLOW.value }
+            ]
+
+            return permissionUserGroupCreate(context, perms)
+          })
+          .then((res) => {
+
+            // create user
+            return signupUser(context, UserFirst)
+          })
+          .then((res) => {
+            context.UserFirstId = res.body.id
+
+            return loginAs(context, UserFirst)
+          })
+          .then((res) => {
+            context.UserFirst = res.body.token
+            context.token = context.adminToken
+
+            return userGroupUsersAdd(context, context.groupManagers, [context.UserFirstId])
+          })
+          .then((res) => {
+            context.token = context.UserFirst
+
+            return noteAdd(context, { caption: 'some note' })
+          })
+          .then((res) => {
+            // 6-1-c3: note were added
+            expect(res.body).to.exist('Body should exist')
+            expect(res.body).to.be.an('object').that.have.property('id')
+            expect(res.body).have.property('caption')
+            expect(res.body).have.property('description')
             expect(res.body.err).to.not.exist()
           })
           .catch((e) => { throw e })
