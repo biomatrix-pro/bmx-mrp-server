@@ -1,9 +1,9 @@
 // DeFined verion of controller: nextgen controller for exModular
 import _ from 'lodash'
 
-const packageName = 'Controller'
+const packageName = 'ControllerDF'
 
-export const Controller = (app) => {
+export const ControllerDF = (app) => {
   app.exModular.modules.Add({
     moduleName: packageName,
     dependency: [

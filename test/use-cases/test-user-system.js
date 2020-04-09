@@ -457,11 +457,11 @@ describe('ex-modular test: user system', function () {
             context.groupManagers = res.body.id
 
             const perms = [
-              { userGroupId: context.groupManagers, accessObjectId: 'Note.list', value: ACCESS.AccessPermissionType.ALLOW.value },
-              { userGroupId: context.groupManagers, accessObjectId: 'Note.item', value: ACCESS.AccessPermissionType.ALLOW.value },
-              { userGroupId: context.groupManagers, accessObjectId: 'Note.create', value: ACCESS.AccessPermissionType.ALLOW.value },
-              { userGroupId: context.groupManagers, accessObjectId: 'Note.remove', value: ACCESS.AccessPermissionType.ALLOW.value },
-              { userGroupId: context.groupManagers, accessObjectId: 'Note.removeAll', value: ACCESS.AccessPermissionType.ALLOW.value }
+              { userGroupId: context.groupManagers, accessObjectId: 'Note.list', permission: ACCESS.AccessPermissionType.ALLOW.value },
+              { userGroupId: context.groupManagers, accessObjectId: 'Note.item', permission: ACCESS.AccessPermissionType.ALLOW.value },
+              { userGroupId: context.groupManagers, accessObjectId: 'Note.create', permission: ACCESS.AccessPermissionType.ALLOW.value },
+              { userGroupId: context.groupManagers, accessObjectId: 'Note.remove', permission: ACCESS.AccessPermissionType.ALLOW.value },
+              { userGroupId: context.groupManagers, accessObjectId: 'Note.removeAll', permission: ACCESS.AccessPermissionType.ALLOW.value }
             ]
 
             return permissionUserGroupCreate(context, perms)
@@ -519,8 +519,8 @@ describe('ex-modular test: user system', function () {
             context.groupEmployee = res.body.id
 
             const perms = [
-              { userGroupId: context.groupEmployee, accessObjectId: 'Note.list', value: ACCESS.AccessPermissionType.ALLOW.value },
-              { userGroupId: context.groupEmployee, accessObjectId: 'Note.item', value: ACCESS.AccessPermissionType.ALLOW.value }
+              { userGroupId: context.groupEmployee, accessObjectId: 'Note.list', permission: ACCESS.AccessPermissionType.ALLOW.value },
+              { userGroupId: context.groupEmployee, accessObjectId: 'Note.item', permission: ACCESS.AccessPermissionType.ALLOW.value }
             ]
             return permissionUserGroupCreate(context, perms)
           })
@@ -571,11 +571,11 @@ describe('ex-modular test: user system', function () {
             context.groupManagers = res.body.id
 
             const perms = [
-              { userGroupId: context.groupManagers, accessObjectId: 'Note.list', value: ACCESS.AccessPermissionType.ALLOW.value },
-              { userGroupId: context.groupManagers, accessObjectId: 'Note.item', value: ACCESS.AccessPermissionType.ALLOW.value },
-              { userGroupId: context.groupManagers, accessObjectId: 'Note.create', value: ACCESS.AccessPermissionType.ALLOW.value },
-              { userGroupId: context.groupManagers, accessObjectId: 'Note.remove', value: ACCESS.AccessPermissionType.ALLOW.value },
-              { userGroupId: context.groupManagers, accessObjectId: 'Note.removeAll', value: ACCESS.AccessPermissionType.ALLOW.value }
+              { userGroupId: context.groupManagers, accessObjectId: 'Note.list', permission: ACCESS.AccessPermissionType.ALLOW.value },
+              { userGroupId: context.groupManagers, accessObjectId: 'Note.item', permission: ACCESS.AccessPermissionType.ALLOW.value },
+              { userGroupId: context.groupManagers, accessObjectId: 'Note.create', permission: ACCESS.AccessPermissionType.ALLOW.value },
+              { userGroupId: context.groupManagers, accessObjectId: 'Note.remove', permission: ACCESS.AccessPermissionType.ALLOW.value },
+              { userGroupId: context.groupManagers, accessObjectId: 'Note.removeAll', permission: ACCESS.AccessPermissionType.ALLOW.value }
             ]
 
             return permissionUserGroupCreate(context, perms)

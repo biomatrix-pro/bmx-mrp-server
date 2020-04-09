@@ -190,6 +190,13 @@ export const RouteBuilder = (app) => {
     ]
   })
 
+  /**
+   * routesForModel: создать или вернуть роуты, относящиеся к этой модели. Если у модели есть свойство
+   * routes с ключами, совпадающими с croudRoutes, то будут использованы эти обработчики.
+   * @param model
+   * @param opt
+   * @return {[]}
+   */
   const routesForModel = (model, opt) => {
     // if no opt specified - generate all crud routes
     if (!opt) {
@@ -206,18 +213,43 @@ export const RouteBuilder = (app) => {
       throw new Error('generateRoute: invalid model param')
     }
 
+    if (!model.routes) {
+      model.routes = []
+    }
+
     // generate routes and register them
-    app.exModular.routes.Add(opt.map((routeName) => {
-      switch (routeName) {
-        case listRouteName: return routeList(app, model)
-        case createRouteName: return routeCreate(app, model)
-        case itemRouteName: return routeItem(app, model)
-        case saveRouteName: return routeSave(app, model)
-        case removeRouteName: return routeRemove(app, model)
-        case removeAllRouteName: return routeRemoveAll(app, model)
+    opt.map((routeName) => {
+      if (model.routes[routeName]) {
+        model.routes.push(model.routes[routeName])
+      } else {
+        let route = null
+        switch (routeName) {
+          case listRouteName:
+            route = routeList(app, model)
+            break
+          case createRouteName:
+            route = routeCreate(app, model)
+            break
+          case itemRouteName:
+            route = routeItem(app, model)
+            break
+          case saveRouteName:
+            route = routeSave(app, model)
+            break
+          case removeRouteName:
+            route = routeRemove(app, model)
+            break
+          case removeAllRouteName:
+            route = routeRemoveAll(app, model)
+            break
+          default:
+            throw new Error(`generateRoute: invalid routeName ${routeName}`)
+        }
+        model.routes[routeName] = route
+        model.routes.push(route)
       }
-      throw new Error(`generateRoute: invalid routeName ${routeName}`)
-    }))
+    })
+    return model.routes
   }
 
   const routesForAllModels = () => {

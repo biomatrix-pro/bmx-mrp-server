@@ -103,10 +103,10 @@ export const AccessSimple = (app) => {
   Module.module.check = (objectName) => (req, res, next) => {
     Module.module.CheckPermission(req.user, objectName)
       .then((_permission) => {
-        if (_permission === undefined) {
+        if (_permission.permission === undefined) {
           return next(Error('Failed to check permission'))
         }
-        if (_permission === ACCESS.UNKNOWN || _permission === ACCESS.DENY) {
+        if (_permission.permission === ACCESS.UNKNOWN || _permission.permission === ACCESS.DENY) {
           return next(new app.exModular.services.errors.ServerNotAllowed())
         }
         return next()
@@ -130,7 +130,7 @@ export const AccessSimple = (app) => {
         if (_isAdmin) {
           // user is admin, so all permissions granted for all objects:
           // console.log('user is admin, allow')
-          return Promise.resolve(ACCESS.ALLOW)
+          return { permission: ACCESS.ALLOW, withGrant: true }
         }
 
         // find access object
@@ -138,7 +138,8 @@ export const AccessSimple = (app) => {
           .then((_accessObject) => {
             if (!_accessObject) {
               // console.log('object not defined, DENY')
-              return Promise.resolve(ACCESS.DENY) // no object defined, DENY
+              // no object defined, DENY:
+              return { permission: ACCESS.DENY, withGrant: false }
             }
             accessObject = _accessObject
 
@@ -155,7 +156,7 @@ export const AccessSimple = (app) => {
                       if (!_userGroups) {
                         // failed to get user groups, so no permissions are defined, return DENY:
                         // console.log('Object not defined, DENY')
-                        return Promise.resolve(ACCESS.DENY) // no object defined, DENY
+                        return { permission: ACCESS.DENY, withGrant: false } // no object defined, DENY
                       }
                       userGroups = _userGroups
                       // console.log('User groups:')
@@ -170,12 +171,12 @@ export const AccessSimple = (app) => {
                             // if permisison is not defined - return UNKNOWN
                             if (!_permissionGroup) {
                               // console.log('Not found')
-                              return ACCESS.ACCESS_UNKNOW
+                              return { permission: ACCESS.ACCESS_UNKNOW, withGrant: false }
                             }
                             // otherwise - return specific permission
                             // console.log('Found')
                             // console.log(_permissionGroup.value)
-                            return _permissionGroup.value
+                            return { permission: _permissionGroup.permission, withGrant: _permissionGroup.withGrant }
                           })
                       }))
                         .then((_groupResult) => {
@@ -186,20 +187,21 @@ export const AccessSimple = (app) => {
                           }
 
                           // by default - group result will be DENY
-                          let groupRes = ACCESS.DENY
+                          const groupRes = { permission: ACCESS.DENY, withGrant: false }
                           _groupResult.map((res) => {
                             // if any group have ALLOW, group result will be ALLOW
-                            if (res === ACCESS.ALLOW) {
-                              groupRes = ACCESS.ALLOW
+                            if (res.permission === ACCESS.ALLOW) {
+                              groupRes.permission = res.permission
+                              groupRes.withGrant = res.withGrant
                             }
                           })
-                          return Promise.resolve(groupRes)
+                          return groupRes
                         })
                     })
                 }
 
                 // we have specific permission and should return it
-                return Promise.resolve(_permissionUser.permission)
+                return { permission: _permissionUser.permission, withGrant: _permissionUser.withGrant }
               })
           })
           .catch((err) => { throw err })

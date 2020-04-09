@@ -13,6 +13,7 @@ import { Errors } from './service-errors'
 import { Validator } from './service-validator'
 import { RouteBuilder } from './route-builder'
 import { Controller } from './service-controller'
+import { ControllerDF } from './service-controller-df'
 import { Codegen } from './service-codegen'
 import { Seed } from './sevice-seed'
 import { Serial } from './service-serial'
@@ -88,6 +89,7 @@ export const appBuilder = (express, options) => {
       app.exModular.services.validator = Validator(app)
       app.exModular.routes.builder = RouteBuilder(app)
       app.exModular.services.controller = Controller(app)
+      app.exModular.services.controllerDF = ControllerDF(app)
       app.exModular.services.seed = Seed(app)
       app.exModular.services.serial = Serial(app)
       app.exModular.services.sendJson = SendJson(app)

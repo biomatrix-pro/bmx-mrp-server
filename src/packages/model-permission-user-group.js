@@ -36,7 +36,7 @@ export const PermissionUserGroup = (app, options) => {
         default: null
       },
       {
-        name: 'value',
+        name: 'permission',
         type: 'enum',
         caption: 'Разрешение',
         description: 'Какое именно разрешение выдано',
