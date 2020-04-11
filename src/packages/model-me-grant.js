@@ -47,6 +47,13 @@ export const MeGrant = (app, options) => {
         default: ACCESS.AccessPermissionType.unknown.value
       },
       {
+        name: 'withGrant',
+        type: 'boolean',
+        caption: 'Передоверие',
+        description: 'Есть ли право передоверить это передоверие',
+        default: false
+      },
+      {
         name: 'permissionUserId',
         type: 'ref',
         model: 'PermissionUser',
@@ -82,16 +89,30 @@ export const MeGrant = (app, options) => {
    */
   Model.afterCreate = (req, res, next) => {
     if (!res.data) {
-      return Promise.resolve()
-        .then(() => next())
+      return Promise.resolve({})
     }
 
     const PermissionUser = app.exModular.models.PermissionUser
     return PermissionUser.create({
       userId: res.data.userId,
       accessObjectId: res.data.accessObjectId,
-      permission: res.data.permission
+      permission: res.data.permission,
+      withGrant: res.data.withGrant
     })
+      .catch((e) => { throw e })
+  }
+
+  Model.afterRemove = (req, res, next) => {
+    const PermissionUser = app.exModular.models.PermissionUser
+
+    const resData = res.data
+    return PermissionUser.remove(res.data.permissionUserId)
+      .then((permissionUser) => {
+        resData.permissionUser = permissionUser
+        res.data = resData
+        return resData
+      })
+      .catch((e) => { throw e })
   }
 
   Model.routes.create = {
@@ -110,7 +131,22 @@ export const MeGrant = (app, options) => {
       Wrap(Model.afterCreate),
       app.exModular.services.controllerDF.sendData
     ]
+  }
 
+  Model.routes.remove = {
+    method: 'DELETE',
+    name: `${Model.name}.remove`,
+    description: `Delete single item in "${Model.name}" by id`,
+    path: `/${Model.name.toLowerCase()}/:id`,
+    before: [
+      app.exModular.auth.check,
+      app.exModular.access.check(`${Model.name}.remove`),
+      app.exModular.services.validator.paramId(Model)
+    ],
+    handler: app.exModular.services.controllerDF.remove(Model),
+    after: [
+      Wrap(Model.afterRemove)
+    ]
   }
   return Model
 }
