@@ -517,7 +517,7 @@ export default (app) => {
               // console.log('item:')
               // console.log(item)
               return Model.removeById(item.id)
-                .then((removedItem) => removedItem.id)
+                // .then((removedItem) => removedItem.id)
                 .catch((err) => { throw err })
             }))
           }

@@ -1,5 +1,6 @@
 import uuid from 'uuid/v4'
 import * as ACCESS from './const-access'
+import { removeAllRouteName, saveRouteName } from './route-builder'
 
 export const MeGrant = (app, options) => {
   if (!options) {
@@ -70,8 +71,13 @@ export const MeGrant = (app, options) => {
   Model.beforeCheckPermission = (req, res, next) => {
     return app.exModular.access.checkPermission(req.user, req.data.accessObjectId)
       .then((permission) => {
-        if (!(permission.permission === ACCESS.Allow && permission.withGrant === true)) {
+        if (!(permission.permission === ACCESS.ALLOW && permission.withGrant === true)) {
           const err = new app.exModular.services.errors.ServerNotAllowed('No withGrant permission')
+          res.err = err
+          return next(err)
+        }
+        if (res.data.permission !== ACCESS.ALLOW) {
+          const err = new app.exModular.services.errors.ServerNotAllowed('permission should be ALLOW')
           res.err = err
           return next(err)
         }
@@ -115,6 +121,41 @@ export const MeGrant = (app, options) => {
       .catch((e) => { throw e })
   }
 
+  Model.afterRemoveAll = (req, res, next) => {
+    const PermissionUser = app.exModular.models.PermissionUser
+
+    const resData = res.data
+    if (!Array.isArray(res.data)) {
+      throw Error('afterRemoveAll: res.data should have an array of removed records')
+    }
+    const ids = []
+    res.data.map((item) => { ids.push(item.permissionUserId) })
+    return PermissionUser.removeAll({ whereIn: { column: PermissionUser.key, ids } })
+      .then((permissionUser) => {
+        resData.permissionUser = permissionUser
+        res.data = resData
+        return resData
+      })
+      .catch((e) => { throw e })
+  }
+
+  Model.beforeSave = (req, res, next) => {
+    if (!Array.isArray(res.data)) {
+      throw Error('afterRemoveAll: res.data should have an array of removed records')
+    }
+    const ids = []
+    res.data.map((item) => { ids.push(item.permissionUserId) })
+    return PermissionUser.removeAll({ whereIn: { column: PermissionUser.key, ids } })
+      .then((permissionUser) => {
+        resData.permissionUser = permissionUser
+        res.data = resData
+        return resData
+      })
+      .catch((e) => { throw e })
+  }
+
+  Model.afterSave =
+
   Model.routes.create = {
     method: 'POST',
     name: `${Model.name}.create`,
@@ -146,6 +187,39 @@ export const MeGrant = (app, options) => {
     handler: app.exModular.services.controllerDF.remove(Model),
     after: [
       Wrap(Model.afterRemove)
+    ]
+  }
+
+  Model.routes.removeAll = {
+    method: 'DELETE',
+    name: `${Model.name}.${removeAllRouteName}`,
+    description: `Delete all items from "${Model.name}"`,
+    path: `/${Model.name.toLowerCase()}`,
+    before: [
+      app.exModular.auth.check,
+      app.exModular.access.check(`${Model.name}.${removeAllRouteName}`)
+    ],
+    handler: app.exModular.services.controllerDF.removeAll(Model),
+    after: [
+      Wrap(Model.afterRemoveAll)
+    ]
+  }
+
+  Model.routes.save = {
+    method: 'PUT',
+    name: `${Model.name}.${saveRouteName}`,
+    description: `Save (update) single item in "${Model.name}"`,
+    path: `/${Model.name.toLowerCase()}/:id`,
+    before: [
+      app.exModular.auth.check,
+      app.exModular.access.check(`${Model.name}.${saveRouteName}`),
+      app.exModular.services.validator.paramId(Model),
+      app.exModular.services.validator.checkBodyForModel(Model, { optionalId: true }),
+      Wrap(Model.beforeCheckPermission)
+    ],
+    handler: app.exModular.services.controllerDF.save(Model),
+    after: [
+      Wrap(Model.afterSave)
     ]
   }
   return Model
