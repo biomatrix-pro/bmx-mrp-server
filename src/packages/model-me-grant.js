@@ -95,9 +95,8 @@ export const MeGrant = (app, options) => {
       .then(() => {
         if (errors.length > 0) {
           res.err = errors
-          return next(new app.exModular.services.errors.ServerNotAllowed('No withGrant permission'))
+          throw new app.exModular.services.errors.ServerNotAllowed('No withGrant permission')
         }
-        return next()
       })
   }
 
@@ -109,7 +108,7 @@ export const MeGrant = (app, options) => {
    * @return {Promise<void>|*}
    */
   Model.afterCreate = (req, res, next) => {
-    console.log('MeGrant.afterCreate')
+    // console.log('MeGrant.afterCreate')
     if (!res.data) {
       return Promise.resolve({})
     }

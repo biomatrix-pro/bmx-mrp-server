@@ -284,7 +284,7 @@ export const ControllerDF = (app) => {
    * @param res
    */
   const sendData = (req, res) => {
-    console.log('DF.sendData')
+    // console.log('DF.sendData')
     if (res.err) {
       throw Error('Error detected on SendData!')
     }
@@ -362,7 +362,7 @@ export const ControllerDF = (app) => {
    * @param Model
    */
   const create = (Model) => (req, res, next) => {
-    console.log('DF.create')
+    // console.log('DF.create')
     if (!req.data) {
       throw new app.exModular.services.errors.ServerInvalidParameters(
         'req.data', '', `${Model.name}.controller.create: no req.data`)
@@ -373,12 +373,12 @@ export const ControllerDF = (app) => {
 
     // check if we need to create series of data:
     if (req.data._items && Array.isArray(req.data._items)) {
-      console.log('start serial')
+      // console.log('start serial')
       const task = req.data._items.map((item) => () => {
-        console.log('item')
-        return Model.create(item)
+        // console.log('item')
+        return Promise.resolve(Model.create(item))
           .then((_item) => {
-            console.log('item processed')
+            // console.log('item processed')
             return _item
           })
           .catch((error) => {
@@ -389,9 +389,9 @@ export const ControllerDF = (app) => {
             }
           })
       })
-      return Promise.resolve(app.exModular.services.serial(task)
+      return app.exModular.services.serial(task)
         .then((_items) => {
-          console.log('process items')
+          // console.log('process items')
           if (_items && Array.isArray(_items) && _items.length === 1) {
             res.sendHeaders.push({ caption: 'Location', value: `${req.path}/${_items[0].id}` })
             res.sendHeaders.push({ caption: 'Content-Location', value: `${req.path}/${_items[0].id}` })
@@ -409,7 +409,7 @@ export const ControllerDF = (app) => {
           } else {
             throw new app.exModular.services.errors.ServerGenericError(error)
           }
-        }))
+        })
     } else {
       // perform create single instance:
       return Model.create(req.data)

@@ -18,7 +18,7 @@ import {
   userGroupAdd,
   userGroupUsersAdd,
   permissionUserGroupCreate,
-  noteAdd, noteSave, userGroupUsersList, userGroupUsersRemove, meGrantAdd
+  noteAdd, noteSave, userGroupUsersList, userGroupUsersRemove, meGrantAdd, noteList
   // userDelete,
   // userSave
 } from '../client/client-api'
@@ -613,10 +613,10 @@ describe('ex-modular test: user system', function () {
             context.UserSecond = res.body.token
 
             context.token = context.UserSecond
-            return noteAdd(context, { caption: 'some note' }, expected.ErrCodeForbidden)
+            return noteList(context, expected.ErrCodeForbidden)
           })
           .then((res) => {
-            // 6-1-c1: note were NOT added
+            // 6-1-c1: note cannot be listed
             expect(res.body).to.exist('Body should exist')
             expect(res.body.err).to.exist()
 
@@ -640,14 +640,12 @@ describe('ex-modular test: user system', function () {
             expect(res.body.err).to.not.exist()
 
             context.token = context.UserSecond
-            return noteAdd(context, { caption: 'some note' }, expected.ErrCodeForbidden)
+            return noteList(context)
           })
           .then((res) => {
             // 6-1-c3: note were added
             expect(res.body).to.exist('Body should exist')
-            expect(res.body).to.be.an('object').that.have.property('id')
-            expect(res.body).have.property('caption')
-            expect(res.body).have.property('description')
+            expect(res.body).to.be.an('array')
             expect(res.body.err).to.not.exist()
           })
           .catch((e) => { throw e })
