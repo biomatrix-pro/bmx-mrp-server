@@ -20,11 +20,12 @@ export const crudRoutes = [
 
 export const routeList = (app, Model) => {
   const objectName = `${Model.name}.${listRouteName}`
+  const resourceName = Model.resourceName ? Model.resourceName : `/${Model.name.toLowerCase()}`
   return {
     method: 'GET',
     name: objectName,
     description: `Get list of "${Model.name}"`,
-    path: `/${Model.name.toLowerCase()}`,
+    path: resourceName,
     handler: app.exModular.services.controller.list(Model),
     validate: [
       app.exModular.auth.check,
@@ -36,11 +37,12 @@ export const routeList = (app, Model) => {
 
 export const routeCreate = (app, Model) => {
   const objectName = `${Model.name}.${createRouteName}`
+  const resourceName = Model.resourceName ? Model.resourceName : `/${Model.name.toLowerCase()}`
   return {
     method: 'POST',
     name: objectName,
     description: `Create new "${Model.name}"`,
-    path: `/${Model.name.toLowerCase()}`,
+    path: resourceName,
     handler: app.exModular.services.controller.create(Model),
     validate: [
       app.exModular.auth.check,
@@ -52,11 +54,12 @@ export const routeCreate = (app, Model) => {
 
 export const routeRemoveAll = (app, Model) => {
   const objectName = `${Model.name}.${removeAllRouteName}`
+  const resourceName = Model.resourceName ? Model.resourceName : `/${Model.name.toLowerCase()}`
   return {
     method: 'DELETE',
     name: objectName,
     description: `Delete all items from "${Model.name}"`,
-    path: `/${Model.name.toLowerCase()}`,
+    path: resourceName,
     handler: app.exModular.services.controller.removeAll(Model),
     validate: [
       app.exModular.auth.check,
@@ -67,6 +70,7 @@ export const routeRemoveAll = (app, Model) => {
 
 export const routeItemForRefs = (app, Model) => {
   const r = []
+  const resourceName = Model.resourceName ? Model.resourceName : `/${Model.name.toLowerCase()}`
 
   r.push(_.filter(Model.props, { type: 'refs' }).map((prop) => {
     return [
@@ -74,7 +78,7 @@ export const routeItemForRefs = (app, Model) => {
         method: 'POST',
         name: `${Model.name}.${prop.name}.${createRouteName}`,
         description: `Add item[s] to refs field "${Model.name}.${prop.name}"`,
-        path: `/${Model.name.toLowerCase()}/:id/${prop.name.toLowerCase()}`,
+        path: `${resourceName}/:id/${prop.name.toLowerCase()}`,
         handler: app.exModular.services.controller.refsCreate(Model, prop),
         validate: [
           app.exModular.auth.check,
@@ -87,7 +91,7 @@ export const routeItemForRefs = (app, Model) => {
         method: 'GET',
         name: `${Model.name}.${prop.name}.${listRouteName}`,
         description: `List item[s] of refs field "${Model.name}.${prop.name}"`,
-        path: `/${Model.name.toLowerCase()}/:id/${prop.name.toLowerCase()}`,
+        path: `${resourceName}/:id/${prop.name.toLowerCase()}`,
         handler: app.exModular.services.controller.refsList(Model, prop),
         validate: [
           app.exModular.auth.check,
@@ -99,7 +103,7 @@ export const routeItemForRefs = (app, Model) => {
         method: 'DELETE',
         name: `${Model.name}.${prop.name}.${removeRouteName}`,
         description: `Remove item[s] of refs field "${Model.name}.${prop.name}"`,
-        path: `/${Model.name.toLowerCase()}/:id/${prop.name.toLowerCase()}`,
+        path: `${resourceName}/:id/${prop.name.toLowerCase()}`,
         handler: app.exModular.services.controller.refsRemove(Model, prop),
         validate: [
           app.exModular.auth.check,
@@ -115,12 +119,13 @@ export const routeItemForRefs = (app, Model) => {
 
 export const routeItem = (app, Model) => {
   const objectName = `${Model.name}.${itemRouteName}`
+  const resourceName = Model.resourceName ? Model.resourceName : `/${Model.name.toLowerCase()}`
   return [
     {
       method: 'GET',
       name: objectName,
       description: `Get single item of "${Model.name}" by id`,
-      path: `/${Model.name.toLowerCase()}/:id`,
+      path: `${resourceName}/:id`,
       handler: app.exModular.services.controller.item(Model),
       validate: [
         app.exModular.auth.check,
@@ -134,11 +139,12 @@ export const routeItem = (app, Model) => {
 
 export const routeSave = (app, Model) => {
   const objectName = `${Model.name}.${saveRouteName}`
+  const resourceName = Model.resourceName ? Model.resourceName : `/${Model.name.toLowerCase()}`
   return {
     method: 'PUT',
     name: objectName,
     description: `Save (update) single item in "${Model.name}"`,
-    path: `/${Model.name.toLowerCase()}/:id`,
+    path: `${resourceName}/:id`,
     handler: app.exModular.services.controller.save(Model),
     validate: [
       app.exModular.auth.check,
@@ -151,11 +157,12 @@ export const routeSave = (app, Model) => {
 
 export const routeRemove = (app, Model) => {
   const objectName = `${Model.name}.${removeRouteName}`
+  const resourceName = Model.resourceName ? Model.resourceName : `/${Model.name.toLowerCase()}`
   return {
     method: 'DELETE',
     name: objectName,
     description: `Delete single item in "${Model.name}" by id`,
-    path: `/${Model.name.toLowerCase()}/:id`,
+    path: `${resourceName}/:id`,
     handler: app.exModular.services.controller.remove(Model),
     validate: [
       app.exModular.auth.check,

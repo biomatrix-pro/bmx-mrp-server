@@ -69,6 +69,13 @@ export const meGroups = (context, expectedCode) => context.request.get(`${contex
   .accept('json')
   .expect(expectedCode || expected.Ok)
 
+export const meGrantAdd = (context, data, expectedCode) => context.request.post(`${context.apiRoot}/me/grant`)
+  .set('Authorization', `${context.authSchema} ${context.token}`)
+  .send(data)
+  .type('json')
+  .accept('json')
+  .expect(expectedCode || expected.OkCreated)
+
 export const inviteCreate = (context, data, expectedCode) => context.request.post(`${context.apiRoot}/auth/invites`)
   .set('Authorization', `${context.authSchema} ${context.token}`)
   .send(data)

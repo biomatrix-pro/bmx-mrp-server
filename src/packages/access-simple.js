@@ -101,7 +101,7 @@ export const AccessSimple = (app) => {
    * @returns middleware которое проверяет наличие доступа к указанному объекту
    */
   Module.module.check = (objectName) => (req, res, next) => {
-    Module.module.CheckPermission(req.user, objectName)
+    Module.module.checkPermission(req.user, objectName)
       .then((_permission) => {
         if (_permission.permission === undefined) {
           return next(Error('Failed to check permission'))
@@ -114,12 +114,12 @@ export const AccessSimple = (app) => {
       .catch((e) => next(e))
   }
 
-  Module.module.CheckPermission = (user, objectName) => {
+  Module.module.checkPermission = (user, objectName) => {
     if (!user || !user.id) {
       throw Error(`${packageName}.CheckPermission: invalid param "user" - ${user.toString()}`)
     }
 
-    // console.log(`CheckPermission( ${user.id}, ${user.name}: ${objectName})`)
+    // console.log(`checkPermission( ${user.id}, ${user.name}: ${objectName})`)
 
     // check if user is admin
     let accessObject = null

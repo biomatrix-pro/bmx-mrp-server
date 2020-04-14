@@ -18,7 +18,7 @@ import {
   userGroupAdd,
   userGroupUsersAdd,
   permissionUserGroupCreate,
-  noteAdd, noteSave, userGroupUsersList, userGroupUsersRemove
+  noteAdd, noteSave, userGroupUsersList, userGroupUsersRemove, meGrantAdd
   // userDelete,
   // userSave
 } from '../client/client-api'
@@ -571,18 +571,17 @@ describe('ex-modular test: user system', function () {
             context.groupManagers = res.body.id
 
             const perms = [
-              { userGroupId: context.groupManagers, accessObjectId: 'Note.list', permission: ACCESS.AccessPermissionType.ALLOW.value },
-              { userGroupId: context.groupManagers, accessObjectId: 'Note.item', permission: ACCESS.AccessPermissionType.ALLOW.value },
-              { userGroupId: context.groupManagers, accessObjectId: 'Note.create', permission: ACCESS.AccessPermissionType.ALLOW.value },
-              { userGroupId: context.groupManagers, accessObjectId: 'Note.remove', permission: ACCESS.AccessPermissionType.ALLOW.value },
-              { userGroupId: context.groupManagers, accessObjectId: 'Note.removeAll', permission: ACCESS.AccessPermissionType.ALLOW.value }
+              { userGroupId: context.groupManagers, accessObjectId: 'Note.list', permission: ACCESS.AccessPermissionType.ALLOW.value, withGrant: true },
+              { userGroupId: context.groupManagers, accessObjectId: 'Note.item', permission: ACCESS.AccessPermissionType.ALLOW.value, withGrant: true },
+              { userGroupId: context.groupManagers, accessObjectId: 'Note.create', permission: ACCESS.AccessPermissionType.ALLOW.value, withGrant: false },
+              { userGroupId: context.groupManagers, accessObjectId: 'Note.remove', permission: ACCESS.AccessPermissionType.ALLOW.value, withGrant: false },
+              { userGroupId: context.groupManagers, accessObjectId: 'Note.removeAll', permission: ACCESS.AccessPermissionType.ALLOW.value, withGrant: false }
             ]
 
             return permissionUserGroupCreate(context, perms)
           })
           .then((res) => {
-
-            // create user
+            // create user 1
             return signupUser(context, UserFirst)
           })
           .then((res) => {
@@ -593,13 +592,55 @@ describe('ex-modular test: user system', function () {
           .then((res) => {
             context.UserFirst = res.body.token
             context.token = context.adminToken
-
             return userGroupUsersAdd(context, context.groupManagers, [context.UserFirstId])
           })
-          .then((res) => {
+          .then(() => {
             context.token = context.UserFirst
-
             return noteAdd(context, { caption: 'some note' })
+          })
+          .then((res) => {
+            // 6-1-c3: note were added
+
+            context.token = context.adminToken
+            return signupUser(context, UserSecond)
+          })
+          .then((res) => {
+            context.UserSecondId = res.body.id
+
+            return loginAs(context, UserSecond)
+          })
+          .then((res) => {
+            context.UserSecond = res.body.token
+
+            context.token = context.UserSecond
+            return noteAdd(context, { caption: 'some note' }, expected.ErrCodeForbidden)
+          })
+          .then((res) => {
+            // 6-1-c1: note were NOT added
+            expect(res.body).to.exist('Body should exist')
+            expect(res.body.err).to.exist()
+
+            context.token = context.UserFirst
+            return meGrantAdd(
+              context,
+              {
+                userId: context.UserSecondId,
+                accessObjectId: 'Note.list',
+                permission: ACCESS.ALLOW,
+                withGrant: false
+              })
+          })
+          .then((res) => {
+            // 6-3-c2: grant was added
+            expect(res.body).to.exist('Body should exist')
+            expect(res.body).to.be.an('object').that.have.property('id')
+            expect(res.body).have.property('accessObjectId')
+            expect(res.body).have.property('permissionUser')
+            expect(res.body.permissionUser).to.be.an('object').that.have.property('id')
+            expect(res.body.err).to.not.exist()
+
+            context.token = context.UserSecond
+            return noteAdd(context, { caption: 'some note' }, expected.ErrCodeForbidden)
           })
           .then((res) => {
             // 6-1-c3: note were added

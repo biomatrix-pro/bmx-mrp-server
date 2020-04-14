@@ -284,13 +284,14 @@ export const ControllerDF = (app) => {
    * @param res
    */
   const sendData = (req, res) => {
+    console.log('DF.sendData')
     if (res.err) {
       throw Error('Error detected on SendData!')
     }
     if (res.sendHeaders && Array.isArray(res.sendHeaders)) {
       res.sendHeaders.map((h) => res.set(h.caption, h.value))
     }
-    res.status(res.statusCode || 200).json(res.data)
+    res.status(res.statusCode ? res.statusCode : 200).json(res.data)
   }
 
   /**
@@ -361,6 +362,7 @@ export const ControllerDF = (app) => {
    * @param Model
    */
   const create = (Model) => (req, res, next) => {
+    console.log('DF.create')
     if (!req.data) {
       throw new app.exModular.services.errors.ServerInvalidParameters(
         'req.data', '', `${Model.name}.controller.create: no req.data`)
@@ -371,8 +373,14 @@ export const ControllerDF = (app) => {
 
     // check if we need to create series of data:
     if (req.data._items && Array.isArray(req.data._items)) {
-      return app.exModular.services.serial(req.data._items.map((item) => () => {
+      console.log('start serial')
+      const task = req.data._items.map((item) => () => {
+        console.log('item')
         return Model.create(item)
+          .then((_item) => {
+            console.log('item processed')
+            return _item
+          })
           .catch((error) => {
             if (error instanceof app.exModular.services.errors.ServerError) {
               throw error
@@ -380,8 +388,10 @@ export const ControllerDF = (app) => {
               throw new app.exModular.services.errors.ServerGenericError(error)
             }
           })
-      }))
+      })
+      return Promise.resolve(app.exModular.services.serial(task)
         .then((_items) => {
+          console.log('process items')
           if (_items && Array.isArray(_items) && _items.length === 1) {
             res.sendHeaders.push({ caption: 'Location', value: `${req.path}/${_items[0].id}` })
             res.sendHeaders.push({ caption: 'Content-Location', value: `${req.path}/${_items[0].id}` })
@@ -391,7 +401,15 @@ export const ControllerDF = (app) => {
             res.statusCode = 201
             res.data = _items
           }
+          return res.data
         })
+        .catch((error) => {
+          if (error instanceof app.exModular.services.errors.ServerError) {
+            throw error
+          } else {
+            throw new app.exModular.services.errors.ServerGenericError(error)
+          }
+        }))
     } else {
       // perform create single instance:
       return Model.create(req.data)

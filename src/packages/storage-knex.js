@@ -142,6 +142,12 @@ export const processAfterLoadFromStorage = (Model, item) => {
   return aItem
 }
 
+const withWhere = (queryBuilder, opt) => {
+  if (opt && opt.where) {
+    queryBuilder.where(opt.where)
+  }
+}
+
 const withWhereIn = (queryBuilder, opt) => {
   if (opt && opt.whereIn) {
     let op = opt.whereIn
@@ -408,7 +414,7 @@ export default (app) => {
       // }
       return knex.select()
         .from(Model.name)
-        .where(opt ? opt.where : {})
+        .modify(withWhere, opt)
         .modify(withWhereIn, opt)
         .modify(withWhereOp, opt)
         .modify(withWhereQ, opt)

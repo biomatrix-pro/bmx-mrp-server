@@ -40,6 +40,12 @@ export const Validator = (app) => {
       return v
     } else if (prop.type === 'ref') {
       return body(propName).optional().isString().withMessage(`${Model.name}.${prop.name} should be string UUID`)
+    } else if (prop.type === 'boolean') {
+      let v = body(propName).isBoolean().withMessage(`${Model.name}.${prop.name} should be boolean`)
+      if (prop.default !== undefined) {
+        v = v.optional({ nullable: true })
+      }
+      return v
     } else if (prop.type === 'enum') {
       const aValues = prop.format.map((item) => item.value)
       return body(propName).isIn(aValues).withMessage(`${Model.name}.${prop.name} should have predefined enum values: ${aValues}`)
