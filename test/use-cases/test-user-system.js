@@ -559,7 +559,7 @@ describe('ex-modular test: user system', function () {
           })
           .catch((e) => { throw e })
       })
-      it('6-3: grant read/write permissions to other user', function () {
+      it('6-3: grant permissions to other user', function () {
         return signupUser(context, UserAdmin)
           .then(() => loginAs(context, UserAdmin))
           .then((res) => {
