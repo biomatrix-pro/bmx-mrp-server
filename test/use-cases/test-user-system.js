@@ -647,7 +647,24 @@ describe('ex-modular test: user system', function () {
             expect(res.body).to.exist('Body should exist')
             expect(res.body).to.be.an('array')
             expect(res.body.err).to.not.exist()
+
+            // try to add grant to permission that have withGrant=false
+            context.token = context.UserFirst
+            return meGrantAdd(
+              context,
+              {
+                userId: context.UserSecondId,
+                accessObjectId: 'Note.create',
+                permission: ACCESS.ALLOW,
+                withGrant: false
+              }, expected.ErrCodeForbidden)
           })
+          .then((res) => {
+            // 6-3-c4: grant was NOT added
+            expect(res.body).to.exist('Body should exist')
+            expect(res.body.err).to.exist()
+          })
+
           .catch((e) => { throw e })
       })
     })
