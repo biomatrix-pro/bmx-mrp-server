@@ -54,7 +54,8 @@ export const PermissionUserGroup = (app, options) => {
         description: 'Есть ли право передоверить это разрешение',
         default: false
       }
-    ]
+    ],
+    resourcePath: '/access/permission-user-group'
   }
   return Model
 }

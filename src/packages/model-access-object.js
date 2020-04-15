@@ -41,7 +41,8 @@ export const AccessObject = (app, options) => {
         ],
         default: AccessObjectType.unknown.value
       }
-    ]
+    ],
+    resourcePath: '/access/object'
   }
   return Model
 }

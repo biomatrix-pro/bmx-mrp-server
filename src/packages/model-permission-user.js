@@ -54,7 +54,8 @@ export const PermissionUser = (app, options) => {
         description: 'Есть ли право передоверить это разрешение',
         default: false
       }
-    ]
+    ],
+    resourcePath: '/access/permission-user'
   }
   return Model
 }

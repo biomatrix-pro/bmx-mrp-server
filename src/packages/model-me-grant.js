@@ -64,7 +64,7 @@ export const MeGrant = (app, options) => {
       }
     ],
     routes: [],
-    resourceName: '/me/grant'
+    resourcePath: '/me/grant'
   }
 
   const Wrap = app.exModular.services.wrap
@@ -178,13 +178,13 @@ export const MeGrant = (app, options) => {
 
   Model.afterSave = (req, res, next) => { next() }
 
-  const resourceName = Model.resourceName ? Model.resourceName : `/${Model.name.toLowerCase()}`
+  const resourcePath = Model.resourcePath ? Model.resourcePath : `/${Model.name.toLowerCase()}`
 
   Model.routes.create = {
     method: 'POST',
     name: `${Model.name}.create`,
     description: `Create new "${Model.name}"`,
-    path: resourceName,
+    path: resourcePath,
     before: [
       app.exModular.auth.check,
       // app.exModular.access.check(`${Model.name}.create`),
@@ -202,7 +202,7 @@ export const MeGrant = (app, options) => {
     method: 'DELETE',
     name: `${Model.name}.remove`,
     description: `Delete single item in "${Model.name}" by id`,
-    path: `${resourceName}/:id`,
+    path: `${resourcePath}/:id`,
     before: [
       app.exModular.auth.check,
       // app.exModular.access.check(`${Model.name}.remove`),
@@ -219,7 +219,7 @@ export const MeGrant = (app, options) => {
     method: 'DELETE',
     name: `${Model.name}.${removeAllRouteName}`,
     description: `Delete all items from "${Model.name}"`,
-    path: resourceName,
+    path: resourcePath,
     before: [
       app.exModular.auth.check
       // app.exModular.access.check(`${Model.name}.${removeAllRouteName}`)
@@ -235,7 +235,7 @@ export const MeGrant = (app, options) => {
     method: 'PUT',
     name: `${Model.name}.${saveRouteName}`,
     description: `Save (update) single item in "${Model.name}"`,
-    path: `${resourceName}/:id`,
+    path: `${resourcePath}/:id`,
     before: [
       app.exModular.auth.check,
       // app.exModular.access.check(`${Model.name}.${saveRouteName}`),

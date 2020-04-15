@@ -67,3 +67,19 @@ Auth-password API:
 * module.login(req, res): контроллер для роута входа в систему.
 * module.logout(req, res): контроллер для маршрута выхода их системы
 * module.routes: определенные маршруты (/auth/login, auth/logout)
+
+## Model definition
+
+Модели в системе описываются декларативным путем.
+
+Model.key - содержит название поля-идентификатора записи
+Model.props -  массив, содержит описание полей в следующем формате:
+
+* name:
+* type:
+* format:
+* default:
+* caption:
+
+Model.resourcePath: на какой маршрут монтировать 
+ 
