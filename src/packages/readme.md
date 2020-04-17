@@ -80,6 +80,11 @@ Model.props -  массив, содержит описание полей в с�
 * format:
 * default:
 * caption:
+* beforeSave: 
+* getter
+* calculated
 
 Model.resourcePath: на какой маршрут монтировать 
  
+Типы свойств:
+* 

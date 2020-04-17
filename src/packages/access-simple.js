@@ -130,7 +130,7 @@ export const AccessSimple = (app) => {
         if (_isAdmin) {
           // user is admin, so all permissions granted for all objects:
           // console.log('user is admin, allow')
-          return { permission: ACCESS.ALLOW, withGrant: true }
+          return { permission: ACCESS.ALLOW, withGrant: true, source: { isAdmin: true } }
         }
 
         // find access object
@@ -139,7 +139,7 @@ export const AccessSimple = (app) => {
             if (!_accessObject) {
               // console.log('object not defined, DENY')
               // no object defined, DENY:
-              return { permission: ACCESS.DENY, withGrant: false }
+              return { permission: ACCESS.DENY, withGrant: false, source: { isAdmin: false, error: 'access-object-not-defined' } }
             }
             accessObject = _accessObject
 
@@ -156,7 +156,11 @@ export const AccessSimple = (app) => {
                       if (!_userGroups) {
                         // failed to get user groups, so no permissions are defined, return DENY:
                         // console.log('Object not defined, DENY')
-                        return { permission: ACCESS.DENY, withGrant: false } // no object defined, DENY
+                        return {
+                          permission: ACCESS.DENY,
+                          withGrant: false,
+                          source: { isAdmin: false, error: 'no-permission-found' }
+                        } // no object defined, DENY
                       }
                       userGroups = _userGroups
                       // console.log('User groups:')
@@ -171,12 +175,20 @@ export const AccessSimple = (app) => {
                             // if permisison is not defined - return UNKNOWN
                             if (!_permissionGroup) {
                               // console.log('Not found')
-                              return { permission: ACCESS.ACCESS_UNKNOW, withGrant: false }
+                              return {
+                                permission: ACCESS.ACCESS_UNKNOW,
+                                withGrant: false,
+                                source: { isAdmin: false, error: 'user-group-permission-not-defined' }
+                              }
                             }
                             // otherwise - return specific permission
                             // console.log('Found')
                             // console.log(_permissionGroup.value)
-                            return { permission: _permissionGroup.permission, withGrant: _permissionGroup.withGrant }
+                            return {
+                              permission: _permissionGroup.permission,
+                              withGrant: _permissionGroup.withGrant,
+                              source: { isAdmin: false, permissionUserGroup: _permissionGroup }
+                            }
                           })
                       }))
                         .then((_groupResult) => {
@@ -187,12 +199,17 @@ export const AccessSimple = (app) => {
                           }
 
                           // by default - group result will be DENY
-                          const groupRes = { permission: ACCESS.DENY, withGrant: false }
+                          const groupRes = {
+                            permission: ACCESS.DENY,
+                            withGrant: false,
+                            source: { isAdmin: false, permissionUserGroup: null }
+                          }
                           _groupResult.map((res) => {
                             // if any group have ALLOW, group result will be ALLOW
                             if (res.permission === ACCESS.ALLOW) {
                               groupRes.permission = res.permission
                               groupRes.withGrant = res.withGrant
+                              groupRes.source.userGroup = res.source.permissionUserGroup
                             }
                           })
                           return groupRes
@@ -201,7 +218,11 @@ export const AccessSimple = (app) => {
                 }
 
                 // we have specific permission and should return it
-                return { permission: _permissionUser.permission, withGrant: _permissionUser.withGrant }
+                return {
+                  permission: _permissionUser.permission,
+                  withGrant: _permissionUser.withGrant,
+                  source: { isAdmin: false, permissionUse: _permissionUser }
+                }
               })
           })
           .catch((err) => { throw err })

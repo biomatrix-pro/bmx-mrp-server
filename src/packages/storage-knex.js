@@ -1,6 +1,7 @@
 import _ from 'lodash'
 import fs from 'fs'
 import moment from 'moment'
+import { isPromise } from './is-promise'
 
 export const processBeforeSaveToStorage = (Model, item, opts) => {
   // console.log(`processBeforeSaveToStorage(${Model.name}, ${JSON.stringify(item)})\n`)
@@ -46,7 +47,7 @@ export const processBeforeSaveToStorage = (Model, item, opts) => {
         throw Error(`${Model.name}.${prop.name} enum value invalid: not found in enum format definition`)
       }
     }
-    if (prop.type === 'calculated') {
+    if (prop.calculated) {
       delete aItem[prop.name]
     }
 
@@ -61,6 +62,28 @@ export const processBeforeSaveToStorage = (Model, item, opts) => {
   })
   // console.log(`processBeforeSaveToStorage result:\n${JSON.stringify(aItem)}`)
   return aItem
+}
+
+export const processAfterLoadFromStorageAsync = (Model, item) => {
+  const aItem = processAfterLoadFromStorage(Model, item)
+  const values = []
+  const props = []
+  Model.props.map((prop) => {
+    if (prop.calculated && aItem[prop.name] && isPromise(aItem[prop.name])) {
+      props.push(prop)
+      values.push(aItem[prop.name])
+    }
+  })
+  return Promise.all(values)
+    .then((_props) => {
+      _props.map((_prop, index) => {
+        aItem[props[index].name] = _prop
+      })
+      return aItem
+    }, (reason) => {
+      throw new Error(reason)
+    })
+    .catch((e) => { throw e })
 }
 
 // transform some item using rules from Model:l
@@ -80,7 +103,7 @@ export const processAfterLoadFromStorage = (Model, item) => {
     console.log(aKeys)
     console.log(propKeys)
   }
-  const getters = []
+  // const getters = []
   propKeys.map((key) => {
     const prop = _.find(Model.props, { name: key })
     if (!prop) {
@@ -95,9 +118,6 @@ export const processAfterLoadFromStorage = (Model, item) => {
       } else {
         aItem[prop.name] = prop.default
       }
-    }
-    if (prop.afterLoad && (typeof prop.afterLoad === 'function')) {
-      aItem[prop.name] = prop.afterLoad(aItem)
     }
 
     if (item[key] && prop.type === 'boolean') {
@@ -128,15 +148,25 @@ export const processAfterLoadFromStorage = (Model, item) => {
     if (item[key] && prop.type === 'datetime') {
       aItem[key] = moment.utc(item[key]).toDate()
     }
-    if (prop.type === 'calculated') {
+    /* if (prop.type === 'calculated') {
       if (prop.getter && (typeof prop.getter === 'function')) {
         getters.push({ name: prop.name, getter: prop.getter })
       }
+    } */
+  })
+
+  // process all after-load getters:
+  Model.props.map((prop) => {
+    if (prop.calculated && prop.getter && (typeof prop.getter === 'function')) {
+      aItem[prop.name] = prop.getter(aItem)
+    }
+    if (prop.afterLoad && (typeof prop.afterLoad === 'function')) {
+      aItem[prop.name] = prop.afterLoad(aItem)
     }
   })
 
   // after processing all props process getters on final property values:
-  getters.map((getter) => { aItem[getter.name] = getter.getter(aItem) })
+  // getters.map((getter) => { aItem[getter.name] = getter.getter(aItem) })
 
   // console.log(`processAfterLoadFromStorage result:\n${JSON.stringify(aItem)}`)
   return aItem
@@ -285,6 +315,18 @@ export default (app) => {
       }
       const knex = Model.storage.db
 
+      // check if model have only calculated fields
+      let allCalculated = true
+      Model.props.map((prop) => {
+        if (!(prop.calculated && prop.calculated === true)) {
+          allCalculated = false
+        }
+      })
+
+      if (allCalculated === true) {
+        return Promise.resolve(true)
+      }
+
       return knex.schema.hasTable(Model.name)
         .then((exists) => {
           if (exists && process.env.START_FRESH) {
@@ -315,7 +357,7 @@ export default (app) => {
                   if (!prop || !infoKey) {
                     return false
                   }
-                  if (prop.type === 'calculated') {
+                  if (prop.calculated) {
                     return true
                   }
                   if (prop.name === infoKey) {
@@ -375,6 +417,19 @@ export default (app) => {
           .storage ${Model.storage}
           .db ${Model.storage.db}`))
       }
+
+      // check if model have only calculated fields
+      let allCalculated = true
+      Model.props.map((prop) => {
+        if (!(prop.calculated && prop.calculated === true)) {
+          allCalculated = false
+        }
+      })
+
+      if (allCalculated === true) {
+        return Promise.resolve(true)
+      }
+
       const knex = Model.storage.db
       return knex(Model.name).del()
         .catch((err) => { throw err })
@@ -395,7 +450,7 @@ export default (app) => {
       return knex.select()
         .from(Model.name)
         .where(Model.key, id)
-        .then((res) => processAfterLoadFromStorage(Model, res[0]))
+        .then((res) => processAfterLoadFromStorageAsync(Model, res[0]))
         .catch((err) => { throw err })
     },
 
@@ -421,7 +476,7 @@ export default (app) => {
         .modify(withOrderBy, opt)
         .modify(withRange, opt)
         .limit(1)
-        .then((res) => processAfterLoadFromStorage(Model, res[0]))
+        .then((res) => processAfterLoadFromStorageAsync(Model, res[0]))
         .catch((err) => { throw err })
     },
 
@@ -449,7 +504,7 @@ export default (app) => {
         .modify(withWhereQ, opt)
         .modify(withOrderBy, opt)
         .modify(withRange, opt)
-        .then((res) => res.map((item) => processAfterLoadFromStorage(Model, item)))
+        .then((res) => Promise.all(res.map((item) => processAfterLoadFromStorageAsync(Model, item))))
         .then((res) => {
           // console.log('res:')
           // console.log(res)

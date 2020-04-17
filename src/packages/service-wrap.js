@@ -1,6 +1,4 @@
-const isPromise = function (p) {
-  return p && typeof p.then === 'function' && typeof p.catch === 'function'
-}
+import { isPromise } from './is-promise'
 
 export const Wrap = (app) => (fn) => (req, res, next) => {
   const processErr = (next, err) => {
