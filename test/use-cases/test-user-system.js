@@ -18,7 +18,7 @@ import {
   userGroupAdd,
   userGroupUsersAdd,
   permissionUserGroupCreate,
-  noteAdd, noteSave, userGroupUsersList, userGroupUsersRemove, meGrantAdd, noteList
+  noteAdd, noteSave, userGroupUsersList, userGroupUsersRemove, meGrantAdd, noteList, meAccess
   // userDelete,
   // userSave
 } from '../client/client-api'
@@ -668,7 +668,75 @@ describe('ex-modular test: user system', function () {
           .catch((e) => { throw e })
       })
     })
+    describe('u-s-7: Me routes', function () {
+      it('7-1: me access', function () {
+        return signupUser(context, UserAdmin)
+          .then(() => loginAs(context, UserAdmin))
+          .then((res) => {
+            context.adminToken = res.body.token
+            context.token = context.adminToken
+            return userGroupAdd(context, { name: 'Managers' })
+          })
+          .then((res) => {
+            context.groupManagers = res.body.id
 
+            const perms = [
+              {
+                userGroupId: context.groupManagers,
+                accessObjectId: 'Note.list',
+                permission: ACCESS.AccessPermissionType.ALLOW.value
+              },
+              {
+                userGroupId: context.groupManagers,
+                accessObjectId: 'Note.item',
+                permission: ACCESS.AccessPermissionType.ALLOW.value
+              },
+              {
+                userGroupId: context.groupManagers,
+                accessObjectId: 'Note.create',
+                permission: ACCESS.AccessPermissionType.ALLOW.value
+              },
+              {
+                userGroupId: context.groupManagers,
+                accessObjectId: 'Note.remove',
+                permission: ACCESS.AccessPermissionType.ALLOW.value
+              },
+              {
+                userGroupId: context.groupManagers,
+                accessObjectId: 'Note.removeAll',
+                permission: ACCESS.AccessPermissionType.ALLOW.value
+              }
+            ]
+
+            return permissionUserGroupCreate(context, perms)
+          })
+          .then(() => signupUser(context, UserFirst))
+          .then((res) => {
+            context.UserFirstId = res.body.id
+
+            return loginAs(context, UserFirst)
+          })
+          .then((res) => {
+            context.UserFirst = res.body.token
+            context.token = context.adminToken
+
+            return userGroupUsersAdd(context, context.groupManagers, [context.UserFirstId])
+          })
+          .then((res) => {
+            context.token = context.UserFirst
+
+            return meAccess(context)
+          })
+          .then((res) => {
+            // 7-1-c1: access object has been returned
+            expect(res.body).to.exist('Body should exist')
+            expect(res.body).to.be.an('array')
+            expect(res.body.err).to.not.exist()
+            console.log(res.body)
+          })
+          .catch((e) => { throw e })
+      })
+    })
     /*
     it('Generate a lot of users', function () {
       let ndx = 1

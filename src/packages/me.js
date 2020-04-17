@@ -1,4 +1,5 @@
 import { MeGrant } from './model-me-grant'
+import { MeAccess } from './model-me-access'
 
 const packageName = 'Me'
 
@@ -73,6 +74,7 @@ export const Me = (app) => {
   app.exModular.routes.Add(Module.module.routes)
 
   app.exModular.modelAdd(MeGrant(app))
+  app.exModular.modelAdd(MeAccess(app))
 
   return app
 }

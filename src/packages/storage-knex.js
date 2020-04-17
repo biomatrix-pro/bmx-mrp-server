@@ -3,6 +3,17 @@ import fs from 'fs'
 import moment from 'moment'
 import { isPromise } from './is-promise'
 
+export const checkIsFullVirtual = (Model) => {
+  // check if model have only calculated fields
+  let allCalculated = true
+  Model.props.map((prop) => {
+    if (!(prop.calculated && prop.calculated === true)) {
+      allCalculated = false
+    }
+  })
+  return allCalculated
+}
+
 export const processBeforeSaveToStorage = (Model, item, opts) => {
   // console.log(`processBeforeSaveToStorage(${Model.name}, ${JSON.stringify(item)})\n`)
   const aItem = _.merge({}, item)
@@ -253,37 +264,39 @@ export default (app) => {
     modelFromSchema: (Model) => {
       const modelMethods = []
 
-      // process refs:
-      const refsProps = _.filter(Model.props, { type: 'refs' })
-      refsProps.map((prop) => {
-        const methodAdd = `${prop.name}Add`
-        const methodRemove = `${prop.name}Remove`
-        const methodClear = `${prop.name}Clear`
-        const methodCount = `${prop.name}Count`
-        const methodList = `${prop.name}List`
-
-        // define methods:
-        modelMethods.push({ name: methodAdd, handler: Model.storage.refAdd(Model, prop) })
-        modelMethods.push({ name: methodRemove, handler: Model.storage.refRemove(Model, prop) })
-        modelMethods.push({ name: methodClear, handler: Model.storage.refClear(Model, prop) })
-        modelMethods.push({ name: methodCount, handler: Model.storage.refCount(Model, prop) })
-        modelMethods.push({ name: methodList, handler: Model.storage.refList(Model, prop) })
-      })
-
       modelMethods.push({ name: 'dataInit', handler: Model.storage.dataInit(Model) })
       modelMethods.push({ name: 'dataClear', handler: Model.storage.dataClear(Model) })
       modelMethods.push({ name: 'schemaInit', handler: Model.storage.schemaInit(Model) })
       modelMethods.push({ name: 'schemaClear', handler: Model.storage.schemaClear(Model) })
       modelMethods.push({ name: 'refsInit', handler: Model.storage.refsInit(Model) })
       modelMethods.push({ name: 'refsClear', handler: Model.storage.refsClear(Model) })
-      modelMethods.push({ name: 'findById', handler: Model.storage.findById(Model) })
-      modelMethods.push({ name: 'findOne', handler: Model.storage.findOne(Model) })
-      modelMethods.push({ name: 'findAll', handler: Model.storage.findAll(Model) })
-      modelMethods.push({ name: 'count', handler: Model.storage.count(Model) })
-      modelMethods.push({ name: 'removeById', handler: Model.storage.removeById(Model) })
-      modelMethods.push({ name: 'removeAll', handler: Model.storage.removeAll(Model) })
-      modelMethods.push({ name: 'create', handler: Model.storage.create(Model) })
-      modelMethods.push({ name: 'update', handler: Model.storage.update(Model) })
+      if (!checkIsFullVirtual(Model)) {
+        // process refs:
+        const refsProps = _.filter(Model.props, { type: 'refs' })
+        refsProps.map((prop) => {
+          const methodAdd = `${prop.name}Add`
+          const methodRemove = `${prop.name}Remove`
+          const methodClear = `${prop.name}Clear`
+          const methodCount = `${prop.name}Count`
+          const methodList = `${prop.name}List`
+
+          // define methods:
+          modelMethods.push({ name: methodAdd, handler: Model.storage.refAdd(Model, prop) })
+          modelMethods.push({ name: methodRemove, handler: Model.storage.refRemove(Model, prop) })
+          modelMethods.push({ name: methodClear, handler: Model.storage.refClear(Model, prop) })
+          modelMethods.push({ name: methodCount, handler: Model.storage.refCount(Model, prop) })
+          modelMethods.push({ name: methodList, handler: Model.storage.refList(Model, prop) })
+        })
+
+        modelMethods.push({ name: 'findById', handler: Model.storage.findById(Model) })
+        modelMethods.push({ name: 'findOne', handler: Model.storage.findOne(Model) })
+        modelMethods.push({ name: 'findAll', handler: Model.storage.findAll(Model) })
+        modelMethods.push({ name: 'count', handler: Model.storage.count(Model) })
+        modelMethods.push({ name: 'removeById', handler: Model.storage.removeById(Model) })
+        modelMethods.push({ name: 'removeAll', handler: Model.storage.removeAll(Model) })
+        modelMethods.push({ name: 'create', handler: Model.storage.create(Model) })
+        modelMethods.push({ name: 'update', handler: Model.storage.update(Model) })
+      }
 
       modelMethods.map((method) => {
         if (!Model[method.name]) {
@@ -307,26 +320,18 @@ export default (app) => {
 
     schemaInit: (Model) => (id) => {
       // console.log(`${Model.name}.init`)
+      if (checkIsFullVirtual(Model) === true) {
+        return Promise.resolve(true)
+      }
+
       if (!Model || !Model.storage || !Model.storage.db) {
         return Promise.reject(new Error(`${Model.name}.storageSchemaInit: some Model's properties are invalid:
           Model ${Model},
           .storage${Model.storage}
           .db ${Model.storage.db}`))
       }
+
       const knex = Model.storage.db
-
-      // check if model have only calculated fields
-      let allCalculated = true
-      Model.props.map((prop) => {
-        if (!(prop.calculated && prop.calculated === true)) {
-          allCalculated = false
-        }
-      })
-
-      if (allCalculated === true) {
-        return Promise.resolve(true)
-      }
-
       return knex.schema.hasTable(Model.name)
         .then((exists) => {
           if (exists && process.env.START_FRESH) {

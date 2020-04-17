@@ -1,14 +1,14 @@
 import uuid from 'uuid/v4'
 import * as ACCESS from './const-access'
 
-export const ModelMeAccess = (app, options) => {
+export const MeAccess = (app, options) => {
   if (!options) {
     options = {}
   }
   // options.storage = options.storage || 'default'
 
   const Model = {
-    name: 'MeGrant',
+    name: 'MeAccess',
     priority: 0,
     props: [
       {
@@ -73,8 +73,8 @@ export const ModelMeAccess = (app, options) => {
         caption: 'Разрешение',
         description: 'Ссылка на разрешение, которое в рамках передоверия сформировано в системе',
         default: null
-      },
-     ],
+      }
+    ],
     routes: [],
     resourcePath: '/me/access'
   }
@@ -88,32 +88,51 @@ export const ModelMeAccess = (app, options) => {
 
   Model.handlerList = (req, res, next) => {
     const AccessObject = app.exModular.models.AccessObject
+    const check = app.exModular.access.checkPermission
 
+    let accessObject = null
     return AccessObject.findAll()
       .then((_accessObject) => {
-
+        accessObject = _accessObject
+        return Promise.all(accessObject.map((object) => check(req.user, object.id)))
       })
+      .then((_permissions) => {
+        const ret = []
+        _permissions.map((perm, index) => {
+          const r = {}
+          r.id = accessObject[index].id
+          r.permission = perm.permission
+          r.isAdmin = perm.source.isAdmin ? perm.source.isAdmin : false
+          r.error = perm.source.error ? perm.source.error : ''
+          r.permissionUserId = perm.source.permissionUser ? perm.source.permissionUser.id : null
+          r.permissionUserGroupId = perm.source.permissionUserGroup ? perm.source.permissionUserGroup.id : null
+
+          if (r.permission === ACCESS.ALLOW) {
+            ret.push(r)
+          }
+        })
+        res.data = ret
+        return ret
+      })
+      .catch((e) => { throw e })
   }
 
-  Model.routes.push(
-    {
-      method: 'GET',
-      name: `${Model.name}.list`,
-      description: `Create new "${Model.name}"`,
-      path: Model.resourcePath,
-      before: [
-        app.exModular.auth.check
-        // app.exModular.access.check(`${Model.name}.create`),
-        // app.exModular.services.validator.checkBodyForArrayOfModel(Model, { optionalId: true }),
-        // Wrap(Model.beforeCheckPermission)
-      ],
-      handler: app.exModular.services.controllerDF.create(Model),
-      after: [
-        Wrap(Model.afterCreate),
-        app.exModular.services.controllerDF.sendData
-      ]
-    }
-  )
+  Model.routes.list = {
+    method: 'GET',
+    name: `${Model.name}.list`,
+    description: `Create new "${Model.name}"`,
+    path: Model.resourcePath,
+    before: [
+      app.exModular.auth.check
+      // app.exModular.access.check(`${Model.name}.create`),
+      // app.exModular.services.validator.checkBodyForArrayOfModel(Model, { optionalId: true }),
+      // Wrap(Model.beforeCheckPermission)
+    ],
+    handler: Model.handlerList,
+    after: [
+      app.exModular.services.controllerDF.sendData
+    ]
+  }
 
   return Model
 }

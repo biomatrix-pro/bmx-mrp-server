@@ -226,7 +226,8 @@ export const RouteBuilder = (app) => {
 
     // generate routes and register them
     opt.map((routeName) => {
-      if (model.routes[routeName]) {
+      if (model.routes[routeName] === null) {
+      } else if (model.routes[routeName]) {
         model.routes.push(model.routes[routeName])
       } else {
         let route = null
