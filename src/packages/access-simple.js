@@ -139,7 +139,8 @@ export const AccessSimple = (app) => {
             if (!_accessObject) {
               // console.log('object not defined, DENY')
               // no object defined, DENY:
-              return { permission: ACCESS.DENY, withGrant: false, source: { isAdmin: false, error: 'access-object-not-defined' } }
+              throw Error(`access.checkPermission: Object ${objectName} not registered!`)
+              // return { permission: ACCESS.DENY, withGrant: false, source: { isAdmin: false, error: 'access-object-not-defined' } }
             }
             accessObject = _accessObject
 
@@ -151,72 +152,90 @@ export const AccessSimple = (app) => {
                   // no specific permissions for that object / user defined, so continue with groups:
                   // first - we should get all groups defined for user:
                   // console.log('no specific permissions for user')
-                  return Module.module.getUserGroups(user)
-                    .then((_userGroups) => {
-                      if (!_userGroups) {
-                        // failed to get user groups, so no permissions are defined, return DENY:
-                        // console.log('Object not defined, DENY')
+
+                  return app.exModular.models.PermissionUser.findOne({
+                    where: {
+                      userId: app.exModular.access.ACCESS_GUEST.id,
+                      accessObjectId: accessObject.id,
+                      permission: ACCESS.ALLOW
+                    }
+                  })
+                    .then((accessGuest) => {
+                      if (accessGuest) {
                         return {
-                          permission: ACCESS.DENY,
-                          withGrant: false,
-                          source: { isAdmin: false, error: 'no-permission-found' }
-                        } // no object defined, DENY
+                          permission: ACCESS.ALLOW,
+                          withGrant: accessGuest.withGrant,
+                          source: {
+                            isAdmin: false,
+                            error: 'guest access',
+                            permissionUserId: accessGuest.id
+                          }
+                        }
                       }
-                      userGroups = _userGroups
-                      // console.log('User groups:')
-                      // console.log(_userGroups)
-
-                      // for each user's group we should get specific permission:
-                      return app.exModular.services.serial(userGroups.map((userGroup) => () => {
-                        // console.log(`UserGroup ${userGroup.name}`)
-                        return app.exModular.models.PermissionUserGroup.findOne(
-                          { where: { userGroupId: userGroup.id, accessObjectId: accessObject.id } })
-                          .then((_permissionGroup) => {
-                            // if permisison is not defined - return UNKNOWN
-                            if (!_permissionGroup) {
-                              // console.log('Not found')
-                              return {
-                                permission: ACCESS.ACCESS_UNKNOW,
-                                withGrant: false,
-                                source: { isAdmin: false, error: 'user-group-permission-not-defined' }
-                              }
-                            }
-                            // otherwise - return specific permission
-                            // console.log('Found')
-                            // console.log(_permissionGroup.value)
+                      return Module.module.getUserGroups(user)
+                        .then((_userGroups) => {
+                          if (!_userGroups) {
+                            // failed to get user groups, so no permissions are defined, return DENY:
+                            // console.log('Object not defined, DENY')
                             return {
-                              permission: _permissionGroup.permission,
-                              withGrant: _permissionGroup.withGrant,
-                              source: { isAdmin: false, permissionUserGroupId: _permissionGroup.id }
-                            }
-                          })
-                      }))
-                        .then((_groupResult) => {
-                          // process result from all user's groups:
-                          if (!_groupResult) {
-                            // strange: no result or error
-                            throw Error(`${packageName}.CheckPermission: failed to process result for user's groups`)
+                              permission: ACCESS.DENY,
+                              withGrant: false,
+                              source: { isAdmin: false, error: 'no-permission-found' }
+                            } // no object defined, DENY
                           }
-
-                          // by default - group result will be DENY
-                          const groupRes = {
-                            permission: ACCESS.DENY,
-                            withGrant: false,
-                            source: { isAdmin: false, permissionUserGroupId: null }
-                          }
-                          _groupResult.map((res) => {
-                            // if any group have ALLOW, group result will be ALLOW
-                            if (res.permission === ACCESS.ALLOW) {
-                              groupRes.permission = res.permission
-                              groupRes.withGrant = res.withGrant
-                              groupRes.source.permissionUserGroupId = res.source.permissionUserGroupId
-                            }
-                          })
-                          return groupRes
+                          userGroups = _userGroups
+                          // console.log('User groups:')
+                          // console.log(_userGroups)
+                          // for each user's group we should get specific permission:
+                          return app.exModular.services.serial(userGroups.map((userGroup) => () => {
+                            // console.log(`UserGroup ${userGroup.name}`)
+                            return app.exModular.models.PermissionUserGroup.findOne(
+                              { where: { userGroupId: userGroup.id, accessObjectId: accessObject.id } })
+                              .then((_permissionGroup) => {
+                                // if permisison is not defined - return UNKNOWN
+                                if (!_permissionGroup) {
+                                  // console.log('Not found')
+                                  return {
+                                    permission: ACCESS.ACCESS_UNKNOW,
+                                    withGrant: false,
+                                    source: { isAdmin: false, error: 'user-group-permission-not-defined' }
+                                  }
+                                }
+                                // otherwise - return specific permission
+                                // console.log('Found')
+                                // console.log(_permissionGroup.value)
+                                return {
+                                  permission: _permissionGroup.permission,
+                                  withGrant: _permissionGroup.withGrant,
+                                  source: { isAdmin: false, permissionUserGroupId: _permissionGroup.id }
+                                }
+                              })
+                          }))
+                            .then((_groupResult) => {
+                              // process result from all user's groups:
+                              if (!_groupResult) {
+                                // strange: no result or error
+                                throw Error(`${packageName}.CheckPermission: failed to process result for user's groups`)
+                              }
+                              // by default - group result will be DENY
+                              const groupRes = {
+                                permission: ACCESS.DENY,
+                                withGrant: false,
+                                source: { isAdmin: false, permissionUserGroupId: null }
+                              }
+                              _groupResult.map((res) => {
+                                // if any group have ALLOW, group result will be ALLOW
+                                if (res.permission === ACCESS.ALLOW) {
+                                  groupRes.permission = res.permission
+                                  groupRes.withGrant = res.withGrant
+                                  groupRes.source.permissionUserGroupId = res.source.permissionUserGroupId
+                                }
+                              })
+                              return groupRes
+                            })
                         })
                     })
                 }
-
                 // we have specific permission and should return it
                 return {
                   permission: _permissionUser.permission,

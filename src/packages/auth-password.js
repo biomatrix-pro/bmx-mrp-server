@@ -111,33 +111,37 @@ export const AuthPassword = (app) => {
       description: 'Login via username/password, return token',
       path: '/auth/login',
       handler: Module.module.login,
-      validate: Validator.checkBodyForModel({
-        name: 'AuthPassword',
-        props: [
-          {
-            name: 'email',
-            type: 'text',
-            format: 'email',
-            default: null
-          },
-          {
-            name: 'password',
-            type: 'text',
-            format: 'password',
-            default: null
-          }
-        ]
-      }, { optionalId: true })
-      /*
-      beforeHandler: [ app.exModular.auth.optional ],
-      */
+      validate: [
+        app.exModular.auth.check,
+        app.exModular.access.check('Auth.Login'),
+        Validator.checkBodyForModel({
+          name: 'AuthPassword',
+          props: [
+            {
+              name: 'email',
+              type: 'text',
+              format: 'email',
+              default: null
+            },
+            {
+              name: 'password',
+              type: 'text',
+              format: 'password',
+              default: null
+            }
+          ]
+        }, { optionalId: true })
+      ]
     },
     {
       method: 'GET',
       name: 'Auth.Logout',
       path: '/auth/logout',
       handler: Module.module.logout,
-      validate: app.exModular.auth.check
+      validate: [
+        app.exModular.auth.check,
+        app.exModular.access.check('Auth.Logout')
+      ]
     }
   ]
 

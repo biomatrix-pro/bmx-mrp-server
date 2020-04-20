@@ -5,6 +5,7 @@ export const InitAccess = (app) => () => {
   const User = app.exModular.models.User
   const UserGroup = app.exModular.models.UserGroup
   const AccessObject = app.exModular.models.AccessObject
+  const PermissionUser = app.exModular.models.PermissionUser
 
   const Serial = app.exModular.services.serial
 
@@ -51,6 +52,54 @@ export const InitAccess = (app) => () => {
           })
           .catch((e) => { throw e })
       }))
+    })
+    .then(() => PermissionUser.findOne({
+      where: {
+        userId: app.exModular.access.ACCESS_GUEST.id,
+        accessObjectId: 'Auth.Signup'
+      }
+    }))
+    .then((item) => {
+      if (!item) {
+        return PermissionUser.create({
+          userId: app.exModular.access.ACCESS_GUEST.id,
+          accessObjectId: 'Auth.Signup',
+          permission: ACCESS.ALLOW,
+          withGrant: false
+        })
+      }
+    })
+    .then(() => PermissionUser.findOne({
+      where: {
+        userId: app.exModular.access.ACCESS_GUEST.id,
+        accessObjectId: 'Auth.Login'
+      }
+    }))
+    .then((item) => {
+      if (!item) {
+        return PermissionUser.create({
+          userId: app.exModular.access.ACCESS_GUEST.id,
+          accessObjectId: 'Auth.Login',
+          permission: ACCESS.ALLOW,
+          withGrant: false
+        })
+      }
+    })
+    .then(() => PermissionUser.findOne({
+      where: {
+        userId: app.exModular.access.ACCESS_GUEST.id,
+        accessObjectId: 'Auth.Logout'
+      }
+    }))
+    .then((item) => {
+      if (!item) {
+        return PermissionUser.create({
+          userId: app.exModular.access.ACCESS_GUEST.id,
+          accessObjectId: 'Auth.Logout',
+          permission: ACCESS.ALLOW,
+          withGrant: false
+        })
+      }
     })
     .catch((e) => { throw e })
 }
