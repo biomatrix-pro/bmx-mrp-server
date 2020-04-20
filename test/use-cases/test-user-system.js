@@ -432,7 +432,7 @@ describe('ex-modular test: user system', function () {
           .then((res) => {
             // 5-1-c5: check that group is added to user's profile:
             expect(res.body).to.exist('Body should exist')
-            expect(res.body).to.be.an('array').that.have.lengthOf(1)
+            expect(res.body).to.be.an('array').that.have.lengthOf(2)
           })
           .catch((e) => { throw e })
       })

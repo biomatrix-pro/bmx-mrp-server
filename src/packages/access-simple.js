@@ -17,6 +17,8 @@ export const AccessSimple = (app) => {
 
   app.exModular.modules.Add(Module)
 
+  Module.module.LOGGED_GROUP_ID = ACCESS.LOGGED_GROUP_ID
+
   Module.module.ACCESS_GUEST = {
     id: ACCESS.GUEST_ID,
     name: '(Guest)',
@@ -36,6 +38,24 @@ export const AccessSimple = (app) => {
     }
 
     return app.exModular.models.UserGroup.usersAdd(ACCESS.ADMIN_GROUP_ID, user.id)
+      .catch((e) => { throw e })
+  }
+
+  Module.module.addLogged = (user) => {
+    if (!user || !user.id) {
+      throw Error(`${packageName}.addLogged: invalid param "user" - ${user.toString()}`)
+    }
+
+    return app.exModular.models.UserGroup.usersAdd(ACCESS.LOGGED_GROUP_ID, user.id)
+      .catch((e) => { throw e })
+  }
+
+  Module.module.removeLogged = (user) => {
+    if (!user || !user.id) {
+      throw Error(`${packageName}.removeLogged: invalid param "user" - ${user.toString()}`)
+    }
+
+    return app.exModular.models.UserGroup.usersRemove(ACCESS.LOGGED_GROUP_ID, user.id)
       .catch((e) => { throw e })
   }
 

@@ -22,6 +22,18 @@ export const InitAccess = (app) => () => {
       }
       return item
     })
+    .then(() => UserGroup.findById(ACCESS.LOGGED_GROUP_ID))
+    .then((item) => {
+      if (!item) {
+        return UserGroup.create({
+          id: ACCESS.LOGGED_GROUP_ID,
+          name: ACCESS.AccessSystemType.Logged.caption,
+          systemType: ACCESS.AccessSystemType.Logged.value,
+          users: []
+        })
+      }
+      return item
+    })
     .then(() => User.findById(ACCESS.GUEST_ID))
     .then((item) => {
       if (!item) {

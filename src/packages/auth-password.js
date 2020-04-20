@@ -33,7 +33,7 @@ export const AuthPassword = (app) => {
     }
 
     let user = null
-
+    let session = null
     return User.findOne({ where: { email: req.data.email } })
       .then((aUser) => {
         user = aUser
@@ -55,7 +55,11 @@ export const AuthPassword = (app) => {
 
         return Session.createOrUpdate({ userId: user.id, ip: req.ip })
       })
-      .then((session) => {
+      .then((_session) => {
+        session = _session
+        return app.exModular.access.addLogged(user)
+      })
+      .then(() => {
         res.json({ token: app.exModular.auth.encode(session.id) })
       })
       .catch((error) => {
@@ -87,9 +91,9 @@ export const AuthPassword = (app) => {
         // remove current user from logged-in group
         return Session.removeById(session.id)
       })
-      .then((data) => {
+      .then(() => app.exModular.access.removeLogged(req.user))
+      .then(() => {
         res.status(200).send()
-        return Promise.resolve()
       })
       .catch((error) => {
         // console.log('login: error')
