@@ -6,6 +6,7 @@ export const InitAccess = (app) => () => {
   const UserGroup = app.exModular.models.UserGroup
   const AccessObject = app.exModular.models.AccessObject
   const PermissionUser = app.exModular.models.PermissionUser
+  const PermissionUserGroup = app.exModular.models.PermissionUserGroup
 
   const Serial = app.exModular.services.serial
 
@@ -108,6 +109,150 @@ export const InitAccess = (app) => () => {
         return PermissionUser.create({
           userId: app.exModular.access.ACCESS_GUEST.id,
           accessObjectId: 'Auth.Logout',
+          permission: ACCESS.ALLOW,
+          withGrant: false
+        })
+      }
+    })
+    .then(() => PermissionUserGroup.findOne({
+      where: {
+        userGroupId: app.exModular.access.LOGGED_GROUP_ID,
+        accessObjectId: 'Me'
+      }
+    }))
+    .then((item) => {
+      if (!item) {
+        return PermissionUserGroup.create({
+          userGroupId: app.exModular.access.LOGGED_GROUP_ID,
+          accessObjectId: 'Me',
+          permission: ACCESS.ALLOW,
+          withGrant: false
+        })
+      }
+    })
+    .then(() => PermissionUserGroup.findOne({
+      where: {
+        userGroupId: app.exModular.access.LOGGED_GROUP_ID,
+        accessObjectId: 'Me.Groups'
+      }
+    }))
+    .then((item) => {
+      if (!item) {
+        return PermissionUserGroup.create({
+          userGroupId: app.exModular.access.LOGGED_GROUP_ID,
+          accessObjectId: 'Me.Groups',
+          permission: ACCESS.ALLOW,
+          withGrant: false
+        })
+      }
+    })
+    .then(() => PermissionUserGroup.findOne({
+      where: {
+        userGroupId: app.exModular.access.LOGGED_GROUP_ID,
+        accessObjectId: 'MeAccess.list'
+      }
+    }))
+    .then((item) => {
+      if (!item) {
+        return PermissionUserGroup.create({
+          userGroupId: app.exModular.access.LOGGED_GROUP_ID,
+          accessObjectId: 'MeAccess.list',
+          permission: ACCESS.ALLOW,
+          withGrant: false
+        })
+      }
+    })
+    .then(() => PermissionUserGroup.findOne({
+      where: {
+        userGroupId: app.exModular.access.LOGGED_GROUP_ID,
+        accessObjectId: 'MeGrant.list'
+      }
+    }))
+    .then((item) => {
+      if (!item) {
+        return PermissionUserGroup.create({
+          userGroupId: app.exModular.access.LOGGED_GROUP_ID,
+          accessObjectId: 'MeGrant.list',
+          permission: ACCESS.ALLOW,
+          withGrant: false
+        })
+      }
+    })
+    .then(() => PermissionUserGroup.findOne({
+      where: {
+        userGroupId: app.exModular.access.LOGGED_GROUP_ID,
+        accessObjectId: 'MeGrant.create'
+      }
+    }))
+    .then((item) => {
+      if (!item) {
+        return PermissionUserGroup.create({
+          userGroupId: app.exModular.access.LOGGED_GROUP_ID,
+          accessObjectId: 'MeGrant.create',
+          permission: ACCESS.ALLOW,
+          withGrant: false
+        })
+      }
+    })
+    .then(() => PermissionUserGroup.findOne({
+      where: {
+        userGroupId: app.exModular.access.LOGGED_GROUP_ID,
+        accessObjectId: 'MeGrant.item'
+      }
+    }))
+    .then((item) => {
+      if (!item) {
+        return PermissionUserGroup.create({
+          userGroupId: app.exModular.access.LOGGED_GROUP_ID,
+          accessObjectId: 'MeGrant.item',
+          permission: ACCESS.ALLOW,
+          withGrant: false
+        })
+      }
+    })
+    .then(() => PermissionUserGroup.findOne({
+      where: {
+        userGroupId: app.exModular.access.LOGGED_GROUP_ID,
+        accessObjectId: 'MeGrant.save'
+      }
+    }))
+    .then((item) => {
+      if (!item) {
+        return PermissionUserGroup.create({
+          userGroupId: app.exModular.access.LOGGED_GROUP_ID,
+          accessObjectId: 'MeGrant.save',
+          permission: ACCESS.ALLOW,
+          withGrant: false
+        })
+      }
+    })
+    .then(() => PermissionUserGroup.findOne({
+      where: {
+        userGroupId: app.exModular.access.LOGGED_GROUP_ID,
+        accessObjectId: 'MeGrant.remove'
+      }
+    }))
+    .then((item) => {
+      if (!item) {
+        return PermissionUserGroup.create({
+          userGroupId: app.exModular.access.LOGGED_GROUP_ID,
+          accessObjectId: 'MeGrant.remove',
+          permission: ACCESS.ALLOW,
+          withGrant: false
+        })
+      }
+    })
+    .then(() => PermissionUserGroup.findOne({
+      where: {
+        userGroupId: app.exModular.access.LOGGED_GROUP_ID,
+        accessObjectId: 'MeGrant.removeAll'
+      }
+    }))
+    .then((item) => {
+      if (!item) {
+        return PermissionUserGroup.create({
+          userGroupId: app.exModular.access.LOGGED_GROUP_ID,
+          accessObjectId: 'MeGrant.removeAll',
           permission: ACCESS.ALLOW,
           withGrant: false
         })
