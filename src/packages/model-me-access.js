@@ -104,8 +104,8 @@ export const MeAccess = (app, options) => {
           r.permission = perm.permission
           r.isAdmin = perm.source.isAdmin ? perm.source.isAdmin : false
           r.error = perm.source.error ? perm.source.error : ''
-          r.permissionUserId = perm.source.permissionUser ? perm.source.permissionUser.id : null
-          r.permissionUserGroupId = perm.source.permissionUserGroup ? perm.source.permissionUserGroup.id : null
+          r.permissionUserId = perm.source.permissionUserId ? perm.source.permissionUserId : null
+          r.permissionUserGroupId = perm.source.permissionUserGroupId ? perm.source.permissionUserGroupId : null
 
           if (r.permission === ACCESS.ALLOW) {
             ret.push(r)

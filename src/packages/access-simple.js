@@ -187,7 +187,7 @@ export const AccessSimple = (app) => {
                             return {
                               permission: _permissionGroup.permission,
                               withGrant: _permissionGroup.withGrant,
-                              source: { isAdmin: false, permissionUserGroup: _permissionGroup }
+                              source: { isAdmin: false, permissionUserGroupId: _permissionGroup.id }
                             }
                           })
                       }))
@@ -202,14 +202,14 @@ export const AccessSimple = (app) => {
                           const groupRes = {
                             permission: ACCESS.DENY,
                             withGrant: false,
-                            source: { isAdmin: false, permissionUserGroup: null }
+                            source: { isAdmin: false, permissionUserGroupId: null }
                           }
                           _groupResult.map((res) => {
                             // if any group have ALLOW, group result will be ALLOW
                             if (res.permission === ACCESS.ALLOW) {
                               groupRes.permission = res.permission
                               groupRes.withGrant = res.withGrant
-                              groupRes.source.userGroup = res.source.permissionUserGroup
+                              groupRes.source.permissionUserGroupId = res.source.permissionUserGroupId
                             }
                           })
                           return groupRes
@@ -221,7 +221,7 @@ export const AccessSimple = (app) => {
                 return {
                   permission: _permissionUser.permission,
                   withGrant: _permissionUser.withGrant,
-                  source: { isAdmin: false, permissionUse: _permissionUser }
+                  source: { isAdmin: false, permissionUserId: _permissionUser.id }
                 }
               })
           })
