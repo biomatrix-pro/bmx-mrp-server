@@ -8,7 +8,7 @@
   "scripts": {
     "start": "cross-env DEBUG='ex-modular:*' babel-node src/app.js",
     "start:fresh": "rimraf ./data/db.sqlite && cross-env DEBUG='ex-modular:*' babel-node src/app.js",
-    "docs:ext": "jsdoc2md -c ./jsdoc.json ./src/ext/*.js > ./src/ext/readme.md",
+    "docs:ext": "jsdoc2md -c ./jsdoc.json src/ext-mrp/*.js > src/ext-mrp/readme.md",
     "clean": "rimraf lib",
     "test": "mocha ./test/**/*.js",
     "cover": "nyc npm run test",

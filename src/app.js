@@ -1,7 +1,7 @@
 import express from 'express'
 import appBuilder from './packages/app-builder'
 import serverBuilder from './packages/server-builder'
-import { Mrp } from './ext/mrp'
+import { Mrp } from './ext-mrp/mrp'
 import { ExtTest } from './ext-test/ext-test'
 import env from 'dotenv-safe'
 
