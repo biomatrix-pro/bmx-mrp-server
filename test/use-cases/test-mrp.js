@@ -34,7 +34,7 @@ import {
 chai.use(dirtyChai)
 
 // test case:
-describe('ex-modular tests', function () {
+describe('MRP module tests', function () {
   env.config()
   process.env.NODE_ENV = 'test' // just to be sure
   let app = null
@@ -80,7 +80,7 @@ describe('ex-modular tests', function () {
       .catch(done)
   })
 
-  describe('First use-case:', function () {
+  describe('First use-case', function () {
     it('Register first user account', function () {
       return signupUser(context, UserAdmin)
         .then((res) => {
