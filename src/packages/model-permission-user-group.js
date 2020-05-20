@@ -10,7 +10,9 @@ export const PermissionUserGroup = (app, options) => {
 
   const Model = {
     name: 'PermissionUserGroup',
-    priority: 0,
+    caption: 'Разрешения групп',
+    description: 'Разрешения, установленные для групп пользователей',
+    resourcePath: '/access/permission-user-group',
     props: [
       {
         name: 'id',
@@ -54,8 +56,7 @@ export const PermissionUserGroup = (app, options) => {
         description: 'Есть ли право передоверить это разрешение',
         default: false
       }
-    ],
-    resourcePath: '/access/permission-user-group'
+    ]
   }
   return Model
 }

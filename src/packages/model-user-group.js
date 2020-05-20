@@ -8,7 +8,6 @@ export const UserGroup = (app, options) => {
 
   return {
     name: 'UserGroup',
-    priority: 0,
     props: [
       {
         name: 'id',

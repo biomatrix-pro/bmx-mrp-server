@@ -9,7 +9,6 @@ export const Session = (app, options) => {
 
   const Model = {
     name: 'Session',
-    priority: 0,
     props: [
       {
         name: 'id',
