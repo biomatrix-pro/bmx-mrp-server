@@ -88,12 +88,15 @@ export const routeItemForRefs = (app, Model) => {
         name: `${Model.name}.${prop.name}.${createRouteName}`,
         description: `Add item[s] to refs field "${Model.name}.${prop.name}"`,
         path: `${resourcePath}/:id/${prop.name.toLowerCase()}`,
-        handler: app.exModular.services.controller.refsCreate(Model, prop),
-        validate: [
+        before: [
           app.exModular.auth.check,
           app.exModular.access.check(`${Model.name}.${createRouteName}`),
           app.exModular.services.validator.paramId(Model),
           app.exModular.services.validator.checkBodyForArrayOfRefs(Model, prop)
+        ],
+        handler: app.exModular.services.controllerDF.refsCreate(Model, prop),
+        after: [
+          app.exModular.services.controllerDF.sendData
         ]
       },
       {
@@ -101,11 +104,14 @@ export const routeItemForRefs = (app, Model) => {
         name: `${Model.name}.${prop.name}.${listRouteName}`,
         description: `List item[s] of refs field "${Model.name}.${prop.name}"`,
         path: `${resourcePath}/:id/${prop.name.toLowerCase()}`,
-        handler: app.exModular.services.controller.refsList(Model, prop),
-        validate: [
+        before: [
           app.exModular.auth.check,
           app.exModular.access.check(`${Model.name}.${listRouteName}`),
           app.exModular.services.validator.paramId(Model)
+        ],
+        handler: app.exModular.services.controllerDF.refsList(Model, prop),
+        after: [
+          app.exModular.services.controllerDF.sendData
         ]
       },
       {
@@ -113,12 +119,15 @@ export const routeItemForRefs = (app, Model) => {
         name: `${Model.name}.${prop.name}.${removeRouteName}`,
         description: `Remove item[s] of refs field "${Model.name}.${prop.name}"`,
         path: `${resourcePath}/:id/${prop.name.toLowerCase()}`,
-        handler: app.exModular.services.controller.refsRemove(Model, prop),
-        validate: [
+        before: [
           app.exModular.auth.check,
           app.exModular.access.check(`${Model.name}.${removeRouteName}`),
           app.exModular.services.validator.paramId(Model),
           app.exModular.services.validator.checkBodyForArrayOfRefs(Model, prop)
+        ],
+        handler: app.exModular.services.controllerDF.refsRemove(Model, prop),
+        after: [
+          app.exModular.services.controllerDF.sendData
         ]
       }
     ]
@@ -178,11 +187,14 @@ export const routeRemove = (app, Model) => {
     name: objectName,
     description: `Delete single item in "${Model.name}" by id`,
     path: `${resourcePath}/:id`,
-    handler: app.exModular.services.controller.remove(Model),
-    validate: [
+    before: [
       app.exModular.auth.check,
       app.exModular.access.check(objectName),
       app.exModular.services.validator.paramId(Model)
+    ],
+    handler: app.exModular.services.controllerDF.remove(Model),
+    after: [
+      app.exModular.services.controllerDF.sendData
     ]
   }
 }
@@ -199,13 +211,13 @@ export const RouteBuilder = (app) => {
       'services.validator',
       'services.validator.paramId',
       'services.validator.checkBodyForModel',
-      'services.controller',
-      'services.controller.list',
-      'services.controller.create',
-      'services.controller.save',
-      'services.controller.item',
-      'services.controller.remove',
-      'services.controller.removeAll',
+      'services.controllerDF',
+      'services.controllerDF.list',
+      'services.controllerDF.create',
+      'services.controllerDF.save',
+      'services.controllerDF.item',
+      'services.controllerDF.remove',
+      'services.controllerDF.removeAll',
       'models',
       'express',
       'services.wrap'
