@@ -43,7 +43,8 @@ export const Me = (app) => {
         if (!Array.isArray(_groups)) {
           _groups = [_groups]
         }
-        res.payload = _groups
+        res.payload = []
+        _groups.map((group) => res.payload.push({ id: group.id, name: group.name, systemType: group.systemType }))
         return next()
       })
       .catch((e) => {
