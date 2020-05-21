@@ -1,5 +1,5 @@
 export const InitUsers = (app) => () =>
-  app.exModular.services.seed('User', 'user.json', { onlyIfEmpty: true })
+  app.exModular.services.seed('User', 'user.json', { upsert: true })
     .then((res) => {
       if (res && Array.isArray(res) && res.length === 1) {
         return app.exModular.access.addAdmin(res[0])
