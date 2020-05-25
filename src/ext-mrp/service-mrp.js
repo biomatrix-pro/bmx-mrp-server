@@ -4,6 +4,14 @@ import { ProductStock, ProductStockType } from './model-product-stock'
 
 const packageName = 'MRP'
 
+export class MRPError extends Error {
+  constructor (message, sender, description) {
+    super(message)
+    this.sender = sender
+    this.description = description
+  }
+}
+
 export const MRP = (app) => {
   app.exModular.modules.Add({
     moduleName: packageName,
@@ -55,6 +63,19 @@ export const MRP = (app) => {
     }
   }
 
+  MRP.log = (data) => {
+    const severity = data.severity || 'info'
+    const sender = data.sender || '(unknown)'
+    const message = data.message || 'INFO'
+    const description = data.description || ''
+    const createdAt = data.createdAt || Date.now()
+    const planCalcId = data.planCalcId || null
+
+    const CalcLog = app.exModular.models.CalcLog
+
+    return CalcLog.create({ planCalcId, severity, sender, message, description, createdAt })
+      .catch((e) => { throw e })
+  }
   /**
    * processInProd: обработать записи о партиях продукции в производстве (на начало расчета MRP)
    * @param productStockId ( -> ProductStock.id) идентификатор записи о партии продукции отправленной в производство
@@ -77,7 +98,8 @@ export const MRP = (app) => {
     return ProductStock.findById(productStockId)
       .then((_productStock) => {
         if (!_productStock) {
-          throw Error('No ProductStock record')
+          const msg = 'No ProductStock record'
+          throw new MRPError(msg, sender)
         }
         productStock = _productStock
         aDate = moment(_productStock.date)
@@ -160,7 +182,24 @@ export const MRP = (app) => {
           })
         }
       })
-      .catch((e) => { throw e })
+      .catch((e) => {
+        if (e instanceof MRPError) {
+          return MRP.log({
+            severity: 'err',
+            sender: MRPError.sender,
+            description: MRPError.description,
+            planCalcId: planCalcId
+          })
+        } else {
+          return MRP.log({
+            severity: 'err',
+            sender: 'MRP.processInProd (generic)',
+            description: e.message,
+            planCalcId: planCalcId
+          })
+            .then(() => { throw e })
+        }
+      })
   }
 
   /**

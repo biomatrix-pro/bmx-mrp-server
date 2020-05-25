@@ -10,25 +10,24 @@ import App from '../../src/packages/app-builder'
 import {
   loginAs,
   UserAdmin,
-  // UserFirst,
-  // userList,
-  signupUser
-  // userDelete,
-  // userSave
+  UserFirst,
+  signupUser,
+  userGroupAdd,
+  permissionUserGroupCreate,
+  userGroupUsersAdd, mrpPlanCalcAdd
 } from '../client/client-api'
+// import { ExtTest } from '../../src/ext-test/ext-test'
+import { Mrp } from '../../src/ext-mrp/mrp'
+import * as ACCESS from '../../src/packages/const-access'
 
 /**
 
- Simple flow: простой use case:
+ MRP test: тестируем модуль MRP
 
- Регистрируем первый пользовательский аккаунт
- Он становится административным аккаунтом
-
- Регистрируем второй и третий аккаунты. Они - обычные пользователи.
-
- Администратору доступен список пользователей. Простым пользователем - нет.
-
- Всем доступен собственный профиль.
+ Основные сценарии тестирования:
+ 1) проверить базовую функцию - взять план, сделать калькуляцию
+ 2) проверить как работает дополнительная калькуляция
+ 3) тестировать индивидуальные сценарии данных
 */
 
 chai.use(dirtyChai)
@@ -51,6 +50,7 @@ describe('MRP module tests', function () {
     App()
       .then((a) => {
         app = a
+        Mrp(app)
       })
       .then(() => app.exModular.storages.Init()) // init storages
       .then(() => app.exModular.modelsInit())
@@ -63,9 +63,7 @@ describe('MRP module tests', function () {
         context.request = supertest(app)
         done()
       })
-      .catch((err) => {
-        done(err)
-      })
+      .catch(done)
   })
 
   after((done) => {
@@ -80,22 +78,57 @@ describe('MRP module tests', function () {
       .catch(done)
   })
 
-  describe('First use-case', function () {
-    it('Register first user account', function () {
+  describe('MRP test case', function () {
+    it('1-1: ', function () {
       return signupUser(context, UserAdmin)
+        .then(() => loginAs(context, UserAdmin))
         .then((res) => {
-          expect(res.body).to.exist('Body should exist')
-          expect(res.body).to.be.an('object')
-          expect(res.body.email).to.exist()
-          expect(res.body.email).to.be.equal(UserAdmin.email)
-          return loginAs(context, UserAdmin)
-        })
-        .then((res) => {
-          expect(res.body).to.exist('res.body should exist')
-          expect(res.body.token).to.exist('res.body.token should exist')
-
           context.adminToken = res.body.token
+          context.token = context.adminToken
+          return userGroupAdd(context, { name: 'Employee' })
         })
+        .then((res) => {
+          context.groupEmployee = res.body.id
+
+          const perms = [
+            {
+              userGroupId: context.groupEmployee,
+              accessObjectId: 'Plan.list',
+              permission: ACCESS.AccessPermissionType.ALLOW.value,
+              withGrant: true
+            },
+            {
+              userGroupId: context.groupEmployee,
+              accessObjectId: 'Plan.item',
+              permission: ACCESS.AccessPermissionType.ALLOW.value,
+              withGrant: true
+            }
+          ]
+          return permissionUserGroupCreate(context, perms)
+        })
+        .then((res) => {
+          context.token = context.UserFirst
+
+          // create user
+          return signupUser(context, UserFirst)
+        })
+        .then((res) => {
+          context.UserFirstId = res.body.id
+
+          return loginAs(context, UserFirst)
+        })
+        .then((res) => {
+          context.UserFirst = res.body.token
+          context.token = context.adminToken
+
+          return userGroupUsersAdd(context, context.groupEmployee, [context.UserFirstId])
+        })
+        .then(()=> {
+          context.token = context.adminToken
+
+          return mrpPlanCalcAdd(context, { planId: 1 })
+        })
+        .catch((e) => { throw e })
     })
   })
 })

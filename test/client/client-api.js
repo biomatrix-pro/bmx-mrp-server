@@ -238,3 +238,12 @@ export const noteSave = (context, aId, data, expectedCode) => context.request.pu
   .type('json')
   .accept('json')
   .expect(expectedCode || expected.Ok)
+
+// MRP ext:
+export const mrpPlanCalcAdd = (context, data, expectedCode) => context.request.post(`${context.apiRoot}/plancalc`)
+  .set('Authorization', `${context.authSchema} ${context.token}`)
+  .send(data)
+  .type('json')
+  .accept('json')
+  .expect(expectedCode || expected.OkCreated)
+
