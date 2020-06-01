@@ -99,7 +99,7 @@ export const MRP = (app) => {
       .then((_productStock) => {
         if (!_productStock) {
           const msg = 'No ProductStock record'
-          throw new MRPError(msg, sender)
+          throw new MRPError(msg, 'MRP.processInProd')
         }
         productStock = _productStock
         aDate = moment(_productStock.date)
