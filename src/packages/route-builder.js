@@ -96,7 +96,9 @@ export const routeItemForRefs = (app, Model) => {
         ],
         handler: app.exModular.services.controllerDF.refsCreate(Model, prop),
         after: [
-          app.exModular.services.controllerDF.sendData
+          prop.afterCreate
+            ? _.concat(prop.afterCreate, app.exModular.services.controllerDF.sendData)
+            : app.exModular.services.controllerDF.sendData
         ]
       },
       {
@@ -111,7 +113,9 @@ export const routeItemForRefs = (app, Model) => {
         ],
         handler: app.exModular.services.controllerDF.refsList(Model, prop),
         after: [
-          app.exModular.services.controllerDF.sendData
+          prop.afterList
+            ? _.concat(prop.afterList, app.exModular.services.controllerDF.sendData)
+            : app.exModular.services.controllerDF.sendData
         ]
       },
       {
@@ -127,7 +131,9 @@ export const routeItemForRefs = (app, Model) => {
         ],
         handler: app.exModular.services.controllerDF.refsRemove(Model, prop),
         after: [
-          app.exModular.services.controllerDF.sendData
+          prop.afterRemove
+            ? _.concat(prop.afterRemove, app.exModular.services.controllerDF.sendData)
+            : app.exModular.services.controllerDF.sendData
         ]
       }
     ]

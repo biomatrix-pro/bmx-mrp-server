@@ -123,7 +123,7 @@ describe('MRP module tests', function () {
 
           return userGroupUsersAdd(context, context.groupEmployee, [context.UserFirstId])
         })
-        .then(()=> {
+        .then(() => {
           context.token = context.adminToken
 
           return mrpPlanCalcAdd(context, { planId: 1 })

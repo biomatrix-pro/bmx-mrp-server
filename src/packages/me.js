@@ -1,5 +1,6 @@
 import { MeGrant } from './model-me-grant'
 import { MeAccess } from './model-me-access'
+import { listRouteName } from './route-builder'
 
 const packageName = 'Me'
 
@@ -8,7 +9,6 @@ export const Me = (app) => {
     moduleName: packageName,
     dependency: [
       'auth.check',
-      'services.sendJson',
       'modules.Add',
       'routes.Add'
     ],
@@ -17,14 +17,26 @@ export const Me = (app) => {
 
   app.exModular.modules.Add(Module)
 
+  /**
+   * me: контроллер маршрута me. Возвращает профиль текущего пользователя. Для
+   * администратора возвращаются идентификкаторы системных групп: adminGroupId,
+   * loggedGroupId
+   */
   Module.module.me = (req, res, next) => {
     return Promise.resolve()
       .then(() => {
-        res.payload = req.user
-        if (res.payload.password) {
-          delete res.payload.password
+        res.data = req.user
+        if (res.data.password) {
+          delete res.data.password
         }
-        return next()
+
+        return app.exModular.access.isAdmin(req.user)
+      })
+      .then((_isAdmin) => {
+        if (_isAdmin) {
+          res.data.adminGroupId = app.exModular.access.ADMIN_GROUP_ID
+          res.data.loggedGroupId = app.exModular.access.LOGGED_GROUP_ID
+        }
       })
       .catch((e) => { throw e })
   }
@@ -58,9 +70,13 @@ export const Me = (app) => {
       name: 'Me',
       method: 'GET',
       path: '/me',
-      before: app.exModular.auth.check,
+      before: [
+        app.exModular.auth.check,
+        app.exModular.access.check('Me')
+      ],
       handler: Module.module.me,
-      after: app.exModular.services.sendJson
+      after: app.exModular.services.controllerDF.sendData
+
     },
     {
       name: 'Me.Groups',
