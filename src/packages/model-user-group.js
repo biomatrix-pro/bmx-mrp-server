@@ -47,9 +47,8 @@ export const UserGroup = (app, options) => {
         if (!_session) {
           return {}
         }
-        return Serial(_session.map((item) => () => ))
+        return Serial(_session.map((item) => () => {}))
       })
-
   }
 
   const usersIndex = _.findIndex(Model.props, { name: 'users', type: 'refs' })

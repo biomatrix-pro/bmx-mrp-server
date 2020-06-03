@@ -124,6 +124,9 @@ describe('ex-modular test: user system', function () {
 Проверить что мегеджер имеет право на создание записи.
    */
 
+  /**
+   * сниппет для теста - создать пользователя Admin
+   */
   const createAdmin = () =>
     signupUser(context, UserAdmin)
       .then((res) => {
@@ -133,9 +136,13 @@ describe('ex-modular test: user system', function () {
       .then((res) => {
         context.adminToken = res.body.token
         context.token = context.adminToken
+        return res
       })
       .catch((e) => { throw e })
 
+  /**
+   * сниппет для теста - создать пользователя UserFirst
+   */
   const createUserFirst = () => {
     context.token = context.adminToken
     return signupUser(context, UserFirst)
@@ -146,6 +153,17 @@ describe('ex-modular test: user system', function () {
       .then((res) => {
         context.UserFirst = res.body.token
         context.token = context.adminToken
+        return res
+      })
+      .catch((e) => { throw e })
+  }
+
+  const createGroupManagers = () => {
+    context.token = context.adminToken
+    return userGroupAdd(context, { name: 'Managers' })
+      .then((res) => {
+        context.groupManagers = res.body.id
+        return res
       })
       .catch((e) => { throw e })
   }
@@ -188,13 +206,8 @@ describe('ex-modular test: user system', function () {
     })
     it('s-2: storage.refs: add, list, remove methods test', function () {
       return createAdmin()
-        .then(() => userGroupAdd(context, { name: 'Managers' }))
-        .then((res) => {
-          context.groupManagers = res.body.id
-
-          // create user
-          return createUserFirst()
-        })
+        .then(() => createGroupManagers())
+        .then(() => createUserFirst())
         .then(() => userGroupUsersAdd(context, context.groupManagers, [context.UserFirstId, context.UserAdminId]))
         .then((res) => {
           // 2-c1:
@@ -380,14 +393,8 @@ describe('ex-modular test: user system', function () {
 
     describe('u-s-5: create user groups and add users to groups', function () {
       it('5-1: add Managers group and UserFirst to that group', function () {
-        return signupUser(context, UserAdmin)
-          .then(() => loginAs(context, UserAdmin))
-          .then((res) => {
-            context.adminToken = res.body.token
-            context.token = context.adminToken
-
-            return userGroupAdd(context, { name: 'Managers' })
-          })
+        return createAdmin()
+          .then(() => createGroupManagers())
           .then((res) => {
             // 5-1-c1: check if group created ok
             expect(res.body).to.exist('Body should exist')
@@ -435,22 +442,9 @@ describe('ex-modular test: user system', function () {
 
     describe('u-s-6: admin user delegate permissions to Note object', function () {
       it('6-1: add permission for Managers group - read/write', function () {
-        return signupUser(context, UserAdmin)
-          .then(() => loginAs(context, UserAdmin))
-          .then((res) => {
-            context.adminToken = res.body.token
-            context.token = context.adminToken
-            return userGroupAdd(context, { name: 'Managers' })
-          })
-          .then((res) => {
-            // 6-1-c1: check if group created ok
-            expect(res.body).to.exist('Body should exist')
-            expect(res.body).to.be.an('object')
-            expect(res.body.id).to.exist()
-            expect(res.body.name).to.be.equal('Managers')
-
-            context.groupManagers = res.body.id
-
+        return createAdmin()
+          .then(() => createGroupManagers())
+          .then(() => {
             const perms = [
               { userGroupId: context.groupManagers, accessObjectId: 'Note.list', permission: ACCESS.AccessPermissionType.ALLOW.value },
               { userGroupId: context.groupManagers, accessObjectId: 'Note.item', permission: ACCESS.AccessPermissionType.ALLOW.value },
@@ -468,15 +462,9 @@ describe('ex-modular test: user system', function () {
             expect(res.body.err).to.not.exist()
 
             // create user
-            return signupUser(context, UserFirst)
+            return createUserFirst()
           })
-          .then((res) => {
-            context.UserFirstId = res.body.id
-
-            return loginAs(context, UserFirst)
-          })
-          .then((res) => {
-            context.UserFirst = res.body.token
+          .then(() => {
             context.token = context.adminToken
 
             return userGroupUsersAdd(context, context.groupManagers, [context.UserFirstId])
@@ -555,16 +543,9 @@ describe('ex-modular test: user system', function () {
           .catch((e) => { throw e })
       })
       it('6-3: grant permissions to other user', function () {
-        return signupUser(context, UserAdmin)
-          .then(() => loginAs(context, UserAdmin))
-          .then((res) => {
-            context.adminToken = res.body.token
-            context.token = context.adminToken
-            return userGroupAdd(context, { name: 'Managers' })
-          })
-          .then((res) => {
-            context.groupManagers = res.body.id
-
+        return createAdmin()
+          .then(() => createGroupManagers())
+          .then(() => {
             const perms = [
               { userGroupId: context.groupManagers, accessObjectId: 'Note.list', permission: ACCESS.AccessPermissionType.ALLOW.value, withGrant: true },
               { userGroupId: context.groupManagers, accessObjectId: 'Note.item', permission: ACCESS.AccessPermissionType.ALLOW.value, withGrant: true },
@@ -665,16 +646,9 @@ describe('ex-modular test: user system', function () {
     })
     describe('u-s-7: Me routes', function () {
       it('7-1: me access', function () {
-        return signupUser(context, UserAdmin)
-          .then(() => loginAs(context, UserAdmin))
-          .then((res) => {
-            context.adminToken = res.body.token
-            context.token = context.adminToken
-            return userGroupAdd(context, { name: 'Managers' })
-          })
-          .then((res) => {
-            context.groupManagers = res.body.id
-
+        return createAdmin()
+          .then(() => createGroupManagers())
+          .then(() => {
             const perms = [
               {
                 userGroupId: context.groupManagers,
@@ -777,14 +751,8 @@ describe('ex-modular test: user system', function () {
 
             return permissionUserGroupCreate(context, perms)
           })
-          .then(() => signupUser(context, UserFirst))
-          .then((res) => {
-            context.UserFirstId = res.body.id
-
-            return loginAs(context, UserFirst)
-          })
-          .then((res) => {
-            context.UserFirst = res.body.token
+          .then(() => createUserFirst())
+          .then(() => {
             context.token = context.adminToken
 
             return userGroupUsersAdd(context, context.groupManagers, [context.UserFirstId])
