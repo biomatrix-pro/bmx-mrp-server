@@ -524,10 +524,8 @@ describe('ex-modular test: user system', function () {
           .catch((e) => { throw e })
       })
       it('6-2: add permission for Employees group - read only', function () {
-        return signupUser(context, UserAdmin)
-          .then(() => loginAs(context, UserAdmin))
-          .then((res) => {
-            context.adminToken = res.body.token
+        return createAdmin()
+          .then(() => {
             context.token = context.adminToken
             return userGroupAdd(context, { name: 'Employee' })
           })
@@ -552,18 +550,10 @@ describe('ex-modular test: user system', function () {
             expect(res.body).to.be.an('array').that.have.lengthOf(2)
             expect(res.body.err).to.not.exist()
 
-            context.token = context.userFirstToken
-
             // create user
-            return signupUser(context, UserFirst)
+            return createUserFirst()
           })
-          .then((res) => {
-            context.userFirstId = res.body.id
-
-            return loginAs(context, UserFirst)
-          })
-          .then((res) => {
-            context.userFirstToken = res.body.token
+          .then(() => {
             context.token = context.adminToken
 
             return userGroupUsersAdd(context, context.groupEmployee, [context.userFirstId])
@@ -597,15 +587,9 @@ describe('ex-modular test: user system', function () {
           })
           .then((res) => {
             // create user 1
-            return signupUser(context, UserFirst)
+            return createUserFirst()
           })
-          .then((res) => {
-            context.userFirstId = res.body.id
-
-            return loginAs(context, UserFirst)
-          })
-          .then((res) => {
-            context.userFirstToken = res.body.token
+          .then(() => {
             context.token = context.adminToken
             return userGroupUsersAdd(context, context.groupManagers, [context.userFirstId])
           })
@@ -617,17 +601,10 @@ describe('ex-modular test: user system', function () {
             // 6-1-c3: note were added
 
             context.token = context.adminToken
-            return signupUser(context, UserSecond)
+            return createUserSecond()
           })
-          .then((res) => {
-            context.UserSecondId = res.body.id
-
-            return loginAs(context, UserSecond)
-          })
-          .then((res) => {
-            context.UserSecond = res.body.token
-
-            context.token = context.UserSecond
+          .then(() => {
+            context.token = context.userSecondToken
             return noteList(context, expected.ErrCodeForbidden)
           })
           .then((res) => {
@@ -639,7 +616,7 @@ describe('ex-modular test: user system', function () {
             return meGrantAdd(
               context,
               {
-                userId: context.UserSecondId,
+                userId: context.userSecondId,
                 accessObjectId: 'Note.list',
                 permission: ACCESS.ALLOW,
                 withGrant: false
@@ -654,7 +631,7 @@ describe('ex-modular test: user system', function () {
             expect(res.body.permissionUser).to.be.an('object').that.have.property('id')
             expect(res.body.err).to.not.exist()
 
-            context.token = context.UserSecond
+            context.token = context.userSecondToken
             return noteList(context)
           })
           .then((res) => {
@@ -668,7 +645,7 @@ describe('ex-modular test: user system', function () {
             return meGrantAdd(
               context,
               {
-                userId: context.UserSecondId,
+                userId: context.userSecondId,
                 accessObjectId: 'Note.create',
                 permission: ACCESS.ALLOW,
                 withGrant: false
