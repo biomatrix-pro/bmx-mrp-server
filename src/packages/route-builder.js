@@ -92,7 +92,9 @@ export const routeItemForRefs = (app, Model) => {
           app.exModular.auth.check,
           app.exModular.access.check(`${Model.name}.${createRouteName}`),
           app.exModular.services.validator.paramId(Model),
-          app.exModular.services.validator.checkBodyForArrayOfRefs(Model, prop)
+          prop.beforeCreate
+            ? _.concat(prop.beforeCreate, app.exModular.services.validator.checkBodyForArrayOfRefs(Model, prop))
+            : app.exModular.services.validator.checkBodyForArrayOfRefs(Model, prop)
         ],
         handler: app.exModular.services.controllerDF.refsCreate(Model, prop),
         after: [
