@@ -1,4 +1,5 @@
 import { v4 as uuid } from 'uuid'
+import _ from 'lodash'
 
 export const UserGroup = (app, options) => {
   if (!options) {
@@ -6,7 +7,7 @@ export const UserGroup = (app, options) => {
   }
   options.storage = options.storage || 'default'
 
-  return {
+  const Model = {
     name: 'UserGroup',
     props: [
       {
@@ -32,4 +33,27 @@ export const UserGroup = (app, options) => {
       }
     ]
   }
+
+  Model.afterRefsDelete = (req, res, next) => {
+    if (!req.data || !Array.isArray(req.data) || req.data.length === 0) {
+      return {}
+    }
+
+    const Session = app.exModular.models.Session
+    const Serial = app.exModular.services.serial
+
+    return Session.findAll({ whereIn: { column: 'userId', ids: req.data } })
+      .then((_session) => {
+        if (!_session) {
+          return {}
+        }
+        return Serial(_session.map((item) => () => ))
+      })
+
+  }
+
+  const usersIndex = _.findIndex(Model.props, { name: 'users', type: 'refs' })
+  const usersProp = Model.props[usersIndex]
+  usersProp.afterDelete = Model.afterRefsDelete
+  return Model
 }

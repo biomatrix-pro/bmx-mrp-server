@@ -690,6 +690,9 @@ export default (app) => {
           if (!item) {
             throw new Error(`${Model.name}.${prop.name}Remove: item with id ${id} not found`)
           }
+          if (_.difference(items, item[prop.name]).length !== 0) {
+            throw new Error(`${Model.name}.${prop.name}Remove: not all param items found in ${prop.name}`)
+          }
           _.pullAll(item[prop.name], items)
           return Model.update(id, item)
         })
