@@ -34,7 +34,7 @@ export const UserGroup = (app, options) => {
     ]
   }
 
-  Model.afterRefsDelete = (req, res, next) => {
+  Model.usersAfterRemove = (req, res, next) => {
     if (!req.data || !Array.isArray(req.data) || req.data.length === 0) {
       return {}
     }
@@ -47,12 +47,14 @@ export const UserGroup = (app, options) => {
         if (!_session) {
           return {}
         }
-        return Serial(_session.map((item) => () => {}))
+        return Serial(_session.map((item) => () =>
+          Session.removeById(item.id)
+            .catch((e) => { throw e })))
       })
   }
 
   const usersIndex = _.findIndex(Model.props, { name: 'users', type: 'refs' })
   const usersProp = Model.props[usersIndex]
-  usersProp.afterDelete = Model.afterRefsDelete
+  usersProp.afterRemove = app.exModular.services.wrap(Model.usersAfterRemove)
   return Model
 }
