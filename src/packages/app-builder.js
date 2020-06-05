@@ -17,7 +17,7 @@ import { ControllerDF } from './service-controller-df'
 import { Codegen } from './service-codegen'
 import { Seed } from './sevice-seed'
 import { Serial } from './service-serial'
-import { SendJson } from './service-send-json'
+// import { SendJson } from './service-send-json'
 
 import { User } from './model-user'
 import { UserGroup } from './model-user-group'
@@ -92,7 +92,7 @@ export const appBuilder = (express, options) => {
       app.exModular.services.controllerDF = ControllerDF(app)
       app.exModular.services.seed = Seed(app)
       app.exModular.services.serial = Serial(app)
-      app.exModular.services.sendJson = SendJson(app)
+      // app.exModular.services.sendJson = SendJson(app)
       app.exModular.auth = Auth(app)
       app.exModular.access = Access(app)
 

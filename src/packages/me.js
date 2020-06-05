@@ -55,14 +55,10 @@ export const Me = (app) => {
         if (!Array.isArray(_groups)) {
           _groups = [_groups]
         }
-        res.payload = []
-        _groups.map((group) => res.payload.push({ id: group.id, name: group.name, systemType: group.systemType }))
-        return next()
+        res.data = []
+        _groups.map((group) => res.data.push({ id: group.id, name: group.name, systemType: group.systemType }))
       })
-      .catch((e) => {
-        res.error = e
-        return next(e)
-      })
+      .catch((e) => { throw e })
   }
 
   Module.module.routes = [
@@ -82,9 +78,12 @@ export const Me = (app) => {
       name: 'Me.Groups',
       method: 'GET',
       path: '/me/groups',
-      before: app.exModular.auth.check,
+      before: [
+        app.exModular.auth.check,
+        app.exModular.access.check('Me.Groups')
+      ],
       handler: Module.module.meGroups,
-      after: app.exModular.services.sendJson
+      after: app.exModular.services.controllerDF.sendData
     }
   ]
 
