@@ -140,11 +140,18 @@ describe('ex-modular test: user system', function () {
       })
       .catch((e) => { throw e })
 
+  const setAdminToken = () => {
+    context.token = context.adminToken
+  }
+
+  const setUserFirstToken = () => {
+    context.token = context.userFirstToken
+  }
   /**
    * сниппет для теста - создать пользователя UserFirst
    */
   const createUserFirst = () => {
-    context.token = context.adminToken
+    setAdminToken()
     return signupUser(context, UserFirst)
       .then((res) => {
         context.userFirstId = res.body.id
@@ -152,14 +159,14 @@ describe('ex-modular test: user system', function () {
       })
       .then((res) => {
         context.userFirstToken = res.body.token
-        context.token = context.adminToken
+        setAdminToken()
         return res
       })
       .catch((e) => { throw e })
   }
 
   const createUserSecond = () => {
-    context.token = context.adminToken
+    setAdminToken()
     return signupUser(context, UserSecond)
       .then((res) => {
         context.userSecondId = res.body.id
@@ -167,14 +174,14 @@ describe('ex-modular test: user system', function () {
       })
       .then((res) => {
         context.userSecondToken = res.body.token
-        context.token = context.adminToken
+        setAdminToken()
         return res
       })
       .catch((e) => { throw e })
   }
 
   const createGroupManagers = () => {
-    context.token = context.adminToken
+    setAdminToken()
     return userGroupAdd(context, { name: 'Managers' })
       .then((res) => {
         context.groupManagers = res.body.id
@@ -309,7 +316,7 @@ describe('ex-modular test: user system', function () {
 
           context.adminToken = res.body.token
 
-          context.token = context.adminToken
+          setAdminToken()
           return meGroups(context)
         })
         .then((res) => {
@@ -407,7 +414,7 @@ describe('ex-modular test: user system', function () {
             expect(res.body).to.exist('res.body should exist')
             expect(res.body.token).to.exist('res.body.token should exist')
             context.userFirstToken = res.body.token
-            context.token = context.userFirstToken
+            setUserFirstToken()
             return userGroupAdd(context, { name: 'Some group name' }, expected.ErrCodeForbidden)
           })
           .then((res) => {
@@ -470,14 +477,14 @@ describe('ex-modular test: user system', function () {
             expect(res.body.token).to.exist('res.body.token should exist')
             context.userFirstToken = res.body.token
 
-            context.token = context.adminToken
+            setAdminToken()
             return userGroupUsersAdd(context, context.groupManagers, [context.userFirstId])
           })
           .then((res) => {
             // 5-1-c4: users are added to group:
             expect(res.body).to.exist('Body should exist')
             expect(res.body).to.be.an('array').that.have.lengthOf(1)
-            context.token = context.userFirstToken
+            setUserFirstToken()
             return meGroups(context)
           })
           .then((res) => {
@@ -504,12 +511,12 @@ describe('ex-modular test: user system', function () {
             return createUserFirst()
           })
           .then(() => {
-            context.token = context.adminToken
+            setAdminToken()
 
             return userGroupUsersAdd(context, context.groupManagers, [context.userFirstId])
           })
           .then((res) => {
-            context.token = context.userFirstToken
+            setUserFirstToken()
 
             return noteAdd(context, { caption: 'some note' })
           })
@@ -526,7 +533,7 @@ describe('ex-modular test: user system', function () {
       it('6-2: add permission for Employees group - read only', function () {
         return createAdmin()
           .then(() => {
-            context.token = context.adminToken
+            setAdminToken()
             return userGroupAdd(context, { name: 'Employee' })
           })
           .then((res) => {
@@ -554,12 +561,12 @@ describe('ex-modular test: user system', function () {
             return createUserFirst()
           })
           .then(() => {
-            context.token = context.adminToken
+            setAdminToken()
 
             return userGroupUsersAdd(context, context.groupEmployee, [context.userFirstId])
           })
           .then((res) => {
-            context.token = context.userFirstToken
+            setUserFirstToken()
 
             return noteAdd(context, { caption: 'some note' }, expected.ErrCodeForbidden)
           })
@@ -590,17 +597,17 @@ describe('ex-modular test: user system', function () {
             return createUserFirst()
           })
           .then(() => {
-            context.token = context.adminToken
+            setAdminToken()
             return userGroupUsersAdd(context, context.groupManagers, [context.userFirstId])
           })
           .then(() => {
-            context.token = context.userFirstToken
+            setUserFirstToken()
             return noteAdd(context, { caption: 'some note' })
           })
           .then((res) => {
             // 6-1-c3: note were added
 
-            context.token = context.adminToken
+            setAdminToken()
             return createUserSecond()
           })
           .then(() => {
@@ -612,7 +619,7 @@ describe('ex-modular test: user system', function () {
             expect(res.body).to.exist('Body should exist')
             expect(res.body.err).to.exist()
 
-            context.token = context.userFirstToken
+            setUserFirstToken()
             return meGrantAdd(
               context,
               {
@@ -641,7 +648,7 @@ describe('ex-modular test: user system', function () {
             expect(res.body.err).to.not.exist()
 
             // try to add grant to permission that have withGrant=false
-            context.token = context.userFirstToken
+            setUserFirstToken()
             return meGrantAdd(
               context,
               {
@@ -667,11 +674,11 @@ describe('ex-modular test: user system', function () {
           .then(() => createPermsForNoteForManagers())
           .then(() => createUserFirst())
           .then(() => {
-            context.token = context.adminToken
+            setAdminToken()
             return userGroupUsersAdd(context, context.groupManagers, [context.userFirstId])
           })
           .then((res) => {
-            context.token = context.userFirstToken
+            setUserFirstToken()
             return meAccess(context)
           })
           .then((res) => {
@@ -694,11 +701,11 @@ describe('ex-modular test: user system', function () {
           .then(() => createPermsForNoteForManagers())
           .then(() => createUserFirst())
           .then(() => {
-            context.token = context.adminToken
+            setAdminToken()
             return userGroupUsersAdd(context, context.groupManagers, [context.userFirstId])
           })
           .then((res) => {
-            context.token = context.userFirstToken
+            setUserFirstToken()
             return meGroups(context)
           })
           .then((res) => {
@@ -712,7 +719,7 @@ describe('ex-modular test: user system', function () {
             expect(res.body[0]).not.to.have.property('users')
           })
           .then((res) => {
-            context.token = context.adminToken
+            setAdminToken()
 
             return meGroups(context)
           })
@@ -734,12 +741,12 @@ describe('ex-modular test: user system', function () {
           .then(() => createPermsForNoteForManagers())
           .then(() => createUserFirst())
           .then(() => {
-            context.token = context.adminToken
+            setAdminToken()
 
             return userGroupUsersAdd(context, context.groupManagers, [context.userFirstId])
           })
           .then(() => {
-            context.token = context.userFirstToken
+            setUserFirstToken()
 
             return me(context)
           })
@@ -755,7 +762,7 @@ describe('ex-modular test: user system', function () {
             expect(res.body).not.to.have.property('adminGroupId')
             expect(res.body).not.to.have.property('loggedGroupId')
 
-            context.token = context.adminToken
+            setAdminToken()
 
             return me(context)
           })
@@ -781,7 +788,7 @@ describe('ex-modular test: user system', function () {
           .then(() => createUserFirst())
           .then(() => createUserSecond())
           .then(() => {
-            context.token = context.adminToken
+            setAdminToken()
 
             return me(context)
           })
