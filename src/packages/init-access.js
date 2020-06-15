@@ -101,6 +101,22 @@ export const InitAccess = (app) => () => {
     .then(() => PermissionUser.findOne({
       where: {
         userId: app.exModular.access.ACCESS_GUEST.id,
+        accessObjectId: 'Auth.Social'
+      }
+    }))
+    .then((item) => {
+      if (!item) {
+        return PermissionUser.create({
+          userId: app.exModular.access.ACCESS_GUEST.id,
+          accessObjectId: 'Auth.Social',
+          permission: ACCESS.ALLOW,
+          withGrant: false
+        })
+      }
+    })
+    .then(() => PermissionUser.findOne({
+      where: {
+        userId: app.exModular.access.ACCESS_GUEST.id,
         accessObjectId: 'Auth.Logout'
       }
     }))

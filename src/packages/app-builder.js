@@ -32,6 +32,7 @@ import { AccessSimple as Access } from './access-simple'
 import { InitAccess } from './init-access'
 import { SignupOpen } from './signup-open'
 import { AuthPassword } from './auth-password'
+import { AuthSocial } from './auth-social'
 import { Me } from './me'
 
 export const appBuilder = (express, options) => {
@@ -110,6 +111,7 @@ export const appBuilder = (express, options) => {
       // configure app with modules:
       SignupOpen(app)
       AuthPassword(app)
+      AuthSocial(app)
       Me(app)
 
       Codegen(app)
