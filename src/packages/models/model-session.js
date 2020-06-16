@@ -1,12 +1,7 @@
 import { v4 as uuid } from 'uuid'
 import _ from 'lodash'
 
-export const Session = (app, options) => {
-  if (!options) {
-    options = {}
-  }
-  options.storage = options.storage || 'default'
-
+export const Session = () => {
   const Model = {
     name: 'Session',
     props: [

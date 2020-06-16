@@ -684,7 +684,7 @@ describe('ex-modular test: user system', function () {
           .then((res) => {
             // 7-1-c1: access object has been returned
             expect(res.body).to.exist('Body should exist')
-            expect(res.body).to.be.an('array').that.have.lengthOf(17)
+            expect(res.body).to.be.an('array').that.have.lengthOf(18)
             expect(res.body.err).to.not.exist()
             expect(res.body[0]).to.have.property('id')
             expect(res.body[0]).to.have.property('permission')

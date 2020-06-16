@@ -1,5 +1,5 @@
 import * as ACCESS from './const-access'
-import { AccessObjectType } from './model-access-object'
+import { AccessObjectType } from './models/model-access-object'
 
 export const InitAccess = (app) => () => {
   const User = app.exModular.models.User

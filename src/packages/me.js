@@ -1,5 +1,5 @@
-import { MeGrant } from './model-me-grant'
-import { MeAccess } from './model-me-access'
+import { MeGrant } from './models/model-me-grant'
+import { MeAccess } from './models/model-me-access'
 // import { listRouteName } from './route-builder'
 
 const packageName = 'Me'

@@ -45,6 +45,12 @@ export const SignupOpen = (app) => {
         if (userCount === 1) {
           addUserAsAdmin = true
         }
+        return User.findOne({ where: { email: req.data.email } })
+      })
+      .then((_user) => {
+        if (_user) {
+          throw new Errors.ServerInvalidParameters('user.email', 'email', 'user with this email already registered')
+        }
         return User.create(req.data)
       })
       .then((aUser) => {
