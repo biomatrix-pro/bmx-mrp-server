@@ -4,26 +4,36 @@ import _ from 'lodash'
 export const UserGroup = (app) => {
   const Model = {
     name: 'UserGroup',
+    caption: '',
+    description: '',
     props: [
       {
         name: 'id',
         type: 'id',
+        caption: '',
+        description: '',
         default: () => uuid()
       },
       {
         name: 'name',
         type: 'text',
+        caption: '',
+        description: '',
         default: null
       },
       {
         name: 'systemType',
         type: 'text',
+        caption: '',
+        description: '',
         default: ''
       },
       {
         name: 'users',
         type: 'refs',
         model: 'User',
+        caption: '',
+        description: '',
         default: []
       }
     ]

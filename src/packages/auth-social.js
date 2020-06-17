@@ -1,4 +1,4 @@
-import * as ACCESS from './const-access'
+// import * as ACCESS from './const-access'
 
 const packageName = 'auth-social'
 
@@ -35,12 +35,13 @@ export const AuthSocial = (app) => {
   const Serial = app.exModular.services.serial
 
   const Session = app.exModular.models.Session
+  const SessionSocial = app.exModular.models.SessionSocial
   const User = app.exModular.models.User
   const UserGroup = app.exModular.models.UserGroup
   const UserDomain = app.exModular.models.UserDomain
   const UserSocial = app.exModular.models.UserSocial
 
-  const addSessionForUser = (user, ip) => {
+  const addSessionForUser = (user, ip, socialLogin) => {
     let session = null
     return Session.createOrUpdate({ userId: user.id, ip })
       .then((_session) => {
@@ -48,7 +49,19 @@ export const AuthSocial = (app) => {
         return app.exModular.access.addLogged(user)
       })
       .then(() => {
-        return { token: app.exModular.auth.encode(session.id) }
+        if (socialLogin) {
+          return SessionSocial.create({
+            sessionId: session.id,
+            rawData: JSON.stringify(socialLogin),
+            accessToken: socialLogin.accessToken
+          })
+        }
+      })
+      .then(() => {
+        return {
+          token: app.exModular.auth.encode(session.id),
+          session: session
+        }
       })
       .catch((error) => {
         // console.log('login: error')
@@ -90,19 +103,20 @@ export const AuthSocial = (app) => {
     let socialLogin = null
     let socialProfile = null
     let domain = null
+    let session = null
 
     return Yandex.authExchangeCodeForToken(req.data.code)
       .then((_socialLogin) => {
         socialLogin = _socialLogin
 
-        console.log('social login:')
-        console.log(socialLogin)
+        // console.log('social login:')
+        // console.log(socialLogin)
 
         return Yandex.authGetProfile(socialLogin.accessToken)
       })
       .then((_passport) => {
-        console.log('Yandex profile (from Passport API):')
-        console.log(_passport)
+        // console.log('Yandex profile (from Passport API):')
+        // console.log(_passport)
         if (!_passport || !_passport.default_email) {
           throw new Errors.ServerGenericError(
             `${packageName}.loginSocial: default_email not found in Yandex passport data`)
@@ -116,55 +130,61 @@ export const AuthSocial = (app) => {
         if (!user) {
           // throw new Errors.ServerInvalidUsernamePassword('User with this email not found')
           // user not found, so we need to check if users's domain is registered
-          if (socialProfile.parsedEmail.domain) {
-            return UserDomain.findOne({ where: { domain: socialProfile.parsedEmail.domain } })
-              .then((_domain) => {
-                if (!_domain || _domain.isAllow === false) {
-                  // domain not listed in list or listed as blocked, so break login
-                  throw new Errors.ServerInvalidUsernamePassword('User with this email not found in local database, or domain is not listed as allowed, or domain is blocked')
-                }
-                domain = _domain
-                // we have isAllow === true domain, so we can add new user and link him to social profile
-                return User.create({
-                  name: socialProfile.real_name,
-                  email: socialProfile.default_email
-                })
-              })
-              .then((_user) => {
-                user = _user
-                return UserSocial.create({
-                  provider: 'yandex',
-                  userId: user.id,
-                  email: socialProfile.default_email,
-                  rawProfile: JSON.stringify(socialProfile)
-                })
-              })
-              .then(() => {
-                if (domain && domain.groups && domain.groups.length > 0) {
-                  return Serial(domain.groups.map((group) => () => UserGroup.usersAdd(group, user.id)))
-                }
-              })
-              .then(() => addSessionForUser(user, req.ip))
-              .then((data) => {
-                res.json(data)
-              })
-              .catch((error) => {
-                if (error instanceof Errors.ServerError) {
-                  throw error
-                } else {
-                  throw new Errors.ServerGenericError(error)
-                }
-              })
+          if (!socialProfile.parsedEmail.domain) {
+            throw new Errors.ServerError('auth_social: invalid parsedEmail.domain')
           }
+
+          return UserDomain.findOne({ where: { domain: socialProfile.parsedEmail.domain } })
+            .then((_domain) => {
+              if (!_domain || _domain.isAllow === false) {
+                // domain not listed in list or listed as blocked, so break login
+                throw new Errors.ServerInvalidUsernamePassword('User with this email not found in local database, or domain is not listed as allowed, or domain is blocked')
+              }
+              domain = _domain
+              // we have isAllow === true domain, so we can add new user and link him to social profile
+              return User.create({
+                name: socialProfile.real_name,
+                email: socialProfile.default_email
+              })
+            })
+            .then((_user) => {
+              user = _user
+              return UserSocial.create({
+                provider: 'yandex',
+                userId: user.id,
+                email: socialProfile.default_email,
+                rawProfile: JSON.stringify(socialProfile)
+              })
+            })
+            .then(() => {
+              if (domain && domain.groups && domain.groups.length > 0) {
+                return Serial(domain.groups.map((group) => () => UserGroup.usersAdd(group, user.id)))
+              }
+            })
+            .then(() => addSessionForUser(user, req.ip, socialLogin))
+            .then((_session) => {
+              if (!_session) {
+                throw new Errors.ServerGenericError('auth-social: Failed to create Session')
+              }
+              session = _session
+              res.json({ token: session.token })
+            })
+            .catch((error) => {
+              if (error instanceof Errors.ServerError) {
+                throw error
+              } else {
+                throw new Errors.ServerGenericError(error)
+              }
+            })
         }
 
         if (user.disabled) {
           throw new Errors.ServerNotAllowed('User is disabled')
         }
 
-        return addSessionForUser(user, req.ip)
+        return addSessionForUser(user, req.ip, socialLogin)
           .then((data) => {
-            res.json(data)
+            res.json({ token: data.token })
           })
           .catch((error) => {
             if (error instanceof Errors.ServerError) {

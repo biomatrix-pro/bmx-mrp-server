@@ -4,26 +4,36 @@ import _ from 'lodash'
 export const Session = () => {
   const Model = {
     name: 'Session',
+    caption: 'Сессия',
+    description: 'Сессия пользователя',
     props: [
       {
         name: 'id',
         type: 'id',
+        caption: '',
+        description: '',
         default: () => uuid()
       },
       {
         name: 'userId',
         type: 'ref',
         model: 'User',
+        caption: '',
+        description: '',
         default: null
       },
       {
         name: 'createdAt',
         type: 'datetime',
+        caption: '',
+        description: '',
         default: () => Date.now()
       },
       {
         name: 'ip',
         type: 'text',
+        caption: '',
+        description: '',
         default: null
       }
     ],

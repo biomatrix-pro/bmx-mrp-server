@@ -36,6 +36,7 @@ import { Me } from './me'
 import { UserDomain } from './models/model-user-domain'
 import { UserSocial } from './models/model-user-social'
 import { InitUserDomain } from './init-user-domain'
+import { SessionSocial } from './models/model-session-social'
 
 export const appBuilder = (express, options) => {
   if (!express) {
@@ -107,6 +108,7 @@ export const appBuilder = (express, options) => {
       app.exModular.modelAdd(User(app))
       app.exModular.modelAdd(UserGroup(app))
       app.exModular.modelAdd(Session(app))
+      app.exModular.modelAdd(SessionSocial(app))
       app.exModular.modelAdd(AccessObject(app))
       app.exModular.modelAdd(PermissionUser(app))
       app.exModular.modelAdd(PermissionUserGroup(app))

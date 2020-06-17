@@ -31,7 +31,7 @@ export const UserSocial = () => {
       {
         name: 'rawProfile',
         type: 'text',
-        length: 2048,
+        size: 2048,
         caption: 'Профиль',
         description: 'Профиль в том виде, в котором получен из социальной сети',
         default: false
