@@ -60,8 +60,64 @@ export const Yandex = (app) => {
       .catch((e) => { throw e })
   }
 
+  /**
+   * получить список пользователей из Directory API:
+   * @param token
+   * @param opt: поддерживаются такие опции (переведены в camelCase):
+   *   fields
+   *   id
+   *   departmentId
+   *   recursiveDepartmentId
+   *   isDismissed: true | false | ignore
+   *   page
+   *   perPage
+   *   orgId: если есть - добавляется в заголовок
+   * @return {Promise<unknown>}
+   */
+  const directoryUsersList = (token, opt) => {
+    const Errors = app.exModular.services.errors
+    if (!opt) {
+      opt = {}
+    }
+
+    const fields = opt.fields || 'is_robot,external_id,position,departments,org_id' +
+      'gender,created,name,about,nickname,groups,is_admin,birthday,department_id,email' +
+      'contacts,aliases,id,is_dismissed'
+
+    const headers = new Headers({ Authorization: `OAuth ${token}`, Accept: 'application/json' })
+    if (opt.orgId) {
+      headers.append('X-Org-ID', opt.orgId.toString())
+    }
+
+    return fetch(new Request(
+      'https://api.directory.yandex.net' +
+      '/v6/users' +
+      `?fields=${fields}` +
+      `${opt.id ? '&id=' + opt.id.toString() : ''}` +
+      `${opt.nickname ? '&nickname=' + opt.nickname : ''}` +
+      `${opt.departmentId ? '&department_id=' + opt.departmentId.toString() : ''}` +
+      `${opt.recursiveDepartmentId ? '&recursive_department_id=' + opt.recursiveDepartmentId.toString() : ''}` +
+      `${opt.groupId ? '&group_id=' + opt.groupId : ''}` +
+      `${opt.recursiveGroupId ? '&recursive_group_id=' + opt.recursiveGroupId : ''}` +
+      `${opt.isDismissed ? '&is_dismissed=' + opt.isDismissed : ''}` +
+      `${opt.page ? '&page=' + opt.page : ''}` +
+      `${opt.perPage ? '&per_page=' + opt.perPage : ''}`,
+      {
+        method: 'GET',
+        headers
+      }))
+      .then((_resp) => {
+        if (_resp.status < 200 || _resp.status >= 300) {
+          throw new Errors.ServerGenericError(`yandex.directoryUsersList: ${_resp.statusText}`)
+        }
+        return _resp.json()
+      })
+      .catch((e) => { throw e })
+  }
+
   return {
     authExchangeCodeForToken,
-    authGetProfile
+    authGetProfile,
+    directoryUsersList
   }
 }

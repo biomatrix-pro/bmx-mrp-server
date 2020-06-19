@@ -1,5 +1,7 @@
 // import * as ACCESS from './const-access'
 
+import { SessionType } from './const-session'
+
 const packageName = 'auth-social'
 
 export const AuthSocial = (app) => {
@@ -42,15 +44,18 @@ export const AuthSocial = (app) => {
   const UserSocial = app.exModular.models.UserSocial
 
   const addSessionForUser = (user, ip, socialLogin) => {
-    let session = null
-    return Session.createOrUpdate({ userId: user.id, ip })
+    let session = { userId: user.id, ip }
+    if (socialLogin) {
+      session.type = SessionType.Social.value
+    }
+    return Session.createOrUpdate(session)
       .then((_session) => {
         session = _session
         return app.exModular.access.addLogged(user)
       })
       .then(() => {
         if (socialLogin) {
-          return SessionSocial.create({
+          return SessionSocial.createOrUpdate({
             sessionId: session.id,
             rawData: JSON.stringify(socialLogin),
             accessToken: socialLogin.accessToken

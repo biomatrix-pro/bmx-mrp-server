@@ -54,8 +54,8 @@ export const processBeforeSaveToStorage = (Model, item, opts) => {
     }
     if (prop.type === 'enum') {
       // ensure enum values are in range:
-      if (!_.find(prop.format, { value: item[prop.name] })) {
-        throw Error(`${Model.name}.${prop.name} enum value invalid: not found in enum format definition`)
+      if (!_.find(prop.format, { value: aItem[prop.name] })) {
+        throw Error(`${Model.name}.${prop.name} enum value invalid: not found in enum format definition (${item[prop.name]})`)
       }
     }
     if (prop.calculated) {

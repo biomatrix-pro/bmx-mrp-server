@@ -68,7 +68,11 @@ export const AuthJwt = (app) => {
           })
           .catch(e => next(e))
       } catch (e) {
-        next(e)
+        if (e instanceof jwt.JsonWebTokenError) {
+          next(new Errors.ServerNotAllowed(e.toString()))
+        } else {
+          next(e)
+        }
       }
     } else {
       // next(new Error('Auth failed, no auth header or unknown scheme'))
