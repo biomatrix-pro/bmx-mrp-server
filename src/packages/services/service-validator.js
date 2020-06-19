@@ -173,6 +173,12 @@ export const Validator = (app) => {
       .catch((err) => { throw err })
   }
   const paramId = (Model) => {
+    if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development') {
+      return oneOf([
+        param('id').isString().withMessage('Id should be specified in URL'),
+        param('id').isAlphanumeric().withMessage('Id should be specified in URL')
+      ])
+    }
     return param('id').isString().withMessage('Id should be specified in URL')
   }
 
