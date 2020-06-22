@@ -37,38 +37,54 @@ export const DirectoryYandex = (app) => {
         caption: '',
         description: '',
         default: null
+      },
+      {
+        name: 'status',
+        type: 'text',
+        format: 'text',
+        caption: '',
+        description: '',
+        size: 64,
+        default: ''
+      },
+      {
+        name: 'statusMessage',
+        type: 'text',
+        format: 'text',
+        caption: '',
+        description: '',
+        default: ''
+      },
+      {
+        name: 'createdAt',
+        type: 'datetime',
+        format: 'YYYY/MM/DD',
+        caption: '',
+        description: '',
+        default: () => Date.now()
       }
     ]
   }
 
   Model._create = app.exModular.storages.default.create(Model)
 
-  // Model.create = (aItem) => {
-  //   const Yandex = app.exModular.services.yandex
-  //
-  //   // databags:
-  //   let directoryYandex = null
-  //
-  //   return Model._create(aItem)
-  //     .then((_directoryYandex) => {
-  //       directoryYandex = _directoryYandex
-  //
-  //       // grab token of current user:
-  //       aItem.userId
-  //       return yandex.directoryUsersList()
-  //       // update data:
-  //       // directoryYandex. = 'Started'
-  //       directoryYandex.createdAt = Date.now()
-  //       console.log('plan started, plan calc:')
-  //       console.log(_planCalc)
-  //       return Model.update(_planCalc.id, _planCalc)
-  //     })
-  //     .then((_planCalc) => {
-  //       planCalc = _planCalc // updated plan
-  //       return MRP.processPlanCalc(planCalc.id)
-  //     })
-  //     .catch((e) => { throw e })
-  // }
+  Model.create = (aItem) => {
+    const Yandex = app.exModular.services.yandex
+
+    // databags:
+    let directoryYandex = null
+
+    aItem.status = 'Import started'
+    aItem.createdAt = Date.now()
+
+    return Model._create(aItem)
+      .then((_directoryYandex) => {
+        directoryYandex = _directoryYandex
+
+        return Yandex.ycDirectoryImport(directoryYandex)
+      })
+      .catch(e => { throw e })
+  }
 
   return Model
 }

@@ -74,7 +74,7 @@ export const Yandex = (app) => {
    *   orgId: если есть - добавляется в заголовок
    * @return {Promise<unknown>}
    */
-  const directoryUsersList = (token, opt) => {
+  const ycUsersList = (token, opt) => {
     const Errors = app.exModular.services.errors
     if (!opt) {
       opt = {}
@@ -115,9 +115,44 @@ export const Yandex = (app) => {
       .catch((e) => { throw e })
   }
 
+  /*
+    Алгоритм импорта данных:
+    * создаём объект DirectoryYandex. Нам нужно проверить, что пользователь,
+    создающий этот объект - это администратор.
+    При создании этого объекта берём авторизацию в яндексе у этого пользователя или у
+    указанного при создании записи пользователя. Статус при создании - старт импорта.
+
+    * при импорте получаем полный каталог от Яндекса: пользователи, отделы, группы, домены, организации.
+    Сохраняем эти данные в объекты YCUser, YCDepartment, YCGroup, YCDomain YCOrganization.
+    Также производим сохранение связей между пользователями, и отделами - в списке YCDepartmentUser,
+    YCGroupUser.
+  */
+  const ycDirectoryImport = (directoryImport) => {
+    if (!directoryImport || !directoryImport.id) {
+      throw new Error('ycDirectoryImport: directoryImport param invalid - no object or no .id property')
+    }
+
+    if (!directoryImport.accessToken || !directoryImport.userId) {
+      throw new Error('ycDirectoryImport: directoryImport param invalid - accessToken or user not found')
+    }
+
+    const DirectoryYandex = app.exModular.models.DirectoryYandex
+
+    return DirectoryYandex.findById(directoryImport.id)
+      .then((_directoryImport) => ycUsersList(directoryImport.accessToken))
+      .then((_import) => {
+        directoryImport.rawUsers = _import
+        directoryImport.statusMessage = 'Finised loading users'
+        directoryImport.status = 'Step completed (users)'
+        return DirectoryYandex.update(directoryImport.id, directoryImport)
+      })
+      .catch(e => { throw e })
+  }
+
   return {
     authExchangeCodeForToken,
     authGetProfile,
-    directoryUsersList
+    ycUsersList: ycUsersList,
+    ycDirectoryImport
   }
 }
