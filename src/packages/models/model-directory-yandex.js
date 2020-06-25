@@ -26,7 +26,7 @@ export const DirectoryYandex = (app) => {
         name: 'rawUsers',
         type: 'text',
         format: 'json',
-        size: 2048,
+        size: 64000,
         caption: 'Пользователи - дамп',
         description: 'Дамп данных о пользователях из каталога',
         default: null

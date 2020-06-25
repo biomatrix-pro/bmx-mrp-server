@@ -1,5 +1,5 @@
 // import * as ACCESS from './const-access'
-
+import _ from 'lodash'
 import { SessionType } from './const-session'
 
 const packageName = 'auth-social'
@@ -107,6 +107,7 @@ export const AuthSocial = (app) => {
     let user = null
     let socialLogin = null
     let socialProfile = null
+    let rawProfile = null
     let domain = null
     let session = null
 
@@ -127,6 +128,7 @@ export const AuthSocial = (app) => {
             `${packageName}.loginSocial: default_email not found in Yandex passport data`)
         }
         socialProfile = _passport
+        rawProfile = _.assign({}, _passport)
         socialProfile.parsedEmail = EmailParser.parseOneAddress(socialProfile.default_email)
         return User.findOne({ where: { email: socialProfile.default_email } })
       })
@@ -158,7 +160,7 @@ export const AuthSocial = (app) => {
                 provider: 'yandex',
                 userId: user.id,
                 email: socialProfile.default_email,
-                rawProfile: JSON.stringify(socialProfile)
+                rawProfile: JSON.stringify(rawProfile)
               })
             })
             .then(() => {

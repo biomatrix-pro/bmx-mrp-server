@@ -80,8 +80,8 @@ export const Yandex = (app) => {
       opt = {}
     }
 
-    const fields = opt.fields || 'is_robot,external_id,position,departments,org_id' +
-      'gender,created,name,about,nickname,groups,is_admin,birthday,department_id,email' +
+    const fields = opt.fields || 'is_robot,external_id,position,departments,org_id,' +
+      'gender,created,name,about,nickname,groups,is_admin,birthday,department_id,email,' +
       'contacts,aliases,id,is_dismissed'
 
     const headers = new Headers({ Authorization: `OAuth ${token}`, Accept: 'application/json' })
@@ -89,8 +89,7 @@ export const Yandex = (app) => {
       headers.append('X-Org-ID', opt.orgId.toString())
     }
 
-    return fetch(new Request(
-      'https://api.directory.yandex.net' +
+    const url = 'https://api.directory.yandex.net' +
       '/v6/users' +
       `?fields=${fields}` +
       `${opt.id ? '&id=' + opt.id.toString() : ''}` +
@@ -101,16 +100,21 @@ export const Yandex = (app) => {
       `${opt.recursiveGroupId ? '&recursive_group_id=' + opt.recursiveGroupId : ''}` +
       `${opt.isDismissed ? '&is_dismissed=' + opt.isDismissed : ''}` +
       `${opt.page ? '&page=' + opt.page : ''}` +
-      `${opt.perPage ? '&per_page=' + opt.perPage : ''}`,
-      {
-        method: 'GET',
-        headers
-      }))
+      `${opt.perPage ? '&per_page=' + opt.perPage : ''}`
+
+    // console.log(url)
+
+    return fetch(new Request(url, { method: 'GET', headers }))
       .then((_resp) => {
         if (_resp.status < 200 || _resp.status >= 300) {
-          throw new Errors.ServerGenericError(`yandex.directoryUsersList: ${_resp.statusText}`)
+          throw new Errors.ServerGenericError(`yandex.directoryUs ersList: ${_resp.statusText}`)
         }
         return _resp.json()
+      })
+      .then((_json) => {
+        // console.log('JSON:')
+        // console.log(_json)
+        return _json
       })
       .catch((e) => { throw e })
   }
@@ -139,9 +143,11 @@ export const Yandex = (app) => {
     const DirectoryYandex = app.exModular.models.DirectoryYandex
 
     return DirectoryYandex.findById(directoryImport.id)
-      .then((_directoryImport) => ycUsersList(directoryImport.accessToken))
+      .then((_directoryImport) => ycUsersList(directoryImport.accessToken, { isDismissed: 'ignore', perPage: '1000' }))
       .then((_import) => {
-        directoryImport.rawUsers = _import
+        console.log('RAW USERS:')
+        console.log(_import)
+        directoryImport.rawUsers = JSON.stringify(_import)
         directoryImport.statusMessage = 'Finised loading users'
         directoryImport.status = 'Step completed (users)'
         return DirectoryYandex.update(directoryImport.id, directoryImport)
