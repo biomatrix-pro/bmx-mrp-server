@@ -38,6 +38,8 @@ import { UserSocial } from './models/model-user-social'
 import { InitUserDomain } from './init-user-domain'
 import { SessionSocial } from './models/model-session-social'
 import { DirectoryYandex } from './models/model-directory-yandex'
+import { YCUserContact } from './models/model-yc-user-contact'
+import { YCUser } from './models/model-yc-user'
 
 export const appBuilder = (express, options) => {
   if (!express) {
@@ -115,7 +117,10 @@ export const appBuilder = (express, options) => {
       app.exModular.modelAdd(PermissionUserGroup(app))
       app.exModular.modelAdd(UserDomain(app))
       app.exModular.modelAdd(UserSocial(app))
+
       app.exModular.modelAdd(DirectoryYandex(app))
+      app.exModular.modelAdd(YCUser(app))
+      app.exModular.modelAdd(YCUserContact(app))
 
       // configure app with modules:
       SignupOpen(app)

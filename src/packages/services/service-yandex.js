@@ -141,13 +141,60 @@ export const Yandex = (app) => {
     }
 
     const DirectoryYandex = app.exModular.models.DirectoryYandex
+    const Serial = app.exModular.services.serial
+    const YCUser = app.exModular.models.YCUser
+    const YCUserContact = app.exModular.models.YCUserContact
 
     return DirectoryYandex.findById(directoryImport.id)
       .then((_directoryImport) => ycUsersList(directoryImport.accessToken, { isDismissed: 'ignore', perPage: '1000' }))
       .then((_import) => {
-        console.log('RAW USERS:')
-        console.log(_import)
+        // console.log('RAW USERS:')
+        // console.log(_import)
         directoryImport.rawUsers = JSON.stringify(_import)
+        if (Array.isArray(_import.result)) {
+          // import all users:
+          return Serial(_import.result.map((_item) => () => {
+            return YCUser.create({
+              id: _item.id.toString(),
+              directoryId: directoryImport.id,
+              isRobot: _item.is_robot,
+              externalId: _item.external_id,
+              position: _item.position,
+              departments: _item.departments.map((department) => { return department.id }),
+              orgId: _item.org_id,
+              gender: _item.gender,
+              created: _item.created,
+              nameFirst: _item.name.first,
+              nameLast: _item.name.last,
+              nameMiddle: _item.name.middle,
+              about: _item.about,
+              nickname: _item.nickname,
+              groups: _item.groups.map((group) => { return group.id }),
+              isAdmin: _item.is_admin,
+              birthday: _item.birthday,
+              departmentId: _item.department_id,
+              email: _item.email,
+              aliases: _item.aliases.toString(),
+              isDismissed: _item.is_dismissed
+            })
+              .then((ycUser) => {
+                if (_item.contacts && Array.isArray(_item.contacts)) {
+                  return Serial(_item.contacts.map((contact) => () => {
+                    return YCUserContact.create({
+                      ycUserId: ycUser.id,
+                      value: contact.value,
+                      type: contact.type,
+                      main: contact.main,
+                      alias: contact.alias,
+                      synthetic: contact.synthetic
+                    })
+                  }))
+                }
+              })
+          }))
+        }
+      })
+      .then(() => {
         directoryImport.statusMessage = 'Finised loading users'
         directoryImport.status = 'Step completed (users)'
         return DirectoryYandex.update(directoryImport.id, directoryImport)

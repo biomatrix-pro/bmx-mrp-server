@@ -101,6 +101,8 @@ describe(`${moduleName} module tests`, function () {
         done()
       })
       .then(() => app.exModular.models.DirectoryYandex.dataClear())
+      .then(() => app.exModular.models.YCUser.dataClear())
+      .then(() => app.exModular.models.YCUserContact.dataClear())
       .catch(done)
   })
 
@@ -118,8 +120,8 @@ describe(`${moduleName} module tests`, function () {
 
   describe('YANDEX test case', function () {
     it('1-1: login to YC and get data', function () {
-      console.log('yAdmin:')
-      console.log(context.yAdmin)
+      // console.log('yAdmin:')
+      // console.log(context.yAdmin)
 
       context.token = context.yAdmin.token
       return directoryYandexAdd(context,
@@ -127,10 +129,10 @@ describe(`${moduleName} module tests`, function () {
           userId: context.yAdmin.user.id,
           accessToken: context.yAdmin.sessionSocial.accessToken
         })
-        .then((_res) => {
-          console.log('YC directory added:')
-          console.log(_res.body)
-        })
+        // .then((_res) => {
+        //   console.log('YC directory added:')
+        //   console.log(_res.body)
+        // })
         .catch((e) => { throw e })
     })
   })
