@@ -62,7 +62,7 @@ export const Yandex = (app) => {
 
   /**
    * получить список пользователей из Directory API:
-   * @param token
+   * @param token токен для доступа к yandex (accessToken)
    * @param opt: поддерживаются такие опции (переведены в camelCase):
    *   fields
    *   id
@@ -74,11 +74,12 @@ export const Yandex = (app) => {
    *   orgId: если есть - добавляется в заголовок
    * @return {Promise<unknown>}
    */
-  const ycUsersList = (token, opt) => {
+  const ycUserList = (token, opt) => {
     const Errors = app.exModular.services.errors
     if (!opt) {
       opt = {}
     }
+    opt.perPage = opt.perPage || 10000
 
     const fields = opt.fields || 'is_robot,external_id,position,departments,org_id,' +
       'gender,created,name,about,nickname,groups,is_admin,birthday,department_id,email,' +
@@ -107,13 +108,104 @@ export const Yandex = (app) => {
     return fetch(new Request(url, { method: 'GET', headers }))
       .then((_resp) => {
         if (_resp.status < 200 || _resp.status >= 300) {
-          throw new Errors.ServerGenericError(`yandex.directoryUs ersList: ${_resp.statusText}`)
+          throw new Errors.ServerGenericError(`yandex.directoryUsersList: ${_resp.statusText}`)
         }
         return _resp.json()
       })
       .then((_json) => {
         // console.log('JSON:')
         // console.log(_json)
+        return _json
+      })
+      .catch((e) => { throw e })
+  }
+
+  /**
+   * Получить список отделов из Yandex Connect
+   * @param token токен для доступа к yandex (accessToken)
+   * @param opt: поддерживаются такие опции (переведены в camelCase):
+   *   page
+   *   perPage
+   *   orgId: если есть - добавляется в заголовок
+   * @return {Promise<unknown>} список департаментов
+   */
+  const ycDepartmentList = (token, opt) => {
+    const Errors = app.exModular.services.errors
+    if (!opt) {
+      opt = {}
+    }
+    opt.perPage = opt.perPage || 1000
+
+    const fields = opt.fields || 'id,name,email,external_id,removed,parents,label,' +
+      'created,parent,description,members_count,head'
+
+    const headers = new Headers({ Authorization: `OAuth ${token}`, Accept: 'application/json' })
+    if (opt.orgId) {
+      headers.append('X-Org-ID', opt.orgId.toString())
+    }
+
+    const url = 'https://api.directory.yandex.net' +
+      '/v6/departments' +
+      `?fields=${fields}` +
+      `${opt.page ? '&page=' + opt.page : ''}` +
+      `${opt.perPage ? '&per_page=' + opt.perPage : ''}`
+
+    let resp = null
+    return fetch(new Request(url, { method: 'GET', headers }))
+      .then((_resp) => {
+        resp = _resp
+        return _resp.json()
+      })
+      .then((_json) => {
+        if (resp.status < 200 || resp.status >= 300) {
+          throw new Errors.ServerGenericError(`yandex.ycDepartmentList: ${resp.statusText} body: ${JSON.stringify(_json)}`)
+        }
+        return _json
+      })
+      .catch((e) => { throw e })
+  }
+
+  /**
+   *
+   * Получить список отделов из Yandex Connect
+   * @param token токен для доступа к yandex (accessToken)
+   * @param opt: поддерживаются такие опции (переведены в camelCase):
+   *   page
+   *   perPage
+   *   orgId: если есть - добавляется в заголовок
+   * @return {Promise<unknown>} список организаций
+   */
+  const ycOrganizationList = (token, opt) => {
+    const Errors = app.exModular.services.errors
+    if (!opt) {
+      opt = {}
+    }
+    opt.perPage = opt.perPage || 1000
+
+    const fields = opt.fields || 'id,name,revision,label,domains,admin_uid,email,services,' +
+      'disk_limit,subscription_plan,country,language,name,fax,disk_usage,phone_number'
+
+    const headers = new Headers({ Authorization: `OAuth ${token}`, Accept: 'application/json' })
+    if (opt.orgId) {
+      headers.append('X-Org-ID', opt.orgId.toString())
+    }
+
+    const url = 'https://api.directory.yandex.net' +
+      '/v6/organizations' +
+      `?fields=${fields}` +
+      `${opt.page ? '&page=' + opt.page : ''}` +
+      `${opt.perPage ? '&per_page=' + opt.perPage : ''}`
+
+    let resp = null
+    return fetch(new Request(url, { method: 'GET', headers }))
+      .then((_resp) => {
+        resp = _resp
+        return _resp.json()
+      })
+      .then((_json) => {
+        if (resp.status < 200 || resp.status >= 300) {
+          throw new Errors.ServerGenericError(`yandex.ycOrganizationList: ${resp.statusText} body: ${JSON.stringify(_json)}`)
+        }
         return _json
       })
       .catch((e) => { throw e })
@@ -144,16 +236,19 @@ export const Yandex = (app) => {
     const Serial = app.exModular.services.serial
     const YCUser = app.exModular.models.YCUser
     const YCUserContact = app.exModular.models.YCUserContact
+    const YCDepartment = app.exModular.models.YCDepartment
+    const YCOrganization = app.exModular.models.YCOrganization
+    const YCService = app.exModular.models.YCService
 
     return DirectoryYandex.findById(directoryImport.id)
-      .then((_directoryImport) => ycUsersList(directoryImport.accessToken, { isDismissed: 'ignore', perPage: '1000' }))
-      .then((_import) => {
+      .then((_directoryImport) => ycUserList(directoryImport.accessToken, { isDismissed: 'ignore' }))
+      .then((_userList) => {
         // console.log('RAW USERS:')
         // console.log(_import)
-        directoryImport.rawUsers = JSON.stringify(_import)
-        if (Array.isArray(_import.result)) {
+        // directoryImport.rawUsers = JSON.stringify(_userList)
+        if (Array.isArray(_userList.result)) {
           // import all users:
-          return Serial(_import.result.map((_item) => () => {
+          return Serial(_userList.result.map((_item) => () => {
             return YCUser.create({
               id: _item.id.toString(),
               directoryId: directoryImport.id,
@@ -191,6 +286,7 @@ export const Yandex = (app) => {
                   }))
                 }
               })
+              .catch(e => { throw e })
           }))
         }
       })
@@ -199,13 +295,72 @@ export const Yandex = (app) => {
         directoryImport.status = 'Step completed (users)'
         return DirectoryYandex.update(directoryImport.id, directoryImport)
       })
+      .then(() => ycDepartmentList(directoryImport.accessToken))
+      .then((_departmentList) => {
+        if (Array.isArray(_departmentList.result)) {
+          return Serial(_departmentList.result.map((_item) => () => {
+            return YCDepartment.create({
+              id: _item.id,
+              name: _item.name,
+              externalId: _item.external_id,
+              removed: _item.removed,
+              parents: _item.parents.map((parent) => { return parent.id }),
+              label: _item.label,
+              created: _item.created,
+              parentId: _item.parent ? _item.parent.id : null,
+              description: _item.description,
+              membersCount: _item.members_count,
+              headId: _item.head
+            })
+          }))
+        }
+      })
+      .then(() => ycOrganizationList(directoryImport.accessToken))
+      .then((_organizationList) => {
+        if (Array.isArray(_organizationList.result)) {
+          return Serial(_organizationList.result.map((_item) => () => {
+            return YCOrganization.create({
+              id: _item.id,
+              name: _item.name,
+              revision: _item.revision,
+              label: _item.label,
+              domainDisplay: _item.domains ? _item.domains.display : null,
+              domainMaster: _item.domains ? _item.domains.master : null,
+              allDomains: _item.domains ? JSON.stringify(_item.domains.all) : null,
+              adminUserId: _item.admin_uid,
+              email: _item.email,
+              diskLimit: _item.disk_limit,
+              subscriptionPlan: _item.subscription_plan,
+              country: _item.country,
+              language: _item.language,
+              diskUsage: _item.disk_usage,
+              phoneNumber: _item.phone_number,
+              fax: _item.fax
+            })
+              .then((ycOrganization) => {
+                if (_item.services && Array.isArray(_item.services)) {
+                  return Serial(_item.services.map((service) => () => {
+                    return YCService.create({
+                      ycOrganizationId: ycOrganization.id,
+                      slug: service.slug,
+                      ready: service.ready
+                    })
+                  }))
+                }
+              })
+              .catch(e => { throw e })
+          }))
+        }
+      })
       .catch(e => { throw e })
   }
 
   return {
     authExchangeCodeForToken,
     authGetProfile,
-    ycUsersList: ycUsersList,
+    ycUserList,
+    ycDepartmentList,
+    ycOrganizationList,
     ycDirectoryImport
   }
 }

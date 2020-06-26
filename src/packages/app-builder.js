@@ -40,6 +40,9 @@ import { SessionSocial } from './models/model-session-social'
 import { DirectoryYandex } from './models/model-directory-yandex'
 import { YCUserContact } from './models/model-yc-user-contact'
 import { YCUser } from './models/model-yc-user'
+import { YCDepartment } from './models/model-yc-department'
+import { YCOrganization } from './models/model-yc-organization'
+import { YCService } from './models/model-yc-service'
 
 export const appBuilder = (express, options) => {
   if (!express) {
@@ -121,6 +124,9 @@ export const appBuilder = (express, options) => {
       app.exModular.modelAdd(DirectoryYandex(app))
       app.exModular.modelAdd(YCUser(app))
       app.exModular.modelAdd(YCUserContact(app))
+      app.exModular.modelAdd(YCDepartment(app))
+      app.exModular.modelAdd(YCOrganization(app))
+      app.exModular.modelAdd(YCService(app))
 
       // configure app with modules:
       SignupOpen(app)

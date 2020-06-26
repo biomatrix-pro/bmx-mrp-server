@@ -17,8 +17,8 @@ export const YCUser = () => {
         name: 'directoryId',
         type: 'ref',
         model: 'DirectoryYandex',
-        caption: 'Пользователь',
-        description: 'Ссылка на локальный профиль пользователя, с которым ассоциирован этот профиль из соцсети',
+        caption: 'Интеграция',
+        description: 'Ссылка на профиль интеграции, через который загружены эти данные',
         default: null
       },
       {

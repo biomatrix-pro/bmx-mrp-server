@@ -22,15 +22,15 @@ export const DirectoryYandex = (app) => {
         description: 'Пользователь, социальный аккаунт которого используется для импорта каталога',
         default: null
       },
-      {
-        name: 'rawUsers',
-        type: 'text',
-        format: 'json',
-        size: 64000,
-        caption: 'Пользователи - дамп',
-        description: 'Дамп данных о пользователях из каталога',
-        default: null
-      },
+      // {
+      //   name: 'rawUsers',
+      //   type: 'text',
+      //   format: 'json',
+      //   size: 64000,
+      //   caption: 'Пользователи - дамп',
+      //   description: 'Дамп данных о пользователях из каталога',
+      //   default: null
+      // },
       {
         name: 'accessToken',
         type: 'text',

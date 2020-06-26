@@ -103,6 +103,7 @@ describe(`${moduleName} module tests`, function () {
       .then(() => app.exModular.models.DirectoryYandex.dataClear())
       .then(() => app.exModular.models.YCUser.dataClear())
       .then(() => app.exModular.models.YCUserContact.dataClear())
+      .then(() => app.exModular.models.YCDepartment.dataClear())
       .catch(done)
   })
 
