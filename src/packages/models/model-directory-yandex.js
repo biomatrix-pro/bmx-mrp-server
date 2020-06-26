@@ -83,6 +83,7 @@ export const DirectoryYandex = (app) => {
 
         return Yandex.ycDirectoryImport(directoryYandex)
       })
+      .then(() => { return directoryYandex })
       .catch(e => { throw e })
   }
 

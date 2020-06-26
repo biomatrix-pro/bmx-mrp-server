@@ -211,6 +211,47 @@ export const Yandex = (app) => {
       .catch((e) => { throw e })
   }
 
+  /**
+   * Получить список доменов из Yandex Connect
+   * @param token токен для доступа к yandex (accessToken)
+   * @param opt: поддерживаются такие опции (переведены в camelCase):
+   *   orgId: если есть - добавляется в заголовок
+   * @return {Promise<unknown>} список доменов
+   */
+  const ycDomainList = (token, opt) => {
+    const Errors = app.exModular.services.errors
+    if (!opt) {
+      opt = {}
+    }
+    opt.perPage = opt.perPage || 1000
+
+    const fields = opt.fields || 'mx,delegated,tech,pop_enabled,master,postmaster_uid,owned,' +
+      'country,name,imap_enabled'
+
+    const headers = new Headers({ Authorization: `OAuth ${token}`, Accept: 'application/json' })
+    if (opt.orgId) {
+      headers.append('X-Org-ID', opt.orgId.toString())
+    }
+
+    const url = 'https://api.directory.yandex.net' +
+      '/v6/domains' +
+      `?fields=${fields}`
+
+    let resp = null
+    return fetch(new Request(url, { method: 'GET', headers }))
+      .then((_resp) => {
+        resp = _resp
+        return _resp.json()
+      })
+      .then((_json) => {
+        if (resp.status < 200 || resp.status >= 300) {
+          throw new Errors.ServerGenericError(`yandex.ycDomainList: ${resp.statusText} body: ${JSON.stringify(_json)}`)
+        }
+        return _json
+      })
+      .catch((e) => { throw e })
+  }
+
   /*
     Алгоритм импорта данных:
     * создаём объект DirectoryYandex. Нам нужно проверить, что пользователь,
@@ -239,6 +280,7 @@ export const Yandex = (app) => {
     const YCDepartment = app.exModular.models.YCDepartment
     const YCOrganization = app.exModular.models.YCOrganization
     const YCService = app.exModular.models.YCService
+    const YCDomain = app.exModular.models.YCDomain
 
     return DirectoryYandex.findById(directoryImport.id)
       .then((_directoryImport) => ycUserList(directoryImport.accessToken, { isDismissed: 'ignore' }))
@@ -285,6 +327,7 @@ export const Yandex = (app) => {
                     })
                   }))
                 }
+                return Promise.resolve()
               })
               .catch(e => { throw e })
           }))
@@ -301,6 +344,7 @@ export const Yandex = (app) => {
           return Serial(_departmentList.result.map((_item) => () => {
             return YCDepartment.create({
               id: _item.id,
+              directoryId: directoryImport.id,
               name: _item.name,
               externalId: _item.external_id,
               removed: _item.removed,
@@ -321,6 +365,7 @@ export const Yandex = (app) => {
           return Serial(_organizationList.result.map((_item) => () => {
             return YCOrganization.create({
               id: _item.id,
+              directoryId: directoryImport.id,
               name: _item.name,
               revision: _item.revision,
               label: _item.label,
@@ -347,10 +392,35 @@ export const Yandex = (app) => {
                     })
                   }))
                 }
+                return Promise.resolve()
               })
               .catch(e => { throw e })
           }))
         }
+        return Promise.resolve()
+      })
+      .then(() => ycDomainList(directoryImport.accessToken))
+      .then((_domainList) => {
+        if (_domainList && Array.isArray(_domainList)) {
+          return Serial(_domainList.map((_item) => () => {
+            return YCDomain.create({
+              directoryId: directoryImport.id,
+              mx: _item.mx,
+              delegated: _item.delegated,
+              tech: _item.tech,
+              popEnabled: _item.pop_enabled,
+              imapEnabled: _item.imap_enabled,
+              master: _item.master,
+              postmasterUid: _item.postmaster_uid,
+              owned: _item.owned,
+              country: _item.country,
+              name: _item.name
+            })
+              .catch(e => { throw e })
+          }))
+            .catch(e => { throw e })
+        }
+        return Promise.resolve()
       })
       .catch(e => { throw e })
   }
@@ -361,6 +431,7 @@ export const Yandex = (app) => {
     ycUserList,
     ycDepartmentList,
     ycOrganizationList,
+    ycDomainList,
     ycDirectoryImport
   }
 }

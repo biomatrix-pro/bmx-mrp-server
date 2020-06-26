@@ -43,6 +43,7 @@ import { YCUser } from './models/model-yc-user'
 import { YCDepartment } from './models/model-yc-department'
 import { YCOrganization } from './models/model-yc-organization'
 import { YCService } from './models/model-yc-service'
+import { YCDomain } from './models/model-yc-domain'
 
 export const appBuilder = (express, options) => {
   if (!express) {
@@ -127,6 +128,7 @@ export const appBuilder = (express, options) => {
       app.exModular.modelAdd(YCDepartment(app))
       app.exModular.modelAdd(YCOrganization(app))
       app.exModular.modelAdd(YCService(app))
+      app.exModular.modelAdd(YCDomain(app))
 
       // configure app with modules:
       SignupOpen(app)
