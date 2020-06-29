@@ -166,7 +166,50 @@ export const Yandex = (app) => {
   }
 
   /**
-   *
+   * Получить список отделов из Yandex Connect
+   * @param token токен для доступа к yandex (accessToken)
+   * @param opt: поддерживаются такие опции (переведены в camelCase):
+   *   page
+   *   perPage
+   *   orgId: если есть - добавляется в заголовок
+   * @return {Promise<unknown>} список организаций
+   */
+  const ycGroupList = (token, opt) => {
+    const Errors = app.exModular.services.errors
+    if (!opt) {
+      opt = {}
+    }
+    opt.perPage = opt.perPage || 1000
+
+    const fields = opt.fields || 'id,name,email,external_id,members,label,created,type,author'
+
+    const headers = new Headers({ Authorization: `OAuth ${token}`, Accept: 'application/json' })
+    if (opt.orgId) {
+      headers.append('X-Org-ID', opt.orgId.toString())
+    }
+
+    const url = 'https://api.directory.yandex.net' +
+      '/v6/groups' +
+      `?fields=${fields}` +
+      `${opt.page ? '&page=' + opt.page : ''}` +
+      `${opt.perPage ? '&per_page=' + opt.perPage : ''}`
+
+    let resp = null
+    return fetch(new Request(url, { method: 'GET', headers }))
+      .then((_resp) => {
+        resp = _resp
+        return _resp.json()
+      })
+      .then((_json) => {
+        if (resp.status < 200 || resp.status >= 300) {
+          throw new Errors.ServerGenericError(`yandex.ycGroupList: ${resp.statusText} body: ${JSON.stringify(_json)}`)
+        }
+        return _json
+      })
+      .catch((e) => { throw e })
+  }
+
+  /**
    * Получить список отделов из Yandex Connect
    * @param token токен для доступа к yandex (accessToken)
    * @param opt: поддерживаются такие опции (переведены в camelCase):
@@ -281,6 +324,7 @@ export const Yandex = (app) => {
     const YCOrganization = app.exModular.models.YCOrganization
     const YCService = app.exModular.models.YCService
     const YCDomain = app.exModular.models.YCDomain
+    const YCGroup = app.exModular.models.YCGroup
 
     return DirectoryYandex.findById(directoryImport.id)
       .then((_directoryImport) => ycUserList(directoryImport.accessToken, { isDismissed: 'ignore' }))
@@ -399,6 +443,43 @@ export const Yandex = (app) => {
         }
         return Promise.resolve()
       })
+      .then(() => ycGroupList(directoryImport.accessToken))
+      .then((_groupList) => {
+        if (Array.isArray(_groupList.result)) {
+          return Serial(_groupList.result.map((_item) => () => {
+            const memberUser = []
+            const memberGroup = []
+            const memberDepartment = []
+
+            if (_item.members && Array.isArray(_item.members)) {
+              _item.members.map((_member) => {
+                if (_member.type === 'user' && _member.object) {
+                  memberUser.push(_member.object.id)
+                } else if (_member.type === 'department' && _member.object) {
+                  memberDepartment.push(_member.object.id)
+                } else if (_member.type === 'group' && _member.object) {
+                  memberGroup.push(_member.object.id)
+                }
+              })
+            }
+            return YCGroup.create({
+              id: _item.id,
+              directoryId: directoryImport.id,
+              name: _item.name,
+              email: _item.email,
+              externalId: _item.external_id,
+              label: _item.label,
+              created: _item.created,
+              type: _item.type,
+              authorId: _item.author ? _item.author.id.toString() : null,
+              memberUser,
+              memberGroup,
+              memberDepartment
+            })
+          }))
+        }
+        return Promise.resolve()
+      })
       .then(() => ycDomainList(directoryImport.accessToken))
       .then((_domainList) => {
         if (_domainList && Array.isArray(_domainList)) {
@@ -432,6 +513,7 @@ export const Yandex = (app) => {
     ycDepartmentList,
     ycOrganizationList,
     ycDomainList,
+    ycGroupList,
     ycDirectoryImport
   }
 }
