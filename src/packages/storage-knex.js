@@ -72,7 +72,7 @@ export const processBeforeSaveToStorage = (Model, item, opts) => {
     }
 
     // array of some values:
-    if (prop.type === 'array' && prop.itemType === 'number') {
+    if (prop.type === 'array' && (prop.itemType === 'decimal' || prop.itemType === 'id')) {
       if (!item[prop.name] || item[prop.name] === [] || item[prop.name] === '') {
         aItem[prop.name] = null
       } else if (Array.isArray(item[prop.name])) {

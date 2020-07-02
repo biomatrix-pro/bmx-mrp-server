@@ -37,7 +37,7 @@ import { UserDomain } from './models/model-user-domain'
 import { UserSocial } from './models/model-user-social'
 import { InitUserDomain } from './init-user-domain'
 import { SessionSocial } from './models/model-session-social'
-import { DirectoryYandex } from './models/model-directory-yandex'
+import { IntgConnection } from './models/model-intg-connection'
 import { YCUserContact } from './models/model-yc-user-contact'
 import { YCUser } from './models/model-yc-user'
 import { YCDepartment } from './models/model-yc-department'
@@ -45,6 +45,8 @@ import { YCOrganization } from './models/model-yc-organization'
 import { YCService } from './models/model-yc-service'
 import { YCDomain } from './models/model-yc-domain'
 import { YCGroup } from './models/model-yc-group'
+import { LinkYCUser } from './models/model-link-yc-user'
+import { IntgImport } from './models/model-intg-import'
 
 export const appBuilder = (express, options) => {
   if (!express) {
@@ -123,7 +125,8 @@ export const appBuilder = (express, options) => {
       app.exModular.modelAdd(UserDomain(app))
       app.exModular.modelAdd(UserSocial(app))
 
-      app.exModular.modelAdd(DirectoryYandex(app))
+      app.exModular.modelAdd(IntgConnection(app))
+      app.exModular.modelAdd(IntgImport(app))
       app.exModular.modelAdd(YCUser(app))
       app.exModular.modelAdd(YCUserContact(app))
       app.exModular.modelAdd(YCDepartment(app))
@@ -131,6 +134,7 @@ export const appBuilder = (express, options) => {
       app.exModular.modelAdd(YCService(app))
       app.exModular.modelAdd(YCDomain(app))
       app.exModular.modelAdd(YCGroup(app))
+      app.exModular.modelAdd(LinkYCUser(app))
 
       // configure app with modules:
       SignupOpen(app)

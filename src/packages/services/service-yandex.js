@@ -297,7 +297,7 @@ export const Yandex = (app) => {
 
   /*
     Алгоритм импорта данных:
-    * создаём объект DirectoryYandex. Нам нужно проверить, что пользователь,
+    * создаём объект IntgConnection. Нам нужно проверить, что пользователь,
     создающий этот объект - это администратор.
     При создании этого объекта берём авторизацию в яндексе у этого пользователя или у
     указанного при создании записи пользователя. Статус при создании - старт импорта.
@@ -307,16 +307,26 @@ export const Yandex = (app) => {
     Также производим сохранение связей между пользователями, и отделами - в списке YCDepartmentUser,
     YCGroupUser.
   */
-  const ycDirectoryImport = (directoryImport) => {
-    if (!directoryImport || !directoryImport.id) {
-      throw new Error('ycDirectoryImport: directoryImport param invalid - no object or no .id property')
+  const ycImportUser = (integration, thisImport, prevImport) => {
+
+  }
+
+  /**
+   * Выполнить полный импорт данных из yandex connect
+   * @param intgConnection - подключение
+   * @param prevImportId - идентификатор предыдущего импорта
+   * @return {Promise<T>|undefined|Promise<void>}
+   */
+  const ycImport = (intgConnection) => {
+    if (!intgConnection || !intgConnection.id) {
+      throw new Error('ycImport: directoryImport param invalid - no object or no .id property')
     }
 
-    if (!directoryImport.accessToken || !directoryImport.userId) {
-      throw new Error('ycDirectoryImport: directoryImport param invalid - accessToken or user not found')
+    if (!intgConnection.accessToken || !intgConnection.userId) {
+      throw new Error('ycImport: directoryImport param invalid - accessToken or user not found')
     }
 
-    const DirectoryYandex = app.exModular.models.DirectoryYandex
+    const IntgConnection = app.exModular.models.IntgConnection
     const Serial = app.exModular.services.serial
     const YCUser = app.exModular.models.YCUser
     const YCUserContact = app.exModular.models.YCUserContact
@@ -325,9 +335,33 @@ export const Yandex = (app) => {
     const YCService = app.exModular.models.YCService
     const YCDomain = app.exModular.models.YCDomain
     const YCGroup = app.exModular.models.YCGroup
+    const IntgImport = app.exModular.models.IntgImport
 
-    return DirectoryYandex.findById(directoryImport.id)
-      .then((_directoryImport) => ycUserList(directoryImport.accessToken, { isDismissed: 'ignore' }))
+    let lastImport = null
+    let lastImportId = null
+    let thisImport = null
+
+    return Promise.resolve()
+      .then(() => {
+        if (intgConnection.lastImportId) {
+          return IntgImport.findById(intgConnection.lastImportId)
+        }
+        return Promise.resolve()
+      })
+      .then((_lastImport) => {
+        if (_lastImport) {
+          lastImport = _lastImport
+          lastImportId = _lastImport.id
+        }
+
+        return IntgImport.create({
+          intgConnectionId: intgConnection.id,
+          prevImportId: lastImportId,
+          status: 'Started',
+          statusMessage: 'Started!'
+        })
+        return ycUserList(intgConnection.accessToken, { isDismissed: 'ignore' })
+      })
       .then((_userList) => {
         // console.log('RAW USERS:')
         // console.log(_import)
@@ -337,7 +371,7 @@ export const Yandex = (app) => {
           return Serial(_userList.result.map((_item) => () => {
             return YCUser.create({
               id: _item.id.toString(),
-              directoryId: directoryImport.id,
+              directoryId: intgConnection.id,
               isRobot: _item.is_robot,
               externalId: _item.external_id,
               position: _item.position,
@@ -378,16 +412,16 @@ export const Yandex = (app) => {
         }
       })
       .then(() => {
-        directoryImport.statusMessage = 'Finised loading users'
-        directoryImport.status = 'Step completed (users)'
-        return DirectoryYandex.update(directoryImport.id, directoryImport)
+        intgConnection.statusMessage = 'Finised loading users'
+        intgConnection.status = 'Step completed (users)'
+        return IntgConnection.update(intgConnection.id, intgConnection)
       })
-      .then(() => ycDepartmentList(directoryImport.accessToken))
+      .then(() => ycDepartmentList(intgConnection.accessToken))
       .then((_departmentList) => {
         if (Array.isArray(_departmentList.result)) {
           return Serial(_departmentList.result.map((_item) => () => {
             // сначала получим список сотрудников этого департамента:
-            return ycUserList(directoryImport.accessToken, { fields: 'id', departmentId: _item.id})
+            return ycUserList(intgConnection.accessToken, { fields: 'id', departmentId: _item.id })
               .then((_userList) => {
                 // трансформировать список пользователей в массив идентификаторов для поля .users
                 const users = _userList ? _userList.result.map((item) => item.id) : []
@@ -395,7 +429,7 @@ export const Yandex = (app) => {
 
                 return YCDepartment.create({
                   id: _item.id,
-                  directoryId: directoryImport.id,
+                  directoryId: intgConnection.id,
                   name: _item.name,
                   externalId: _item.external_id,
                   removed: _item.removed,
@@ -413,13 +447,13 @@ export const Yandex = (app) => {
           }))
         }
       })
-      .then(() => ycOrganizationList(directoryImport.accessToken))
+      .then(() => ycOrganizationList(intgConnection.accessToken))
       .then((_organizationList) => {
         if (Array.isArray(_organizationList.result)) {
           return Serial(_organizationList.result.map((_item) => () => {
             return YCOrganization.create({
               id: _item.id,
-              directoryId: directoryImport.id,
+              directoryId: intgConnection.id,
               name: _item.name,
               revision: _item.revision,
               label: _item.label,
@@ -453,7 +487,7 @@ export const Yandex = (app) => {
         }
         return Promise.resolve()
       })
-      .then(() => ycGroupList(directoryImport.accessToken))
+      .then(() => ycGroupList(intgConnection.accessToken))
       .then((_groupList) => {
         if (Array.isArray(_groupList.result)) {
           return Serial(_groupList.result.map((_item) => () => {
@@ -474,7 +508,7 @@ export const Yandex = (app) => {
             }
             return YCGroup.create({
               id: _item.id,
-              directoryId: directoryImport.id,
+              directoryId: intgConnection.id,
               name: _item.name,
               email: _item.email,
               externalId: _item.external_id,
@@ -490,12 +524,12 @@ export const Yandex = (app) => {
         }
         return Promise.resolve()
       })
-      .then(() => ycDomainList(directoryImport.accessToken))
+      .then(() => ycDomainList(intgConnection.accessToken))
       .then((_domainList) => {
         if (_domainList && Array.isArray(_domainList)) {
           return Serial(_domainList.map((_item) => () => {
             return YCDomain.create({
-              directoryId: directoryImport.id,
+              directoryId: intgConnection.id,
               mx: _item.mx,
               delegated: _item.delegated,
               tech: _item.tech,
@@ -524,6 +558,6 @@ export const Yandex = (app) => {
     ycOrganizationList,
     ycDomainList,
     ycGroupList,
-    ycDirectoryImport
+    ycImport
   }
 }
