@@ -30,7 +30,7 @@ export default (app) => {
           table.string(prop.name, 36)
           break
         case 'refs':
-          table.string(prop.name, 255)
+          table.string(prop.name, prop.size || 256)
           break
         case 'datetime':
           table.datetime(prop.name)

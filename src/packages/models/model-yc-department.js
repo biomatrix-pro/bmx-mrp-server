@@ -105,6 +105,16 @@ export const YCDepartment = () => {
         caption: 'Руководитель',
         description: 'Идентификатор сотрудника-руководителя отдела',
         default: null
+      },
+      {
+        name: 'users',
+        type: 'refs',
+        model: 'YCUser',
+        format: '',
+        size: 2048,
+        caption: 'Сотрудники',
+        description: 'Список сотрудников отдела',
+        default: []
       }
     ]
   }

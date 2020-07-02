@@ -386,20 +386,30 @@ export const Yandex = (app) => {
       .then((_departmentList) => {
         if (Array.isArray(_departmentList.result)) {
           return Serial(_departmentList.result.map((_item) => () => {
-            return YCDepartment.create({
-              id: _item.id,
-              directoryId: directoryImport.id,
-              name: _item.name,
-              externalId: _item.external_id,
-              removed: _item.removed,
-              parents: _item.parents.map((parent) => { return parent.id }),
-              label: _item.label,
-              created: _item.created,
-              parentId: _item.parent ? _item.parent.id : null,
-              description: _item.description,
-              membersCount: _item.members_count,
-              headId: _item.head
-            })
+            // сначала получим список сотрудников этого департамента:
+            return ycUserList(directoryImport.accessToken, { fields: 'id', departmentId: _item.id})
+              .then((_userList) => {
+                // трансформировать список пользователей в массив идентификаторов для поля .users
+                const users = _userList ? _userList.result.map((item) => item.id) : []
+                console.log(users)
+
+                return YCDepartment.create({
+                  id: _item.id,
+                  directoryId: directoryImport.id,
+                  name: _item.name,
+                  externalId: _item.external_id,
+                  removed: _item.removed,
+                  parents: _item.parents.map((parent) => { return parent.id }),
+                  label: _item.label,
+                  created: _item.created,
+                  parentId: _item.parent ? _item.parent.id : null,
+                  description: _item.description,
+                  membersCount: _item.members_count,
+                  headId: _item.head,
+                  users
+                })
+              })
+              .catch(e => { throw e })
           }))
         }
       })
