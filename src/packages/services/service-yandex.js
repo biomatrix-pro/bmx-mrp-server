@@ -295,77 +295,21 @@ export const Yandex = (app) => {
       .catch((e) => { throw e })
   }
 
-  /*
-    Алгоритм импорта данных:
-    * создаём объект IntgConnection. Нам нужно проверить, что пользователь,
-    создающий этот объект - это администратор.
-    При создании этого объекта берём авторизацию в яндексе у этого пользователя или у
-    указанного при создании записи пользователя. Статус при создании - старт импорта.
-
-    * при импорте получаем полный каталог от Яндекса: пользователи, отделы, группы, домены, организации.
-    Сохраняем эти данные в объекты YCUser, YCDepartment, YCGroup, YCDomain YCOrganization.
-    Также производим сохранение связей между пользователями, и отделами - в списке YCDepartmentUser,
-    YCGroupUser.
-  */
-  const ycImportUser = (integration, thisImport, prevImport) => {
-
-  }
-
   /**
-   * Выполнить полный импорт данных из yandex connect
-   * @param intgConnection - подключение
-   * @param prevImportId - идентификатор предыдущего импорта
-   * @return {Promise<T>|undefined|Promise<void>}
+   * Произвести импорт ресурса "пользователи" из Яндекс-Коннект
+   * @param intgConnection подключение к Яндекс-Коннект
+   * @param thisImport: объект текущего импорта
+   * @param prevImport: объект предыдущего импорта
+   * @return {Promise<unknown>}
    */
-  const ycImport = (intgConnection) => {
-    if (!intgConnection || !intgConnection.id) {
-      throw new Error('ycImport: directoryImport param invalid - no object or no .id property')
-    }
-
-    if (!intgConnection.accessToken || !intgConnection.userId) {
-      throw new Error('ycImport: directoryImport param invalid - accessToken or user not found')
-    }
-
-    const IntgConnection = app.exModular.models.IntgConnection
+  const ycImportUser = (intgConnection, thisImport, prevImport) => {
     const Serial = app.exModular.services.serial
+
     const YCUser = app.exModular.models.YCUser
     const YCUserContact = app.exModular.models.YCUserContact
-    const YCDepartment = app.exModular.models.YCDepartment
-    const YCOrganization = app.exModular.models.YCOrganization
-    const YCService = app.exModular.models.YCService
-    const YCDomain = app.exModular.models.YCDomain
-    const YCGroup = app.exModular.models.YCGroup
-    const IntgImport = app.exModular.models.IntgImport
 
-    let lastImport = null
-    let lastImportId = null
-    let thisImport = null
-
-    return Promise.resolve()
-      .then(() => {
-        if (intgConnection.lastImportId) {
-          return IntgImport.findById(intgConnection.lastImportId)
-        }
-        return Promise.resolve()
-      })
-      .then((_lastImport) => {
-        if (_lastImport) {
-          lastImport = _lastImport
-          lastImportId = _lastImport.id
-        }
-
-        return IntgImport.create({
-          intgConnectionId: intgConnection.id,
-          prevImportId: lastImportId,
-          status: 'Started',
-          statusMessage: 'Started!'
-        })
-        return ycUserList(intgConnection.accessToken, { isDismissed: 'ignore' })
-      })
+    return ycUserList(intgConnection.accessToken, { isDismissed: 'ignore' })
       .then((_userList) => {
-        // console.log('RAW USERS:')
-        // console.log(_import)
-        // directoryImport.rawUsers = JSON.stringify(_userList)
         if (Array.isArray(_userList.result)) {
           // import all users:
           return Serial(_userList.result.map((_item) => () => {
@@ -411,10 +355,67 @@ export const Yandex = (app) => {
           }))
         }
       })
+  }
+
+  /**
+   * Выполнить полный импорт данных из yandex connect
+   * @param intgConnection - подключение
+   * @param prevImportId - идентификатор предыдущего импорта
+   * @return {Promise<T>|undefined|Promise<void>}
+   */
+  const ycImport = (intgConnection) => {
+    if (!intgConnection || !intgConnection.id) {
+      throw new Error('ycImport: directoryImport param invalid - no object or no .id property')
+    }
+
+    if (!intgConnection.accessToken || !intgConnection.userId) {
+      throw new Error('ycImport: directoryImport param invalid - accessToken or user not found')
+    }
+
+    // const IntgConnection = app.exModular.models.IntgConnection
+    const Serial = app.exModular.services.serial
+    const YCDepartment = app.exModular.models.YCDepartment
+    const YCOrganization = app.exModular.models.YCOrganization
+    const YCService = app.exModular.models.YCService
+    const YCDomain = app.exModular.models.YCDomain
+    const YCGroup = app.exModular.models.YCGroup
+    const IntgImport = app.exModular.models.IntgImport
+
+    let lastImport = null
+    let lastImportId = null
+    let thisImport = null
+
+    return Promise.resolve()
       .then(() => {
-        intgConnection.statusMessage = 'Finised loading users'
-        intgConnection.status = 'Step completed (users)'
-        return IntgConnection.update(intgConnection.id, intgConnection)
+        if (intgConnection.lastImportId) {
+          return IntgImport.findById(intgConnection.lastImportId)
+        }
+        return Promise.resolve()
+      })
+      .then((_lastImport) => {
+        if (_lastImport) {
+          lastImport = _lastImport
+          lastImportId = _lastImport.id
+        }
+
+        return IntgImport.create({
+          intgConnectionId: intgConnection.id,
+          prevImportId: lastImportId,
+          status: 'Started',
+          statusMessage: 'Started!'
+        })
+      })
+      .then((_intgImport) => {
+        thisImport = _intgImport
+        if (!_intgImport) {
+          throw new Error('ycImport: failed to create intImport record')
+        }
+        return ycImportUser(intgConnection, thisImport, lastImport)
+      })
+      .then(() => {
+        thisImport.statusMessage = 'Finished loading users'
+        thisImport.status = '(Users)'
+        return IntgImport.update(thisImport.id, thisImport)
       })
       .then(() => ycDepartmentList(intgConnection.accessToken))
       .then((_departmentList) => {
