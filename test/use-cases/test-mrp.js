@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 import { describe, it, before, beforeEach, after } from 'mocha'
 import supertest from 'supertest'
-import chai, { expect } from 'chai'
+import chai from 'chai'
 import dirtyChai from 'dirty-chai'
 import env from 'dotenv-safe'
 
@@ -106,7 +106,7 @@ describe('MRP module tests', function () {
           ]
           return permissionUserGroupCreate(context, perms)
         })
-        .then((res) => {
+        .then(() => {
           context.token = context.UserFirst
 
           // create user

@@ -1,6 +1,6 @@
 import { v4 as uuid } from 'uuid'
 
-export const IntgImportResource = (app) => {
+export const IntgImportResource = () => {
   return {
     name: 'IntgImportResource',
     caption: 'Импорт ресурса',
@@ -22,47 +22,46 @@ export const IntgImportResource = (app) => {
         default: null
       },
       {
-        name: 'remoteNew',
-        type: 'array',
-        itemType: 'id',
+        name: 'resource',
+        type: 'text',
         format: '',
-        caption: 'Новые',
-        description: 'Новые элементы в источнике',
-        default: []
+        caption: 'Ресурс',
+        description: 'Импортируемый ресурс',
+        default: null
       },
       {
-        name: 'remoteUpdated',
-        type: 'array',
-        itemType: 'id',
+        name: 'resourceId',
+        type: 'text',
         format: '',
-        caption: 'Измененные',
-        description: 'Измененные элементы в источнике',
-        default: []
+        caption: 'id ресурса',
+        description: 'Идентификатор в таблице - источнике ',
+        default: null
       },
       {
-        name: 'remoteRemoved',
-        type: 'array',
-        itemType: 'id',
+        name: 'hash',
+        type: 'text',
         format: '',
-        caption: 'Удалённые',
-        description: 'Удаленные элементы из источника',
-        default: []
+        size: 32,
+        caption: 'Хэш',
+        description: 'Хэш записи в таблице-источнике',
+        default: null
       },
       {
-        name: 'remoteSame',
-        type: 'array',
-        itemType: 'id',
+        name: 'type',
+        type: 'text',
+        size: 7,
         format: '',
-        caption: 'Неизменные',
-        description: 'Неизменные элементы в источнике',
-        default: []
+        caption: 'Тип',
+        description: 'Тип записи: new, upd, same, del',
+        default: null
       },
       {
-        name: '',
-        type: '',
+        name: 'nextResourceId',
+        type: 'ref',
+        model: 'IntgImportResource',
         format: '',
-        caption: '',
-        description: '',
+        caption: 'След',
+        description: 'Следующая версия этого ресурса',
         default: null
       }
       // {
