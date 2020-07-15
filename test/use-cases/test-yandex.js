@@ -8,7 +8,7 @@ import env from 'dotenv-safe'
 import App from '../../src/packages/app-builder'
 
 import {
-  directoryYandexAdd
+  intgConnectionAdd
 } from '../client/client-api'
 // import { ExtTest } from '../../src/ext-test/ext-test'
 import { Mrp } from '../../src/ext-mrp/mrp'
@@ -28,7 +28,7 @@ chai.use(dirtyChai)
 
 const moduleName = 'YANDEX'
 // test case:
-describe(`${moduleName} module tests`, function () {
+describe('YANDEX module tests', function () {
   env.config()
   process.env.NODE_ENV = 'test' // just to be sure
   let app = null
@@ -134,11 +134,19 @@ describe(`${moduleName} module tests`, function () {
       // console.log(context.yAdmin)
 
       context.token = context.yAdmin.token
-      return directoryYandexAdd(context,
+      return intgConnectionAdd(context,
         {
           userId: context.yAdmin.user.id,
           type: 'yandex_connect',
-          accessToken: context.yAdmin.sessionSocial.accessToken
+          accessToken: context.yAdmin.sessionSocial.accessToken,
+          resources: [
+            'department',
+            'domain',
+            'group',
+            'organization',
+            'service',
+            'user'
+          ]
         })
         // .then((_res) => {
         //   console.log('YC directory added:')

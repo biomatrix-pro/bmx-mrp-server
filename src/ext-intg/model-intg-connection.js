@@ -47,6 +47,15 @@ export const IntgConnection = (app) => {
         default: null
       },
       {
+        name: 'resources',
+        type: 'array',
+        itemType: 'id',
+        format: '',
+        caption: 'Ресурсы',
+        description: 'Ресурсы для импорта из внешней системы',
+        default: ''
+      },
+      {
         name: 'lastImportId',
         type: 'ref',
         format: 'IntgImport',
