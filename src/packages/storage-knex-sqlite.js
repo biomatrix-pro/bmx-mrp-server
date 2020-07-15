@@ -32,6 +32,9 @@ export default (app) => {
         case 'refs':
           table.string(prop.name, prop.size || 256)
           break
+        case 'array':
+          table.string(prop.name, prop.size || 2048)
+          break
         case 'datetime':
           table.datetime(prop.name)
           break
