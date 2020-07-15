@@ -365,11 +365,11 @@ export const Yandex = (app) => {
    */
   const ycImport = (intgConnection) => {
     if (!intgConnection || !intgConnection.id) {
-      throw new Error('ycImport: directoryImport param invalid - no object or no .id property')
+      throw new Error('ycImport: intgConnection param invalid - no object or no .id property')
     }
 
     if (!intgConnection.accessToken || !intgConnection.userId) {
-      throw new Error('ycImport: directoryImport param invalid - accessToken or user not found')
+      throw new Error('ycImport: intgConnection param invalid - accessToken or user not found')
     }
 
     // const IntgConnection = app.exModular.models.IntgConnection

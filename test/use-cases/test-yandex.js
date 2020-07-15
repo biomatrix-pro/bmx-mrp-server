@@ -56,6 +56,11 @@ describe(`${moduleName} module tests`, function () {
         return app.exModular.routes.builder.generateRoutes()
       })
       .then(() => app.exModular.initAll())
+      .then(() => app.exModular.services.seed('User', 'intg-yc-user.json', { upsert: true }))
+      .then(() => app.exModular.services.seed('UserSocial', 'intg-yc-user-social.json', { upsert: true }))
+      .then(() => app.exModular.services.seed('Session', 'intg-yc-session.json', { upsert: true }))
+      .then(() => app.exModular.services.seed('SessionSocial', 'intg-yc-session-social.json', { upsert: true }))
+      .then(() => app.exModular.access.addAdmin({ id: 'a2236d6b-a3cc-4552-a73c-b5ca1263a2ce' }))
       .then(() => app.exModular.models.UserDomain.findOne({ where: { domain: process.env.YC_DOMAIN } }))
       .then((_domain) => {
         if (!_domain) {
@@ -100,7 +105,7 @@ describe(`${moduleName} module tests`, function () {
         context.request = supertest(app)
         done()
       })
-      .then(() => app.exModular.models.DirectoryYandex.dataClear())
+      .then(() => app.exModular.models.IntgConnection.dataClear())
       .then(() => app.exModular.models.YCDepartment.dataClear())
       .then(() => app.exModular.models.YCDomain.dataClear())
       .then(() => app.exModular.models.YCGroup.dataClear())
@@ -132,6 +137,7 @@ describe(`${moduleName} module tests`, function () {
       return directoryYandexAdd(context,
         {
           userId: context.yAdmin.user.id,
+          type: 'yandex_connect',
           accessToken: context.yAdmin.sessionSocial.accessToken
         })
         // .then((_res) => {

@@ -1,0 +1,9 @@
+[
+  {
+    "id": "0def63f7-c11a-44f0-92f4-cba2eec3612d",
+    "userId": "a2236d6b-a3cc-4552-a73c-b5ca1263a2ce",
+    "provider": "yandex",
+    "rawProfile": "{\"id\":\"1130000024602471\",\"login\":\"kiselev@biomatrix.pro\",\"client_id\":\"d5b69e09b9c940b09f8adde9adcf295e\",\"display_name\":\"kiselev@biomatrix.pro\",\"real_name\":\"Denis Kiselev\",\"first_name\":\"Denis\",\"last_name\":\"Kiselev\",\"sex\":null,\"default_email\":\"kiselev@biomatrix.pro\",\"emails\":[\"kiselev@biomatrix.pro\"],\"birthday\":null,\"default_avatar_id\":\"64336/GTuybM99Li8TyTMeU9bXUSad1o-1\",\"is_avatar_empty\":false}",
+    "email": "kiselev@biomatrix.pro"
+  }
+]

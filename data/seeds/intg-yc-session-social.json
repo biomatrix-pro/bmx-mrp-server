@@ -1,0 +1,8 @@
+[
+  {
+    "id": "0d79361a-69de-4348-b859-373cd4625cee",
+    "sessionId": "90740bf8-6e52-43ad-ab51-ca99b5f12e59",
+    "rawData": "{\"tokenType\":\"bearer\",\"accessToken\":\"AgAEA7qiEAdnAAZNhzu5TyiHa06kv_W6zg2VLQQ\",\"expiresIn\":28954658,\"refreshToken\":\"1:VfnlcTHOhNj9E59h:2Xt0aFwgg8qUG47uvcI29jWRRSvBQCzuE3xhp8umoGCinFJ9Zy16:Wfq_NP2YSVpTqdzuYaSfqA\"}",
+    "accessToken": "AgAEA7qiEAdnAAZNhzu5TyiHa06kv_W6zg2VLQQ"
+  }
+]

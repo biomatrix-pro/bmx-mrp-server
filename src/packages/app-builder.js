@@ -37,16 +37,7 @@ import { UserDomain } from './models/model-user-domain'
 import { UserSocial } from './models/model-user-social'
 import { InitUserDomain } from './init-user-domain'
 import { SessionSocial } from './models/model-session-social'
-import { IntgConnection } from '../ext-intg/model-intg-connection'
-import { YCUserContact } from '../ext-intg/model-yc-user-contact'
-import { YCUser } from '../ext-intg/model-yc-user'
-import { YCDepartment } from '../ext-intg/model-yc-department'
-import { YCOrganization } from '../ext-intg/model-yc-organization'
-import { YCService } from '../ext-intg/model-yc-service'
-import { YCDomain } from '../ext-intg/model-yc-domain'
-import { YCGroup } from '../ext-intg/model-yc-group'
-import { LinkYCUser } from '../ext-intg/model-link-yc-user'
-import { IntgImport } from '../ext-intg/model-intg-import'
+import { Intg } from '../ext-intg/intg'
 
 export const appBuilder = (express, options) => {
   if (!express) {
@@ -125,22 +116,12 @@ export const appBuilder = (express, options) => {
       app.exModular.modelAdd(UserDomain(app))
       app.exModular.modelAdd(UserSocial(app))
 
-      app.exModular.modelAdd(IntgConnection(app))
-      app.exModular.modelAdd(IntgImport(app))
-      app.exModular.modelAdd(YCUser(app))
-      app.exModular.modelAdd(YCUserContact(app))
-      app.exModular.modelAdd(YCDepartment(app))
-      app.exModular.modelAdd(YCOrganization(app))
-      app.exModular.modelAdd(YCService(app))
-      app.exModular.modelAdd(YCDomain(app))
-      app.exModular.modelAdd(YCGroup(app))
-      app.exModular.modelAdd(LinkYCUser(app))
-
       // configure app with modules:
       SignupOpen(app)
       AuthPassword(app)
       AuthSocial(app)
       Me(app)
+      Intg(app)
 
       Codegen(app)
 
@@ -148,7 +129,7 @@ export const appBuilder = (express, options) => {
       app.exModular.initAdd(InitAccess(app))
       app.exModular.initAdd(InitUserDomain(app))
 
-      // check dependings among installed modules (plugins):
+      // check deps among installed modules (plugins):
       app.exModular.checkDeps()
 
       return app

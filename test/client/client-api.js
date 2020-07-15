@@ -248,7 +248,7 @@ export const mrpPlanCalcAdd = (context, data, expectedCode) => context.request.p
   .expect(expectedCode || expected.OkCreated)
 
 // YANDEX:
-export const directoryYandexAdd = (context, data, expectedCode) => context.request.post(`${context.apiRoot}/directoryyandex`)
+export const directoryYandexAdd = (context, data, expectedCode) => context.request.post(`${context.apiRoot}/intgconnection`)
   .set('Authorization', `${context.authSchema} ${context.token}`)
   .send(data)
   .type('json')
