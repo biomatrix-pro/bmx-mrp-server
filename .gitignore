@@ -108,3 +108,5 @@ dist
 bin
 
 *.sqlite
+
+.DS_Store
