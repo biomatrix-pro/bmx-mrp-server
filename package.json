@@ -34,7 +34,7 @@
     "moment-business-days": "^1.2.0",
     "morgan": "^1.10.0",
     "mustache": "^4.0.1",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.1",
     "sqlite3": "^4.2.0",
     "uuid": "^8.0.0",
     "validator": "^13.0.0"
