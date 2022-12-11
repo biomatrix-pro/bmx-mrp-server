@@ -23,7 +23,7 @@
     "debug": "^4.1.1",
     "dotenv-safe": "^8.2.0",
     "email-addresses": "^3.1.0",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "express-list-endpoints": "^5.0.0",
     "express-validator": "^6.6.1",
     "jsonwebtoken": "^8.5.1",
